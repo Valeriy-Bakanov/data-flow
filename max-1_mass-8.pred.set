@@ -1,0 +1,47 @@
+/ Поиск максимума в массиве с использование предикатов
+/ используется алгоритм последовательного сравнения чисел в массиве
+/
+SET 3, m01 / первый элемент массива
+SET 5, m02
+SET 2, m03
+SET 111, m04
+SET 13, m05
+SET 9, m06
+SET 2, m07
+SET 6, m08
+/
+SUB m02, m01, 02-01 / 2-й элемент массива минус 1-й (1-я пара чисел) 
+PGE 02-01, IS_02_ge_01 / IS_02_ge_01 -> true if m02>=m01
+CPY m02, max_01-02,  IS_02_ge_01 / if m02>=m01
+CPY m01, max_01-02, !IS_02_ge_01 / if m02<m01
+/
+SUB m03, max_01-02, 03-max_01-02,true / 3-й элемент массива минус max_01-02
+PGE 03-max_01-02, IS_03_ge_max_01-02, / IS_03_ge_max_01-02 -> true if m03>=max_01-02
+CPY m03, max_01-03,        IS_03_ge_max_01-02 / if m03>=max_01-02
+CPY max_01-02, max_01-03, !IS_03_ge_max_01-02 / if m03<max_01-02
+/
+SUB m04, max_01-03, 04-max_01-03 / 4-й элемент массива минус max_01-03
+PGE 04-max_01-03, IS_04_ge_max_01-03 / IS_04_ge_max_01-03 -> true if m04>=max_01-03
+CPY m04, max_01-04,        IS_04_ge_max_01-03 / if m04>=max_01-03
+CPY max_01-03, max_01-04, !IS_04_ge_max_01-03 / if m04<max_01-03
+/
+SUB m05, max_01-04, 05-max_01-04 / 5-й элемент массива минус max_01-04
+PGE 05-max_01-04, IS_05_ge_max_01-04 / IS_05_ge_max_01-04 -> true if m05>=max_01-04
+CPY m05, max_01-05,        IS_05_ge_max_01-04 / if m05>=max_01-04
+CPY max_01-04, max_01-05, !IS_05_ge_max_01-04 / if m05<max_01-04
+/
+SUB m06, max_01-05, 06-max_01-05 / 6-й элемент массива минус max_01-05
+PGE 06-max_01-05, IS_06_ge_max_01-05 / IS_06_ge_max_01-05 -> true if m06>=max_01-05
+CPY m06, max_01-6,         IS_06_ge_max_01-05 / if m06>=max_01-05
+CPY max_01-05, max_01-06, !IS_06_ge_max_01-05 / if m06<max_01-05
+/
+SUB m07, max_01-06, 07-max_01-06 / 7-й элемент массива минус max_01-06
+PGE 07-max_01-06, IS_07_ge_max_01-06 / IS_07_ge_max_01-06 -> true if m07>=max_01-06
+CPY m07, max_01-7,         IS_07_ge_max_01-06 / if m07>=max_01-06
+CPY max_01-06, max_01-07, !IS_07_ge_max_01-06 / if m07<max_01-06
+/
+SUB m08, max_01-07, 08-max_01-07 / 8-й элемент массива минус max_01-07
+PGE 08-max_01-07, IS_08_ge_max_01-07 / IS_08_ge_max_01-07 -> true if m08>=max_01-07
+CPY m08, max_01-8,         IS_08_ge_max_01-07 / if m08>=max_01-07
+CPY max_01-07, max_01-08, !IS_08_ge_max_01-07 / if m08<max_01-07
+/

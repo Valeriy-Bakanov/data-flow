@@ -1,0 +1,21 @@
+; Valery Bakanov research computer complex (2008 and further); e881e@mail.ru, http://vbakanov.ru/left_1.htm
+; This file was automatically created thru program DATA_FLOW.EXE
+; from the original data file SQUA_EQU_2.SET
+;
+=100/100: -Times 100 ; [MUL,A,TWO,A2,true,2 * A -> A2]
+=101/101: -Times 100 ; [MUL,A,FOUR,A4,true,4 * A -> A4]
+=102/102: -Times 100 ; [MUL,B,NEG_ONE,B_NEG,true,NEG_ONE * B -> B_NEG]
+=103/103: -Times 100 ; [POW,B,TWO,BB,true,B^2 -> BB]
+=104/104: -Times 100 ; [MUL,A4,C,AC4,true,A4 * C -> AC4]
+=105/105: -Times 100 ; [SUB,BB,AC4,D,true,BB - AC4 -> D[iskriminant]]
+=106/106: -Times 100 ; [SQR,D,,sqrt_D,true,sqrt(D) -> sqrt_D]
+=107/107: -Times 100 ; [ADD,B_NEG,sqrt_D,W1,true,B_NEG + sqrt_D -> W1]
+=108/108: -Times 100 ; [SUB,B_NEG,sqrt_D,W2,true,B_NEG - sqrt_D -> W2]
+=109/109: -Times 100 ; [DIV,W1,A2,X1,true,W1 / A2 -> X1 // #9  | #109]
+=110/110: -Times 100 ; [DIV,W2,A2,X2,true,W2 / A2 -> X2 // #10 | #110]
+=111/111: -Times 0 ; [SET,1.0,,A,true,1.0 -> A]
+=112/112: -Times 0 ; [SET,7.0,,B,true,7.0 -> B]
+=113/113: -Times 0 ; [SET,3.0,,C,true,3.0 -> C]
+=114/114: -Times 0 ; [SET,2,,TWO,true,2 -> TWO]
+=115/115: -Times 0 ; [SET,4,,FOUR,true,4 -> FOUR]
+=116/116: -Times 0 ; [SET,-1,,NEG_ONE,true,(-1) -> NEG_ONE]

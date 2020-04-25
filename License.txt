@@ -1,0 +1,29 @@
+Russian version see below...
+
+=============================================================
+
+Computer simulator streaming (Data-Flow) architecture with 
+predicate operator execution.
+
+Idea, user interface, programming and support - Valery Bakanov, 
+mailto:e881e@mail.ru , http://vbakanov.ru/left_1.htm ,
+2008-2019. Additionally, see http://vbakanov.ru/dataflow/dataflow.htm .
+
+Fully free use of this computer is allowed programs "as is" at the 
+level of executable files (format files PE GUI 4.0 for Windows 32 bit). 
+Developer link required when using this software product in research
+work.
+
+=============================================================
+
+Компьютерная программа-симулятор вычислителя потоковой (Data-Flow) 
+архитектуры с предикатныи выполнением операторов. Идея, 
+пользовательский интерфейс, программирование и поддержка - 
+Баканов Валерий, mailto:e881e@mail.ru , http://vbakanov.ru/left_1.htm , 
+2008-2019. Дополнительно см. http://vbakanov.ru/dataflow/dataflow.htm .
+
+Допускается полностью свободное использование данной компьютерной
+программы "как есть" на уровне исполняемых файлов (файлы 
+формата PE GUI 4.0 для Windows 32 бит). Ссылка на разработчика 
+обязательна при использовании данного программного продукта в 
+исследовательской работе.
