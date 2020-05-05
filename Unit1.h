@@ -172,8 +172,7 @@ __published:	// IDE-managed Components
         void __fastcall M1_CopyToNotepad(TObject *Sender);
         void __fastcall ExtendedSave_IGA_Click(TObject *Sender);
         void __fastcall Show_AIU(TObject *Sender);
-        void __fastcall StatusBarMainDrawPanel(TStatusBar *StatusBar,
-          TStatusPanel *Panel, const TRect &Rect);
+
 //
 private:	// User declarations
 public:		// User declarations
