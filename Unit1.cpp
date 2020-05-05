@@ -4765,7 +4765,6 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
 
 //  strcpy( str, mPM->Strings[iRow].c_str() ); // восстановим str после применения strtok
   strcpy( str, buff ); // восстановим str после применения strtok
-
 //
   strReplace( dest, sizeof(dest)-1, tmp, sIndex, IntToStr(iCycle).c_str() ); // заменяем символ индекса его значением
   strcpy( tmp, ParseAndCalculateIndex( dest ) ); // вычисляем это значение
@@ -4777,8 +4776,9 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
 //
   p = strtok( str, "," ); // ищем начало вхождение результата инструкции SET
 //  p = strtok( NULL, "/; " ); // ищем конец вхождения инструкции SET (без комментариев)
-  strcpy( w, startComments_1 ); // в w "/"
-  strcat( w, startComments_2 ); // в w "/;"
+//  strcpy( w, startComments_1 ); // в w "/"
+//  strcat( w, startComments_2 ); // в w "/;"
+  snprintf( w, sizeof(w), "%s%s", startComments_1,startComments_2 ); // в w теперь "/;"
   p = strtok( NULL,  w ); // ищем конец вхождения инструкции SET (без комментариев)
 //
   strcat( work, " " ); // пробел перед результатом операции SET
