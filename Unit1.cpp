@@ -49,6 +49,8 @@ TF1 *F1; // главное окно
 TParser parser; // перед TParser добавлено :: для обеспечения отдельной области видимости
 //
 //==============================================================================
+#define APM Application->ProcessMessages(); // дать поработать Windows
+//
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 //
@@ -219,7 +221,6 @@ INT all_maxProcs, // всего участвующих в вычислениях АИУ
 #define SBM1 F1->StatusBarMain->Panels->Items[1] // для вывода в Panels[1]
 #define SBM2 F1->StatusBarMain->Panels->Items[2] // для вывода в Panels[2]
 //
-#define SBMR F1->StatusBarMain->Repaint(); // перерисовка StatusBarMain
 //------------------------------------------------------------------------------
 //
 struct { // DrawColorTest (выделение ячеек цветом при тестировании без выполнения программы)
@@ -588,6 +589,13 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+void __fastcall TF1::StatusBarMainDrawPanel(TStatusBar *StatusBar, TStatusPanel *Panel, const TRect &Rect)
+{ // вызывается при перерисовке StatusBarMain
+ StatusBarMain->Refresh(); // перерисовать...
+} //----------------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void t_printf(char *fmt, ...)
 {  // не менее одного обязательного аргумента !
  int lenBuff = _256; // начальная длина буфера вывода
@@ -602,12 +610,12 @@ void t_printf(char *fmt, ...)
  {
   buff = (char*) realloc( buff, new_lenBuff+1 ); // увеличиваем буфер (с учётом '\0' в конце)...
   vsnprintf( buff, new_lenBuff+1, fmt, args ); // заново выводим в (расширенный) буфер buff
-//  Beep( 1000, 10 );
  }
 //
  va_end(args);  // конец списка аргументов в эллипсисе
 //
  AddLineToProtocol( buff ); // добавление в Nemo_Run ( учитываются "\n" )
+//
 // free( buff );
 } // ---- конец t_printf -------------------------------------------------------
 
@@ -1822,7 +1830,6 @@ Calc_Stat_Proc()
      sum_tProc; // время работы каждого из АИУ
 //
 // SBM0->Text = " Финальная обработка данных..."; // вывод текста в StatusBarMain (секция 0)
- SBMR // перерисовать StatusBarMain принудительно
 //
  F1->Label_Data->Font->Color   = clBlack;
  F1->Label_Buffer->Font->Color = clBlack;
@@ -1833,16 +1840,15 @@ Calc_Stat_Proc()
 //
  ftime(&t1); // взяли момент времени окончания выполнения программы
 //
-// обрабатываем статистику загрузки АИУ по данным из Tpr --------------------
+// обрабатываем статистику загрузки АИУ по данным из Tpr -----------------------
  for(ULI i=0; i<mTpr->Count; i++)
  {
-  Application->ProcessMessages(); // дать поработать  Windows ------------------
+  APM // дать поработать  Windows ----------------------------------------------
 //
   if( !(i % 100 ) ) // если i кратно 100
   {
    sprintf( w, " Предварительная обработка данных (%.0f%%)...", 1e2 * i / mTpr->Count);
    SBM0->Text = w;
-   SBMR // перерисовать StatusBarMain принудительно
   }
 //
   strcpy(tmp, mTpr->Strings[i].c_str()); // запомнили строку из Tpr в tmp
@@ -1912,15 +1918,14 @@ Calc_Stat_Proc()
  {
    sprintf( w, " Окончательная обработка данных (%.0f%%)...", 1e2 * j / Count_Sets);
    SBM0->Text = w;
-   SBMR // перерисовать StatusBarMain принудительно
 //
   strcpy(Set, Set_Params[j].Set); // запомнили для удобства работы
 //
   n_Sets = 0; // счетчик числа выполнений инструкции Set
 //
-  for(ULI i=0; i<mTpr->Count; i++) // по списку Tpr
+  for(ULI i=0; i<mTpr->Count; i++) // по списку Tpr    
   {
-   Application->ProcessMessages(); // дать поработать  Windows -----------------
+   APM // дать поработать  Windows ---------------------------------------------
 //
    strcpy(tmp,  mTpr->Strings[i].c_str()); // запомнили строку из Tpr в tmp
    strcpy(tmp1, GetSubString(tmp, 41,50));  // номер инструкции в виде строки tmp1
@@ -2220,8 +2225,7 @@ Primary_Init_Data()
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall
-ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкции номер i_Set
+void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкции номер i_Set
 { // кроме инструкции ЫУЕ
  REAL Op1, Op2, Result, Predicate;
  char aOp1[_ID_LEN], aOp2[_ID_LEN], aResult[_ID_LEN], aPredicate[_ID_LEN];
@@ -2237,7 +2241,7 @@ ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкции номер i_Set
  if( is_SET( Mem_Instruction[i_Set].Set ) ) // инструкцию SET не обрабатываем здесь !!!
   return;
 //
-// ----- здесь проверок не надо, ибо НЕГОТОВЫЕ инсрукции не попадают даже в БУФЕР КОМАНД !!!
+// ----- здесь проверок не надо, ибо НЕГОТОВЫЕ инстnрукции не попадают даже в БУФЕР КОМАНД !!!
 //
 ////////////////////////////////////////////////////////////////////////////////
 // ищем свободное АИУ для исполнения инструкции номер i_Set ....................
@@ -3361,7 +3365,7 @@ TF1::Most_Wonderful(TObject *Sender)
 void __fastcall // вызывается из "Работа->Перемешать инструкции+расчет" главного меня
 TF1::Mixed_Start(TObject *Sender)
 {
- Start_DataFlow_Process ( 1 ); // перемешать инструкции и начать рассчет
+ Start_DataFlow_Process ( 1 ); // перемешать инструкции и начать расчёт
 } //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5235,8 +5239,8 @@ void __fastcall TF1::Save_Data(TObject *Sender)
 void __fastcall // вызывается для завершения выполнения инструкции на АИУ i_Proc
 FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int i_Proc)
 {
-// которой устанавливаются флаги готовности у входных операндов иных
-// инструкций, зависящих по входным операндам от результата выполнения данной на АИУ номер i_Proc
+// устанавливаются флаги готовности у входных операндов иных инструкций, зависящих
+// по входным операндам от результата выполнения данной на АИУ номер i_Proc
  char Set[_SET_LEN],
       aResult[_ID_LEN],
       aPredicat[_ID_LEN], // поле предиката
@@ -5603,7 +5607,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
   for( ULI i=0; i<mTpr->Count; i++ ) // по таблице выполненных инструкций в Tpr
   {
    n_proc = _atoi64(GetSubString(mTpr->Strings[i].c_str(),  1,10)); // номер АИУ, на котором инструкция выполнялась
-   n_set  = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 41,50));  // номер выполненной инструкции
+   n_set  = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 41,50)); // номер выполненной инструкции
    tick_1 = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 11,20)); // время НАЧАЛА выполнения инструкции (в тактах)
    tick_2 = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 21,30)); // время КОНЦА выполнения инструкции (в тактах)
 //
@@ -5823,8 +5827,6 @@ bool __fastcall AddLineToProtocol(char *str)
   {
    F1->M1->Lines->Add( buf ); // вывод строки buf в M1
    strcpy( buf, "" ); // очистили строку w для дальнейшей работы
-//
-//   Application->ProcessMessages(); // дать поработать Windows
   }
 //
  } // конец по символам строки str
@@ -6182,3 +6184,7 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  SBM0->Text = " Все файлы протоколов сохранены...";
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
+
+
+
+
