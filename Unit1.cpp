@@ -218,6 +218,8 @@ INT all_maxProcs, // всего участвующих в вычислениях АИУ
 #define SBM0 F1->StatusBarMain->Panels->Items[0] // для вывода в Panels[0]
 #define SBM1 F1->StatusBarMain->Panels->Items[1] // для вывода в Panels[1]
 #define SBM2 F1->StatusBarMain->Panels->Items[2] // для вывода в Panels[2]
+//
+#define SBMR F1->StatusBarMain->Repaint(); // перерисовка StatusBarMain
 //------------------------------------------------------------------------------
 //
 struct { // DrawColorTest (выделение ячеек цветом при тестировании без выполнения программы)
@@ -1815,12 +1817,12 @@ Calc_Stat_Proc()
  if( Regim == 2 ) // ошибка...
   return;
 //
- char Set[_SET_LEN], tmp[_1024], tmp1[_1024];
+ char Set[_SET_LEN], tmp[_1024], tmp1[_1024], w[_512];;
  INT n_Sets, // число выполнений каждой инструкции
      sum_tProc; // время работы каждого из АИУ
 //
- SBM0->Text = " Финальная обработка данных..."; // вывод текста в StatusBarMain (секция 0)
- F1->StatusBarMain->Repaint(); // перерисовать принудительно
+// SBM0->Text = " Финальная обработка данных..."; // вывод текста в StatusBarMain (секция 0)
+ SBMR // перерисовать StatusBarMain принудительно
 //
  F1->Label_Data->Font->Color   = clBlack;
  F1->Label_Buffer->Font->Color = clBlack;
@@ -1834,6 +1836,15 @@ Calc_Stat_Proc()
 // обрабатываем статистику загрузки АИУ по данным из Tpr --------------------
  for(ULI i=0; i<mTpr->Count; i++)
  {
+  Application->ProcessMessages(); // дать поработать  Windows ------------------
+//
+  if( !(i % 100 ) ) // если i кратно 100
+  {
+   sprintf( w, " Предварительная обработка данных (%.0f%%)...", 1e2 * i / mTpr->Count);
+   SBM0->Text = w;
+   SBMR // перерисовать StatusBarMain принудительно
+  }
+//
   strcpy(tmp, mTpr->Strings[i].c_str()); // запомнили строку из Tpr в tmp
 //
   serial_Ticks += atoi(GetSubString(tmp, 31,40)); // суммируем по всем исполненным инструкциям
@@ -1899,12 +1910,18 @@ Calc_Stat_Proc()
 // теперь вычисляем вес каждой из выполненных инструкций ......................
  for(int j=0; j<Count_Sets; j++) // по списку инструкций
  {
+   sprintf( w, " Окончательная обработка данных (%.0f%%)...", 1e2 * j / Count_Sets);
+   SBM0->Text = w;
+   SBMR // перерисовать StatusBarMain принудительно
+//
   strcpy(Set, Set_Params[j].Set); // запомнили для удобства работы
 //
   n_Sets = 0; // счетчик числа выполнений инструкции Set
 //
   for(ULI i=0; i<mTpr->Count; i++) // по списку Tpr
   {
+   Application->ProcessMessages(); // дать поработать  Windows -----------------
+//
    strcpy(tmp,  mTpr->Strings[i].c_str()); // запомнили строку из Tpr в tmp
    strcpy(tmp1, GetSubString(tmp, 41,50));  // номер инструкции в виде строки tmp1
 //
@@ -4770,7 +4787,7 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
  fputs( startPos, fptrOut ); // при некорректности minI,maxI,stepI строки комментируются
 //
  fputs( str, fptrOut ); // сохраняем расширенную строку макроса ( fputs строку не переводит! )
- fputs( " / line after PrP\n", fptrOut );
+ fputs( " ; line after PrP\n", fptrOut );
 //
  return 0; // всё Ok
 //
@@ -5883,6 +5900,11 @@ void __fastcall Save_IGA()
       aResult[_ID_LEN], aPredicat[_ID_LEN];
  bool flagNot, flagPredicat;
 //
+// сохраняем ИНФОРМАЦИОННЫЙ_ГРАФ_ПРОГРАММЫ (*.gv) //////////////////////////////
+//
+ SBM0->Text = " Сохраняется информационный граф программы (GV-файл)...";
+ Delay(100); // чтобы успеть увидеть...
+//
  strcpy( FileName, FileNameSet ); // имя файла дуг
  strcpy( FileName, ChangeFileExt( FileName, ExtIGA ).c_str()); // ".gv" рекомендует стандарт, ибо ".dot" задействовано в Word'е
 //
@@ -5970,6 +5992,11 @@ void __fastcall Extended_Save_IGA()
  INT i; // номер оператора
  char FileName[256];
  FILE *fptr;
+//
+// сохраняем ДАННЫЕ_О_ВРЕМЕНИ_ВЫПОЛНЕНИЯ_ОПЕРАТОРОВ (*.mvr) //////////////////////////////
+//
+ SBM0->Text = " Сохраняется файл данных о времени выполнения операторов (MVR-файл)...";
+ Delay(100); // чтобы успеть увидеть...
 //
  strcpy( FileName, FileNameSet ); // имя файла "MVR"
  strcpy( FileName, ChangeFileExt( FileName, ExtMVR).c_str()); // формат ".MVR" - данные о времени выполнения каждого оператора (вершины графа)
@@ -6151,5 +6178,7 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  Extended_Save_IGA(); // сохранить данные о времени выполнения операторов (*.mvr)
   snprintf( tmp, sizeof(tmp), "%s\\mvr%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".mvr").c_str(), tmp );
+//
+ SBM0->Text = " Все файлы протоколов сохранены...";
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
