@@ -8,7 +8,7 @@ SET  1, max
 /
 SET 0, n[1]
 /
-for[i]=1,1000,1 {  
+for[i]=1,10,1 {  
 RND min,  max,  m[i] / равн.распрн.псевдо-случ.число {min-max}
 ADD n[i], m[i], n[i+1] / сумма - в n{max+1}
 

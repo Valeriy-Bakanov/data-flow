@@ -1,4 +1,4 @@
-//
+
 #include "Unit1.h"
 #include "Unit2.h" // чтобы был доступ к F2 (форма вывода графика интенсивности вычислений)
 #include "Unit3.h" // чтобы был доступ к F3 (форма вывода графика Ганнта)
@@ -1483,11 +1483,12 @@ Line_Set(int i_Set, int Rule)
   case 0: strcpy(tmp1, "?");
 //
           if( is_SET( Set )) // это SET ........................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s {%s} %s",
-                         Mem_Instruction[i_Set].Set,
-                         ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
-                         Mem_Instruction[i_Set].aResult, tmp1,
-                         Mem_Instruction[i_Set].Comment);
+           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s {%s} %s %s",
+                        Mem_Instruction[i_Set].Set,
+                        ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
+                        Mem_Instruction[i_Set].aResult, tmp1,
+                        startComments_2,
+                        Mem_Instruction[i_Set].Comment);
 
           break; // break case 0;
 //
@@ -1495,30 +1496,33 @@ Line_Set(int i_Set, int Rule)
   case 1: snprintf(tmp1,sizeof(tmp1), "%.*e", ACC_REAL, Get_Data(Mem_Instruction[i_Set].aResult)); // содержимое по адресу (строка!) aResult
 //
           if( is_SET(  Set ) ) // это SET ......................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s {%s} %s",
+           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s {%s} %s %s",
                          Mem_Instruction[i_Set].Set,
                          ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                          Mem_Instruction[i_Set].aResult, tmp1,
+                         startComments_2,
                          Mem_Instruction[i_Set].Comment);
 //
           else
 //==============================================================================
           switch( Get_CountOperandsByInstruction(Set) )
            { // ... по числу входных операндов инструкции Set
-            case 1: snprintf(tmp,sizeof(tmp), "%s %s {%.*e}, %s {%s} %s",
+            case 1: snprintf(tmp,sizeof(tmp), "%s %s {%.*e}, %s {%s} %s %s",
                                    Mem_Instruction[i_Set].Set,
                                    Mem_Instruction[i_Set].aOp1,
                                    ACC_REAL, Get_Data(Mem_Instruction[i_Set].aOp1),
                                    Mem_Instruction[i_Set].aResult, tmp1,
+                                   startComments_2,
                                    Mem_Instruction[i_Set].Comment);
                     break;
-            case 2: snprintf(tmp,sizeof(tmp), "%s %s {%.*e}, %s {%.*e}, %s {%s} %s",
+            case 2: snprintf(tmp,sizeof(tmp), "%s %s {%.*e}, %s {%.*e}, %s {%s} %s %s",
                                    Mem_Instruction[i_Set].Set,
                                    Mem_Instruction[i_Set].aOp1,
                                    ACC_REAL, Get_Data(Mem_Instruction[i_Set].aOp1),
                                    Mem_Instruction[i_Set].aOp2,
                                    ACC_REAL, Get_Data(Mem_Instruction[i_Set].aOp2),
                                    Mem_Instruction[i_Set].aResult, tmp1,
+                                   startComments_2,
                                    Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
@@ -1530,27 +1534,30 @@ Line_Set(int i_Set, int Rule)
 
 ////////////////////////////////////////////////////////////////////////////////
   case -1:if( is_SET( Set ) ) // это SET .......................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s %s",
+           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s %s %s",
                          Mem_Instruction[i_Set].Set,
                          ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                          Mem_Instruction[i_Set].aResult,
+                         startComments_2,
                          Mem_Instruction[i_Set].Comment);
 
           else
 //==============================================================================
           switch( Get_CountOperandsByInstruction(Set) )
            { // ... по числу входных операндов инструкции Set
-            case 1: snprintf(tmp,sizeof(tmp), "%s %s, %s %s",
+            case 1: snprintf(tmp,sizeof(tmp), "%s %s, %s %s %s",
                                   Mem_Instruction[i_Set].Set,
                                   Mem_Instruction[i_Set].aOp1,
                                   Mem_Instruction[i_Set].aResult,
+                                  startComments_2,
                                   Mem_Instruction[i_Set].Comment);
                     break;
-            case 2: snprintf(tmp,sizeof(tmp), "%s %s, %s, %s %s",
+            case 2: snprintf(tmp,sizeof(tmp), "%s %s, %s, %s %s %s",
                                   Mem_Instruction[i_Set].Set,
                                   Mem_Instruction[i_Set].aOp1,
                                   Mem_Instruction[i_Set].aOp2,
                                   Mem_Instruction[i_Set].aResult,
+                                  startComments_2,
                                   Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
@@ -1644,7 +1651,7 @@ Add_toData(int i_Set, char* aResult, REAL Data)
 //
  if( Really_Data > 0.5*Max_Data ) // ранее информировать об опасности заполненности массива нет..!
  {
-  snprintf( tmp,sizeof(tmp), "Данные (%d%)", int(1e2*Really_Data/Max_Data) );
+  snprintf( tmp,sizeof(tmp), "Данные (%d%)", int( 1e2*Really_Data/Max_Data) );
   F1->Label_Data->Caption = tmp; // число переменных
   F1->Label_Data->Repaint();
  }
@@ -1841,7 +1848,7 @@ Calc_Stat_Proc()
 //
   if( !(i % 100 ) ) // если i кратно 100
   {
-   sprintf( w, " Предварительная обработка данных (%.0f%%)...", 1e2 * i / mTpr->Count);
+   sprintf( w, " Предварительная обработка данных (%.0f%%)...", 1e2*i/mTpr->Count);
    SBM0->Text = w;
   }
 //
@@ -1907,17 +1914,17 @@ Calc_Stat_Proc()
 //
  t_printf( "всего выполнилось %d инструкций (не учитывая SET)\n", mTpr->Count);
 //
-// теперь вычисляем вес каждой из выполненных инструкций ......................
+// теперь вычисляем вес каждой из выполненных инструкций .......................
  for(int j=0; j<Count_Sets; j++) // по списку инструкций
  {
-   sprintf( w, " Окончательная обработка данных (%.0f%%)...", 1e2 * j / Count_Sets);
+   sprintf( w, " Окончательная обработка данных (%.0f%%)...", 1e2*j/ Count_Sets);
    SBM0->Text = w;
 //
   strcpy(Set, Set_Params[j].Set); // запомнили для удобства работы
 //
   n_Sets = 0; // счетчик числа выполнений инструкции Set
 //
-  for(ULI i=0; i<mTpr->Count; i++) // по списку Tpr    
+  for(ULI i=0; i<mTpr->Count; i++) // по списку Tpr
   {
    APM // дать поработать  Windows ---------------------------------------------
 //
@@ -1929,10 +1936,7 @@ Calc_Stat_Proc()
   } // конец цикла по строкам Tpr
 //
   if(n_Sets) // только если выполнилась хотя бы раз...
-  {
-   t_printf( "инструкция %s выполнилась %d раз ( %5.1f% )",
-                     Set, n_Sets, 100.0 * n_Sets / mTpr->Count);
-  }
+   t_printf( "инструкция %s выполнилась %d раз ( %5.1f% )", Set, n_Sets, 100.0 * n_Sets / mTpr->Count);
 //
  } // конец цикла по списку инструкций в Set_Params[]
 //
@@ -1945,6 +1949,7 @@ Calc_Stat_Proc()
   {
    strcpy(tmp,  mTpr->Strings[j].c_str()); // запомнили строку из Tpr в tmp
    strcpy(tmp1, GetSubString(tmp, 1,10)); // номер АИУ в виде строки tmp1
+//
    if(i == atoi(tmp1)) // нашли в Tpr номер АИУ i
    {
     strcpy(tmp1, GetSubString(tmp, 31,40)); // время выполнения любой инструкции на i-том АИУ
@@ -4515,24 +4520,30 @@ cont_withim_macros_body: // начинаем цикл по строкам тела макроса --------------
 //
 enf_of_fptrIn: // конец входного файла fptrIn ----------------------------------
 //
-  snprintf( tmp,sizeof(tmp), "// start preprocessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
-  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
+//  snprintf( tmp,sizeof(tmp), "// start preprocessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
+//  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
+  fprintf( fptrOut, "%c%c start pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n",
+                    startComments_1[0],startComments_1[0], sIndex,minI,maxI,stepI );
 //
   for( int iRow=0; iRow<mPM->Count; iRow++ ) // по всем строкам в PM
   {
-   fputs( "// ", fptrOut ); // строки до обработки препроцессором выдаются как комментируемые
-   fputs( mPM->Strings[iRow].c_str(), fptrOut );  // строка до расширенияя препроцессором
-   fputs( " / source line (before PreP)\n", fptrOut ); // fputs сама строку не переводит!
+//   fputs( "// ", fptrOut ); // строки до обработки препроцессором выдаются как комментируемые
+//   fputs( mPM->Strings[iRow].c_str(), fptrOut );  // строка до расширенияя препроцессором
+//   fputs( " / source line (before PreP)\n", fptrOut ); // fputs сама строку не переводит!
+   fprintf( fptrOut, "%c%c %s %c source line (before PreP)\n", startComments_1[0],startComments_1[0],
+                     mPM->Strings[iRow].c_str(), startComments_2[0] );
 //
    for( int i=minI; i<=maxI; i+=stepI ) // для каждого значения параметра цикла
     PreProcRow_For1( iRow, sIndex, i ); // расширяем строку iRow тела макроса
 //
   } // конец цикла while( 1 ) ==================================================
 //
-// ---- заканчиваем вывод преобразованных данных
-  snprintf( tmp,sizeof(tmp), "// end pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
-  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
-
+// ---- выводим преобразованные данные -----------------------------------------
+//  snprintf( tmp,sizeof(tmp), "// end pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
+//  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
+  fprintf( fptrOut, "%c%c end pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n",
+                    startComments_1[0],startComments_1[0], sIndex,minI,maxI,stepI );
+//
   mPM->Clear(); // очистить PM (TStringList) после обработки очередного макроса
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4570,7 +4581,7 @@ char* __fastcall ParseAndCalculateIndex(char* Expression)
    flagAlarmParser = FALSE;
   } // и больше не выдавать..!
 //
-  startPos[0] = startComments_1[0]; // после ошибки все строки комментируются
+  startPos[0] = startComments_2[0]; // после ошибки все строки комментируются ":"
 //
  } // конец catch( )
 //
@@ -4684,7 +4695,7 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
 { // препроцессор для конвертации одной строки тела макроса одномерного массива
 // здесь iRow - номер строки исходного тела макроса (из RM),
 // sIndex - строка индекса одномерного массива, iCycle - номер цикла
- char str[_512], tmp[_256], dest[_256], *p,
+ char str[_512], tmp[_256], dest[_256], w[_512], *p,
       *pStartSB, *pEndSB, // указатели на '[' и ']' (Start Square Brecket - End Square Brecket)
       work[_512]="\0", // работаем с внешней рабочей строкой (в ней будем НАКАПЛИВАТЬ) преобразованные части обрабатываемой строки
       buff[_512], // рабочий буффер для work
@@ -4765,27 +4776,22 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
   strcpy( str, buff ); // восстановим str после применения strtok
 //
   p = strtok( str, "," ); // ищем начало вхождение результата инструкции SET
-  p = strtok( NULL, "/ " ); // ищем конец вхождения инструкции SET (без комментариефв
+//  p = strtok( NULL, "/; " ); // ищем конец вхождения инструкции SET (без комментариев)
+  strcpy( w, startComments_1 ); // в w "/"
+  strcat( w, startComments_2 ); // в w "/;"
+  p = strtok( NULL,  w ); // ищем конец вхождения инструкции SET (без комментариев)
+//
   strcat( work, " " ); // пробел перед результатом операции SET
   strcat( work, p ); // адрес результата
 //
-
-//  AddLineToProtocol( str ); // тестовая отладка
-//  AddLineToProtocol( work ); // тестовая отладка
-//  AddLineToProtocol( "==" ); // тестовая отладка
-
-//  snprintf( ww,sizeof(ww), ">%s<<", work );
-//  AddLineToProtocol( work ); // тестовая отладка
-
   strcpy( str, work ); // всё готово - результат снова в str
-
 //
  } // конец обработки инструкции SET -------------------------------------------
 //
- fputs( startPos, fptrOut ); // при некорректности minI,maxI,stepI строки комментируются
-//
- fputs( str, fptrOut ); // сохраняем расширенную строку макроса ( fputs строку не переводит! )
- fputs( " ; line after PrP\n", fptrOut );
+// fputs( startPos, fptrOut ); // при некорректности minI,maxI,stepI строки комментируются
+// fputs( str, fptrOut ); // сохраняем расширенную строку макроса ( fputs строку не переводит! )
+ fprintf( fptrOut, "%s%s %s line after PrP\n", startPos, str, startComments_2 );
+// fputs( " ; line after PrP\n", fptrOut );
 //
  return 0; // всё Ok
 //
@@ -5569,7 +5575,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
 { // вычисляется и возвращается max число ОДНОВРЕМЕННО работающих АИУ (процессоров)
 // и заполняется серия данных для постройки графика интенсивности вычислений
  char tmp[_512],  tmp1[_512],
-      tmp2[_512];
+      tmp2[_512], w[_512];
  INT tick_End, // конец времени последней выполненной инструкции (в тактах)
      tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени
@@ -5591,8 +5597,16 @@ int __fastcall Work_TimeSets_Protocol_IC()
 //
  for( i_tick=0; i_tick<=tick_End; i_tick++ ) // по всем тактам программы
  {
+  APM // дать поработать Windows -----------------------------------------------
+//
   if( i_tick % tick_ScanForGraph ) // ВЫДАВАТЬ каждые tick_ScanForGraph (global) тактов
    continue;
+//
+  if( !(i_tick % 100 ) ) // если i кратно 100
+  {
+   sprintf( w, " Обработка данных для оценки работы АИУ (%.0f%%)...", 1e2*i_tick/tick_End);
+   SBM0->Text = w;
+  }
 //
   n_i = 0; // число выполняемых инструкций в момент времени времени t_i
 //
@@ -5600,6 +5614,8 @@ int __fastcall Work_TimeSets_Protocol_IC()
 ////////////////////////////////////////////////////////////////////////////////
   for( ULI i=0; i<mTpr->Count; i++ ) // по таблице выполненных инструкций в Tpr
   {
+   APM // дать поработать Windows -----------------------------------------------
+//
    n_proc = _atoi64(GetSubString(mTpr->Strings[i].c_str(),  1,10)); // номер АИУ, на котором инструкция выполнялась
    n_set  = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 41,50)); // номер выполненной инструкции
    tick_1 = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 11,20)); // время НАЧАЛА выполнения инструкции (в тактах)
