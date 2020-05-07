@@ -878,7 +878,7 @@ Delay(long mSecs)
  unsigned long t,
           FirstTick = ::GetTickCount(); // запомнили начало отсчета
  t=(mSecs>=0 ? mSecs : -1e3*mSecs);
- while( ::GetTickCount()-FirstTick < t ) // работать, пока заданный интервал времени не истек...
+ while( ::GetTickCount()-FirstTick < t ) // работать, пока заданный интервал времени не истёк...
   Application->ProcessMessages(); // дать поработать WINDOWS
 }
 // --- конец Delay -------------------------------------------------------------
@@ -1449,7 +1449,7 @@ StopCalculations( int Rule )
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-REAL __fastcall // возвращает из Mem_Data[] число по адресу (строка!) Addr
+REAL __fastcall // возвращает из Mem_Data[] число по адресу (имени) Addr
 Get_Data(char *Addr)
 { // если строка 'Addr / Dаta' не существует - выдается предупреждение и результат = 1.0e0
 // char tmp[_512];
@@ -1460,7 +1460,7 @@ Get_Data(char *Addr)
 //
 // не нашли... информируем об этом !!! /////////////////////////////////////////
  t_printf( "-W- %s() не нашёл в Mem_Data[] значения по адресу %s. Принято 1.0e0 -W-",
-                  __FUNC__,Addr);
+            __FUNC__,Addr);
 //
   return 1.0 ;
 } // ---------------------------------------------------------------------------
@@ -1581,31 +1581,36 @@ Line_Set(int i_Set, int Rule)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall // добавляет в Mem_Data[] число Data по адресу (строка!) Addr
+void __fastcall // добавляет в Mem_Data[] число Data по адресу (имени) Addr
 Add_toData(int i_Set, char* aResult, REAL Data)
 {
-// i_Set - номер инструкции, в результате котрой было вычислено это значеник
+// i_Set - номер инструкции, в результате котрой было вычислено это значениe
 // aResult - имя ячейки (переменной), Data - значение переменной
 // если строка 'Addr / ***' существует - переписывается поле Data, выдается
 // предупреждение и пул данных визуализируетсяЯ; если не существует - добавим
 // (включая ВИЗУАЛИЗАЦИЮ)
- char tmp[_512], tmp1[_512];
+ char tmp[_512], tmp1[_1024];
 //
-// не нарушен ли ПРИНЦИП ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором Addr ?)
+// не нарушен ли ПРИНЦИП ЕДИНОКРаТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором Addr ?)
 //
- for(int i=0; i<Really_Data; i++) // ищем путем тупого последовательного перебора
-  if( !strcmp(Mem_Data[i].Addr, aResult) ) // данные с таким адресом УЖЕ ЕСТЬ !!!
+ for(ULI i=0; i<Really_Data; i++) // ищем путем тупого последовательного перебора
+//
+  if( !strcmp( Mem_Data[i].Addr, aResult ) ) // данные с адресом (именем) aResult в массиве Mem_Data[].Attr УЖЕ ЕСТЬ !!!
   {
-   if( !memcmp( aResult,attrVar,strlen(attrVar) ) ) // сравнение по strlen(attrVar) символам
-   { // на aResult не распространяется правило ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ
-    F1->Master_Timer->Enabled = FALSE; // выключили таймер
 //
+   if( !memcmp( aResult, attrVar, strlen(attrVar) ) ) // если первые символы aResult есть attVar - можно переписывать данные...
+   {
     Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
-//
-    F1->Master_Timer->Enabled = TRUE; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
-//
     return;
-   } // конец if( !memcmp( Addr,attrVar,strlen(attrVar) ) // сравнение по strlen(attrVar) символам
+   } // конец if( !memcmp( Addr,attrVar,strlen(attrVar) )
+//
+   if( Data == Mem_Data[i].Data ) // если записываемое значение равно уже существующему...
+   {
+    t_printf( "-\n-W- %s(): Обнаружена ситуация попытки переписи элемента данных %s тем же значением %.*e (%s)... -W-\n-",
+              __FUNC__, Mem_Data[i].Addr, Data, Get_Time_asLine());
+//    MessageBeep( MB_ICONASTERISK ); // предупреждение...
+    return;
+   }  // конец if( Data == Mem_Data[i].Data )
 //
    F1->Master_Timer->Enabled = FALSE; // выключили таймер
 //
@@ -1614,7 +1619,7 @@ Add_toData(int i_Set, char* aResult, REAL Data)
    strcat(tmp, "\n\nПереписать данные / оставить прежние значения / завершить выполнение программы ?\n");
    snprintf(tmp1,sizeof(tmp1), tmp, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data);
 //
-   int out = MessageDlg(tmp1, mtWarning, TMsgDlgButtons() << mbOK << mbCancel << mbAbort, 0);
+   int out = MessageDlg(tmp1, mtWarning, TMsgDlgButtons() << mbOK << mbCancel << mbAbort, 0); // выдали окно выбора дальнейших действий
 //
    switch (out) // принЯтие решения по коду возврАта из MessageDlg()...
    {
@@ -1622,7 +1627,7 @@ Add_toData(int i_Set, char* aResult, REAL Data)
                snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Data);
                mD->Cells[1][i+1] = tmp; // вЫвели в ОКНО_ДАННЫХ
                t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*e} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*e}. Данные перезапИсаны... -W-",
-                                __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
+                          __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
                Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
 //
                F1->Master_Timer->Enabled = TRUE; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
@@ -1631,7 +1636,7 @@ Add_toData(int i_Set, char* aResult, REAL Data)
 //
     case mrCancel: // отказаться от пЕреписи и сохранить предыдУщие значения
                t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*e} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*e}. Данные НЕ перезапИсаны... -W-",
-                                __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
+                          __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
 //
                F1->Master_Timer->Enabled = TRUE; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
 //
@@ -1640,19 +1645,20 @@ Add_toData(int i_Set, char* aResult, REAL Data)
     case mrAbort: // закончить выполнение программы...
                F1->Stop_Calculations(NULL);
 //
-               F1->Master_Timer->Enabled = TRUE; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
+               F1->Master_Timer->Enabled = FALSE; // выключили таймер...
 //
                return;
 //
    } // конец выбора по switch (случай нарушЕния концепции ЕДИНОКРАТНОГО ПРИВАИВАНИЯ)
+//
   } // конец if(!strcmp(Mem_Data[i].Addr, Addr))
 //
 // такой строки не существует... УРА!!! Можно добавлять ........................
 //
- if( Really_Data > 0.5*Max_Data ) // ранее информировать об опасности заполненности массива нет..!
+ if( Really_Data > 0.5*Max_Data ) // информировать об опасности заполненности массива..!
  {
   snprintf( tmp,sizeof(tmp), "Данные (%d%)", int( 1e2*Really_Data/Max_Data) );
-  F1->Label_Data->Caption = tmp; // число переменных
+  F1->Label_Data->Caption = tmp; // число адресов (имён) данных
   F1->Label_Data->Repaint();
  }
 //
@@ -1661,12 +1667,12 @@ Add_toData(int i_Set, char* aResult, REAL Data)
   if( flagAlarmData ) // надо выдавать сообщения...
   {
    t_printf( "-\n-W- %s(): память данных (%d) исчерпана, возможна потеря информации (%s)... -W-\n-",
-                    __FUNC__, Max_Data, Get_Time_asLine());
+              __FUNC__, Max_Data, Get_Time_asLine());
    ShowMessage( "Память данных исчерпана, при дальнейшей работе возможна потеря информации..." );
    MessageBeep( MB_ICONASTERISK ); // предупреждение...
 //
    flagAlarmData = FALSE;
-  } // после первого раза сообшения не выдабтся...
+  } // после первого раза сообшения не выдаётся...
 //  StopCalculations( 2 ); // выполнение программы невозможно
 //
    return;
@@ -1679,7 +1685,7 @@ Add_toData(int i_Set, char* aResult, REAL Data)
 //
 // успешно добавлено ...........................................................
  t_printf( "-I- %s(): данные {%.*e} (результат выполнения инструкции #%d) по адресу %s успешно добавлены в память данных (%s) -I-",
-                  __FUNC__, ACC_REAL, Data, i_Set, aResult, Get_Time_asLine());
+           __FUNC__, ACC_REAL, Data, i_Set, aResult, Get_Time_asLine());
 //
  mD->RowCount = Really_Data + 2; // обязательно 2 (чтобы при Really_Data=0 было 2, а не 1)
  snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Data);
