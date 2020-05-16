@@ -436,18 +436,19 @@ struct ip {
  {"PGE", 1,    1},
  {"PLE", 1,    1},
  {"PEQ", 1,    1}, //30
+ {"PNE", 1,    1},
  {"PGT", 1,    1},
  {"PLT", 1,    1},
 //
  {"PNT", 1,    1},
- {"POR", 2,    2},
- {"PAN", 2,    2}, // 35
+ {"POR", 2,    2}, // 35
+ {"PAN", 2,    2},
  {"PIM", 2,    2},
- {"PEV", 2,    2}, // 37
+ {"PEV", 2,    2}, // 38
 //
  {"PAP", 2,    2},
  {"PHS", 2,    2},
- {"PRM", 2,    2}, // 40
+ {"PRM", 2,    2}, // 41
  {"PXR", 2,    2},
 } ;
 int Count_Sets = sizeof(Set_Params) / sizeof(ip); // РЕАЛЬНОЕ число пар в массиве Instruction_Params[]
@@ -2708,6 +2709,14 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
 
 ////////////////////////////////////////////////////////////////////////////////
  else
+ if(!strcmp(Set, "PNE")) // это инструкция PNE
+ {
+  Result = ( Op1 != 0.0 ) ? 1.0 : 0.0 ;
+ }
+// конец выполнения инструкции PNE .............................................
+
+////////////////////////////////////////////////////////////////////////////////
+ else
  if(!strcmp(Set, "PGT")) // это инструкция PGT
  {
   Result = ( Op1 > 0.0 ) ? 1.0 : 0.0 ;
@@ -4870,6 +4879,7 @@ bool __fastcall is_Predicat(char* Set)
  if ( !strcmp( Set, "PGE" ) || // оператор PGE
       !strcmp( Set, "PLE" ) || // ...
       !strcmp( Set, "PEQ" ) ||
+      !strcmp( Set, "PNE" ) ||
       !strcmp( Set, "PGT" ) ||
       !strcmp( Set, "PLT" ) ||
       !strcmp( Set, "PNT" ) || // отрицание
