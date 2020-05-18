@@ -37,7 +37,9 @@ SET 2,  TWO  / 2 -> TWO
 SET 4,  FOUR / 4 -> FOUR
 SET -1, NEG_ONE / (-1) -> NEG_ONE
 /
-PGE D, IS_re / IS_re <- true if D>=0
+SET 0,ZERO
+/
+PGE D,ZERO, IS_re / IS_re <- true if D>=0
 /
 
 

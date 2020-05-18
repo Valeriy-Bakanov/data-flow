@@ -155,7 +155,7 @@ int    __fastcall Work_TimeSets_Protocol_IC();  // работаем с данными интенсивно
 int    __fastcall Work_TimeSets_Protocol_AIU(); // работаем с загруженностью АИУ (диаграмма Гантта)
 //
 void   __fastcall Finalize_Only_SET(int i_Set); // вызывается для завершения выполнения инструкции SET номер i_Set
-void   __fastcall Finalize_Exept_SET(int i_Proc); // вызывается для завершения выполнения инструкции на АИУ i_Proc
+void   __fastcall Finalize_Except_SET(int i_Proc); // вызывается для завершения выполнения инструкции на АИУ i_Proc
 void   __fastcall Delay_Vizu_Buffer(); // ждет Delay_Buffer миллисек для визуализации буфера
 //
 REAL   __fastcall Calc_ConnectedIndex(int Rule); // вычисление характеристик информационного графа программы
@@ -433,12 +433,12 @@ struct ip {
  {"CEL", 1,    2},
  {"RND", 2,  100},
 //
- {"PGE", 1,    1},
- {"PLE", 1,    1},
- {"PEQ", 1,    1}, //30
- {"PNE", 1,    1},
- {"PGT", 1,    1},
- {"PLT", 1,    1},
+ {"PGE", 2,    1}, // сравнение двух чисел
+ {"PLE", 2,    1},
+ {"PEQ", 2,    1}, //30
+ {"PNE", 2,    1},
+ {"PGT", 2,    1},
+ {"PLT", 2,    1},
 //
  {"PNT", 1,    1},
  {"POR", 2,    2}, // 35
@@ -2687,7 +2687,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  else
  if(!strcmp(Set, "PGE")) // это инструкция PGE
  {
-  Result = ( Op1 >= 0.0 ) ? 1.0 : 0.0 ;
+  Result = ( Op1 >= Op2 ) ? 1.0 : 0.0 ;
  }
 // конец выполнения инструкции PGE .............................................
 
@@ -2695,7 +2695,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  else
  if(!strcmp(Set, "PLE")) // это инструкция PLE
  {
-  Result = ( Op1 <= 0.0 ) ? 1.0 : 0.0 ;
+  Result = ( Op1 <= Op2 ) ? 1.0 : 0.0 ;
  }
 // конец выполнения инструкции PLE .............................................
 
@@ -2703,7 +2703,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  else
  if(!strcmp(Set, "PEQ")) // это инструкция PEQ
  {
-  Result = ( Op1 == 0.0 ) ? 1.0 : 0.0 ;
+  Result = ( Op1 == Op2 ) ? 1.0 : 0.0 ;
  }
 // конец выполнения инструкции PEQ .............................................
 
@@ -2711,7 +2711,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  else
  if(!strcmp(Set, "PNE")) // это инструкция PNE
  {
-  Result = ( Op1 != 0.0 ) ? 1.0 : 0.0 ;
+  Result = ( Op1 != Op2 ) ? 1.0 : 0.0 ;
  }
 // конец выполнения инструкции PNE .............................................
 
@@ -2719,7 +2719,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  else
  if(!strcmp(Set, "PGT")) // это инструкция PGT
  {
-  Result = ( Op1 > 0.0 ) ? 1.0 : 0.0 ;
+  Result = ( Op1 > Op2 ) ? 1.0 : 0.0 ;
  }
 // конец выполнения инструкции PGT .............................................
 
@@ -2727,7 +2727,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  else
  if(!strcmp(Set, "PLT")) // это инструкция PLT
  {
-  Result = ( Op1 < 0.0 ) ? 1.0 : 0.0 ;
+  Result = ( Op1 < Op2 ) ? 1.0 : 0.0 ;
  }
 // конец выполнения инструкции PLT .............................................
 
@@ -3409,13 +3409,13 @@ TF1::On_Master_Timer(TObject *Sender)
 //
    if( (localTick - Mem_Proc[i_Proc].tick_Start) >= dt_ticks ) // время выполнения инструкции вЫшло
    {
-    Finalize_Exept_SET( i_Proc ); // по результатам выполнения инструкции i_Proc
+    Finalize_Except_SET( i_Proc ); // по результатам выполнения инструкции i_Proc
     // устанавливает флаги готовности операндов у других инструкций и, если все операнды ГОТОВЫ,
     // добавляет ГОТОВУЮ инструкцию в буфер инсрукций для последующего выполнения
     localTickOfEndLastExecuteSet = localTick; // время окончания выполнения инструкции
    }
 // '>=' вместо '==' записано в целях избежания ошибок округления !!!!!!!!!!!!!!!
-// не следует опасаться повторного вызова Finalize_Exept_SET(i_Proc) - в этой процедуре
+// не следует опасаться повторного вызова Finalize_Except_SET(i_Proc) - в этой процедуре
 // при первом выполнении будет установлен флаг Mem_Proc[i_Proc].Busy = FALSE и сработает continue
 //
   } // конец цикла по АИУ
@@ -5023,7 +5023,7 @@ Finalize_Only_SET(int i_Set)
  bool s_isPredicat, // TRUE, если ВЫПОЛНИВШИЙСЯ оператор есть ПРЕДИКАТ
       isPredicat, // TRUE, если ЗАВИСИМЫЙ оператор ПРЕДИКАТ
       flagNot, // TRUE, если в ЗАВИСИМОМ операторе первый символ имени флага предиката "!" или "~"
-      flagPredicat, // TRUE, если в имени ЗАВИСИМОГО оператора есть переменная (ХХХ или !XXX или !XXX)
+      flagPredicat, // TRUE, если в имени ЗАВИСИМОГО оператора есть переменная (XXX или !XXX)
       flagPredicatTRUE; // TRUE, если в ЗАВИСИМОМ операторе флаг предиката TRUE (с учётом isNot)
 //
  if( !Regim ) // не выполнять - закончить счет ---------------------------------
@@ -5080,7 +5080,7 @@ Finalize_Only_SET(int i_Set)
         strcmp( aPredicat, falseLowerCase ) )  // И это НЕ статический false
    {
     if( flagNot ) // имя флага предиката НАЧИНАЕТСЯ с '!' или '~'
-     if( !strcmp( &aPredicat[1],aResult ) )
+     if( !strcmp( &aPredicat[1],aResult ) ) // начиная со второго символа...
       flagPredicat = TRUE;
 //
     if( !flagNot ) // имя флага предиката  НЕ НАЧИНАЕТСЯ с '!' или '~'
@@ -5138,6 +5138,7 @@ Finalize_Only_SET(int i_Set)
             } // конец if( !isPredicat )
 //
 // ----- обрабатываем случай, когда ЗАВИСИМЫЙ оператор суть предикат -----------
+/* таких случаев теперь НЕТ.....................................................
             if( isPredicat ) // ... этот оператор - предикат ...
             {
              if( !strcmp(Mem_Instruction[i].aOp1, aResult) ) // 1-й операнд ГОТОВ
@@ -5154,6 +5155,7 @@ Finalize_Only_SET(int i_Set)
 //
 // ---- добавляем в текст протокола --------------------------------------------
 //
+*/
             break; // конец обработки оператора с одним операндом + возможно, предиктор
 ////////////////////////////////////////////////////////////////////////////////
     case 2: // ----- два операнда + (возможно) предикат ------------------------
@@ -5195,13 +5197,34 @@ Finalize_Only_SET(int i_Set)
               Add_toBuffer(i); // добавить ГКВ-команду в буфер команд для исполнения
             } // конец if( !isPredictor )
 //
-// ----- если зависимый оператор - предикат, то его два операнда - флаги и могут устанавливаться
-// ----- только операторами - предикатами (оператор SET точно не может этого делать)
-// ----- поэтому блока if( isPredicat ) не пишем! ..............................
+// ----- обрабатываем случай ЗАВИСИМОЙ инструкции - ПРЕДИКАТА ------------------
+            if( isPredicat ) // ... предикат ...
+            {
+             if( !strcmp(Mem_Instruction[i].aOp1, aResult) ) // 1-й операнд ГОТОВ
+             {
+              Mem_Instruction[i].fOp1 = TRUE;
+              snprintf(tmp,sizeof(tmp), " %d(1|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+              mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
+             }
+//
+             if( !strcmp(Mem_Instruction[i].aOp2, aResult) ) // 2-й операнд ГОТОВ
+             {
+              Mem_Instruction[i].fOp2 = TRUE;
+              snprintf(tmp,sizeof(tmp), " %d(2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+              if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 )
+               { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
+              mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
+             }
+//
+             if( Mem_Instruction[i].fOp1 && // первый операнд ГОТОВ...
+                 Mem_Instruction[i].fOp2 && // второй операнд ГОТОВ...
+                 flagPredicatTRUE ) // ... и флаг предикатора есть TRUE
+              Add_toBuffer(i); // добавить ГКВ-команду в буфер команд для исполнения
+            } // конец if( isPredictor )
 //
             break; // конец обработки оператора с двумя операндами + возможно, предикат
 ////////////////////////////////////////////////////////////////////////////////
-   default: break;
+   default: break;  // кроме 1 или 2 операнда у оператора...
 //
    } // конец switch по числу операндов у i-того оператора ---------------------
 //
@@ -5253,7 +5276,7 @@ void __fastcall TF1::Save_Data(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // вызывается для завершения выполнения инструкции на АИУ i_Proc
-Finalize_Exept_SET(int i_Proc)
+Finalize_Except_SET(int i_Proc)
 {
 // устанавливаются флаги готовности у входных операндов иных инструкций, зависящих
 // по входным операндам от результата выполнения данной на АИУ номер i_Proc
@@ -5264,7 +5287,7 @@ Finalize_Exept_SET(int i_Proc)
  bool s_isPredicat, // TRUE, если ВЫПОЛНИВШИЙСЯ оператор есть ПРЕДИКАТ
       isPredicat, // TRUE, если ЗАВИСИМЫЙ оператор ПРЕДИКАТ
       flagNot, // TRUE, если в ЗАВИСИМОМ операторе первый символ имени флага предиката "!" или "~"
-      flagPredicat, // TRUE, если в имени ЗАВИСИМОГО оператора есть переменная (ХХХ или !XXX или !XXX)
+      flagPredicat, // TRUE, если в имени ЗАВИСИМОГО оператора есть переменная (XXX или !XXX)
       flagPredicatTRUE; // TRUE, если в ЗАВИСИМОМ операторе флаг предиката TRUE (с учётом isNot)
 //
  if( !Regim ) // не выполнять - закончить счет ---------------------------------
@@ -5328,7 +5351,7 @@ Finalize_Exept_SET(int i_Proc)
        strcmp( aPredicat, falseLowerCase ) )  // И это НЕ статический false
    {
     if( flagNot ) // имя начинается с '!' или '~'
-     if( !strcmp( &aPredicat[1],aResult ) )
+     if( !strcmp( &aPredicat[1],aResult ) )  // начиная со второго символа...
       flagPredicat = TRUE;
 //
     if( !flagNot ) // имя Не начинается с '!' или '~'
@@ -5389,6 +5412,7 @@ Finalize_Exept_SET(int i_Proc)
               Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
             } // конец if( !s_isPredicat && !isPredicat )
 //
+/* такого теперь не бывает......................................................
 // ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (1 операнд) ...
             if( !s_isPredicat && isPredicat )
             {
@@ -5402,6 +5426,7 @@ Finalize_Exept_SET(int i_Proc)
              if( Mem_Instruction[i].fOp1 ) // первый операнд предиката ГОТОВ... у предиката нет предиката
               Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
             } // конец if( !s_isPredicat && isPredicat )
+*/
 //
 // ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (1 операнд) ...
             if( s_isPredicat && !isPredicat )
@@ -5433,13 +5458,10 @@ Finalize_Exept_SET(int i_Proc)
                  flagPredicatTRUE ) // значение флага ПРЕДИКАТА
              {
               Mem_Instruction[i].fPredicatTRUE = TRUE; // установили флаг ПРЕДИКAТ_ИСТИНЕН
-//if( i_Set == 215 ) t_printf( "\n43) %d/%s %d/%s Result=%f |aResult=\'%s\'|\n", i_Set,Mem_Instruction[i_Set].Set, i,Mem_Instruction[i].Set, Result, aResult );
               snprintf(tmp,sizeof(tmp), " %d(PredTRUE|1)", i);
-//if( i_Set == 215 ) t_printf( "\n44) %d/%s %d/%s Result=%f |aResult=\'%s\'|\n", i_Set,Mem_Instruction[i_Set].Set, i,Mem_Instruction[i].Set, Result, aResult );
               strcat(str, tmp); // флаг TRUE предиката
               mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
              }
-//if( i_Set == 215 ) t_printf( "\n45) %d/%s %d/%s Result=%f |aResult=\'%s\'|\n", i_Set,Mem_Instruction[i_Set].Set, i,Mem_Instruction[i].Set, Result, aResult );
 //
              if( Mem_Instruction[i].fOp1 && // 1-й операнд ГОТОВ...
                  Mem_Instruction[i].fPredicatTRUE ) // ... и флаг предиката есть TRUE
@@ -5487,9 +5509,29 @@ Finalize_Exept_SET(int i_Proc)
 //
             } // конец if( !s_isPredicat && !isPredicat )
 //
-// ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ  (2 операнда) ...
-//            if( !s_isPredicat && isPredicat )
-//             break; // ... оператор - НЕ ПРЕДИКАТ не может изменять операнды у оператора - ПРЕДИКАТА
+// ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (2 операнда) ...
+            if( !s_isPredicat && isPredicat )
+            {
+             if( !strcmp(Mem_Instruction[i].aOp1, aResult) ) // 1-й операнд ГОТОВ
+             {
+              Mem_Instruction[i].fOp1 = TRUE;
+              snprintf(tmp,sizeof(tmp), " %d(1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+              mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
+             }
+//
+             if( !strcmp(Mem_Instruction[i].aOp2,aResult) ) // 2-й операнд ГОТОВ
+             {
+              Mem_Instruction[i].fOp2 = TRUE;
+              snprintf(tmp,sizeof(tmp), " %d(2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+              if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 )
+               { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
+              mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
+             }
+//
+             if( Mem_Instruction[i].fOp1 && // первый операнд предиката ГОТОВ... у предиката нет предиката
+                 Mem_Instruction[i].fOp2 )  // второй операнд ГОТОВ...
+              Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+            } // конец if( !s_isPredicat && isPredicat )
 //
 // ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (2 операнда) ...
             if( s_isPredicat && !isPredicat )
@@ -5507,8 +5549,8 @@ Finalize_Exept_SET(int i_Proc)
 //
             } // конец if( s_isPredicat && !isPredicat )
 //
-// ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (2 операнда) ...
-            if( s_isPredicat && isPredicat )
+// ----- ВЫПОЛНИВШИЙСЯ оператор - не ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (2 операнда) ...
+            if( !s_isPredicat && isPredicat )
             {
              if( !strcmp(Mem_Instruction[i].aOp1,aResult) ) // 1-й операнд ГОТОВ
              {
@@ -5531,11 +5573,11 @@ Finalize_Exept_SET(int i_Proc)
              if( Mem_Instruction[i].fOp1 && // первый операнд ГОТОВ...
                  Mem_Instruction[i].fOp2 )  // второй операнд ГОТОВ...
               Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
-            } // конец if( s_isPredicat && isPredicat )
+            } // конец if( !s_isPredicat && isPredicat )
 //
             break; // конец обработки оператора с двумя операндами + возможно, предикат
-//
-   default: break;
+////////////////////////////////////////////////////////////////////////////////
+   default: break; // кроме 1 или 2 операнда у оператора...
 //
    } // конец switch по числу операндов у i-того оператора ---------------------
 //
@@ -5583,7 +5625,7 @@ Finalize_Exept_SET(int i_Proc)
 //
  Vizu_Flow_Exec(); // визуализация процента исполненных инструкций
 //
-} // --- конец Finalize_Exept_SET ----------------------------------------------
+} // --- конец Finalize_Except_SET ---------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -5972,7 +6014,7 @@ void __fastcall Save_IGA()
 // очищаем от лидирующих '!' или '~'
    if( flagPredicat ) // не true/false
     if( flagNot )
-     strcpy( aPredicat, &Mem_Instruction[j].aPredicat[1] );
+     strcpy( aPredicat, &Mem_Instruction[j].aPredicat[1] ); // начиная со второго символа...
 //
    if( !strcmp( Mem_Instruction[j].aOp1, aResult ) || // c Result совпало имя первого операнда...
        !strcmp( Mem_Instruction[j].aOp2, aResult ) || // c Result совпало имя второго операнда...
@@ -6210,6 +6252,7 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  SBM0->Text = " Все файлы протоколов сохранены...";
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
+
 
 
 
