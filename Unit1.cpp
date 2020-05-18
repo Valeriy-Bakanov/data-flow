@@ -154,8 +154,8 @@ float  __fastcall Calc_03_Param_Instruction(int i_Set); // вычиcляет ПОЛЕЗНОСТЬ 
 int    __fastcall Work_TimeSets_Protocol_IC();  // работаем с данными интенсивности вычислений
 int    __fastcall Work_TimeSets_Protocol_AIU(); // работаем с загруженностью АИУ (диаграмма Гантта)
 //
-void   __fastcall FinalizeOnlySET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int i_Set); // вызывается для выполнения инструкции SET номер i_Set
-void   __fastcall FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int i_Proc); // вызывается для завершения выполнения инструкции на АИУ i_Proc
+void   __fastcall Finalize_Only_SET(int i_Set); // вызывается для завершения выполнения инструкции SET номер i_Set
+void   __fastcall Finalize_Exept_SET(int i_Proc); // вызывается для завершения выполнения инструкции на АИУ i_Proc
 void   __fastcall Delay_Vizu_Buffer(); // ждет Delay_Buffer миллисек для визуализации буфера
 //
 REAL   __fastcall Calc_ConnectedIndex(int Rule); // вычисление характеристик информационного графа программы
@@ -2217,9 +2217,9 @@ Primary_Init_Data()
  for( ULI i=0; i<Really_Set; i++ ) // цикл по всем инструкциям в Mem_Instruction .......
   {
    if( is_SET( Mem_Instruction[i].Set ) ) // это "безАдресный" SET......................
-    FinalizeOnlySET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions( i ); // обрабатывается не АИУ, а ВХОДНЫМ КОММУНИКАТОРОМ
+    Finalize_Only_SET( i ); // обрабатывается не АИУ, а ВХОДНЫМ КОММУНИКАТОРОМ
 //
-// вызов FinalizeOnlySET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions выполняет инструкцию i_Set (добавляет соотв. строку в
+// вызов Finalize_Only_SET выполняет инструкцию i_Set (добавляет соотв. строку в
 // Mem_Data, устанавливает флаг "выполнено" у данной инструкции, сканирует Mem_Instruction
 // по всем инструкциям на наличие в списке операндов тольо что внесенного в Mem_Data)
 //
@@ -3409,13 +3409,13 @@ TF1::On_Master_Timer(TObject *Sender)
 //
    if( (localTick - Mem_Proc[i_Proc].tick_Start) >= dt_ticks ) // время выполнения инструкции вЫшло
    {
-    FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions( i_Proc ); // по результатам выполнения инструкции i_Proc
+    Finalize_Exept_SET( i_Proc ); // по результатам выполнения инструкции i_Proc
     // устанавливает флаги готовности операндов у других инструкций и, если все операнды ГОТОВЫ,
     // добавляет ГОТОВУЮ инструкцию в буфер инсрукций для последующего выполнения
     localTickOfEndLastExecuteSet = localTick; // время окончания выполнения инструкции
    }
 // '>=' вместо '==' записано в целях избежания ошибок округления !!!!!!!!!!!!!!!
-// не следует опасаться повторного вызова FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(i_Proc) - в этой процедуре
+// не следует опасаться повторного вызова Finalize_Exept_SET(i_Proc) - в этой процедуре
 // при первом выполнении будет установлен флаг Mem_Proc[i_Proc].Busy = FALSE и сработает continue
 //
   } // конец цикла по АИУ
@@ -4879,7 +4879,7 @@ bool __fastcall is_Predicat(char* Set)
  if ( !strcmp( Set, "PGE" ) || // оператор PGE
       !strcmp( Set, "PLE" ) || // ...
       !strcmp( Set, "PEQ" ) ||
-      !strcmp( Set, "PNE" ) ||
+      !strcmp( Set, "PNE" ) || // ...
       !strcmp( Set, "PGT" ) ||
       !strcmp( Set, "PLT" ) ||
       !strcmp( Set, "PNT" ) || // отрицание
@@ -5012,7 +5012,7 @@ void __fastcall TF1::F1_OnKeyUp(TObject *Sender, WORD &Key,
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall
-FinalizeOnlySET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int i_Set)
+Finalize_Only_SET(int i_Set)
 { // выполнение инструкции SET номер i_Set
 // предполагается, что это мгновенно (время учитывать не надо)..................
 // инструкция SET выполняется НЕ ПРОЦЕССОРОМ, а ВХОДНЫМ коммуникатором !!!
@@ -5223,7 +5223,7 @@ FinalizeOnlySET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int i_
 //
  Vizu_Flow_Exec(); // визуализация процента исполненных инструкций
 //
-} // ----- конец FinalizeOnlySET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions
+} // ----- конец Finalize_Only_SET ---------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -5253,7 +5253,7 @@ void __fastcall TF1::Save_Data(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // вызывается для завершения выполнения инструкции на АИУ i_Proc
-FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int i_Proc)
+Finalize_Exept_SET(int i_Proc)
 {
 // устанавливаются флаги готовности у входных операндов иных инструкций, зависящих
 // по входным операндам от результата выполнения данной на АИУ номер i_Proc
@@ -5337,7 +5337,7 @@ FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int 
    }
 //
 //--- теперь определяем значение Result на true или false и окончательно -------
-//--- (с учётом статических true/false) устанавливаем flagPredicatTrue --------
+//--- (с учётом статических true/false) устанавливаем flagPredicatTrue ---------
 //
    flagPredicatTRUE = FALSE; // начальная установка
    if( flagPredicat ) // переменная-предиктор определена, но значение ещё неизвестно
@@ -5360,7 +5360,7 @@ FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int 
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-   switch( Get_CountOperandsByInstruction( Set ) ) // ... число входных операндов инструкции Set
+   switch( Get_CountOperandsByInstruction( Set ) ) // !!! число входных операндов инструкции Set
    {
     case 1: // ----- один операнд + (возможно) предикат ------------------------
 // ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (1 операнд) ...
@@ -5583,7 +5583,7 @@ FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions(int 
 //
  Vizu_Flow_Exec(); // визуализация процента исполненных инструкций
 //
-} // --- конец FinalizeExceptSET_DetectReadyForRun_AddToBuffer_AttemptExecMax_Instructions
+} // --- конец Finalize_Exept_SET ----------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
