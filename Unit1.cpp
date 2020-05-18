@@ -5198,6 +5198,7 @@ Finalize_Only_SET(int i_Set)
             } // конец if( !isPredictor )
 //
 // ----- обрабатываем случай ЗАВИСИМОЙ инструкции - ПРЕДИКАТА ------------------
+//            else // так "КРАСИВШЕ" с точки зрения синтаксиса языка, но ЛОГИЧНЕЕ - см. след. строку...
             if( isPredicat ) // ... предикат ...
             {
              if( !strcmp(Mem_Instruction[i].aOp1, aResult) ) // 1-й операнд ГОТОВ
@@ -5446,13 +5447,14 @@ Finalize_Except_SET(int i_Proc)
 // ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (1 операнд) ...
             if( !s_isPredicat && !isPredicat )
             {
-//             if( !strcmp(Mem_Instruction[i].aOp1,aResult) ) // 1-й операнд ГОТОВ
-//             {
-//              Mem_Instruction[i].fOp1 = TRUE;
-//              snprintf(tmp,sizeof(tmp), " %d(1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
-//              mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
-//             }
-//
+/*
+             if( !strcmp(Mem_Instruction[i].aOp1,aResult) ) // 1-й операнд ГОТОВ
+             {
+              Mem_Instruction[i].fOp1 = TRUE;
+              snprintf(tmp,sizeof(tmp), " %d(1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+              mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
+             }
+*/
 //----- если эта инструкция-НЕ ПРЕДИКАТ, надо проверить флаг (и его значение) поля предиката
              if( !flagPredicat && // это инструкция НЕ ПРЕДИКАТ
                  flagPredicatTRUE ) // значение флага ПРЕДИКАТА
