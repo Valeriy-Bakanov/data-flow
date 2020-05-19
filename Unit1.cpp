@@ -1018,188 +1018,6 @@ void __fastcall Write_Config()  // сохраняет данные в файл конфигурации
 //
 } // --- конец Write_Config ----------------------------------------------------
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-bool __fastcall Read_Instructions()
-{ // читаем инструкции из файла FileNameSets в массив структур Mem->Set[]
- FILE *fptr; // указатель на структуру ФАЙЛ
- char str[_512], // строка для считывания и расшифровки инструкций
-      tmp[_512], // рабочая строка
-      Set[_SET_LEN], // мнемоника инструкции
-//      aPredicat[_SET_LEN], // поле предиктора
-      *p;
- bool flagPredicate; // TRUE если в операторе допустимо поле предиката
-//
-  RunPreProcessor(); // обработать препроцессором
-//
- if(!(fptr = fopen(FileNameSetPrP, "r"))) // файл ПОСЛЕ ПРЕПРОЦЕССОРА открыть не удалось...
- {
-  return FALSE ;
- }
-
- snprintf( tmp,sizeof(tmp), " Загружен файл %s [*%s]", ExtractFileName(FileNameSet), ExtPrP ); // вывод в строку статуса
- SBM2->Text = tmp;
-
-////////////////////////////////////////////////////////////////////////////////
-
- for(UI i=0; i<Max_Instruction; i++) // по строкам инструкций
-  {
-   if(fgets(str, sizeof(str), fptr) == NULL) // читаем строку из fptr
-    break; // если строки кончились, функция fgets возвращает NULL
-
-   if(str[strlen(str)-1] == 10) // если в конце символ новой строки (10) в десятичной)...
-    str[strlen(str)-1] = ' ';   // ... то заменим на пробел !
-//
-// ----- все Tab в строке str заменяем на пробелы ------------------------------
-   for( int i=0; i<strlen(str); i++ ) // по всем символам строки...
-    if( str[i] == VK_TAB ) // если i-тый символ есть Tab (9/0x9)...
-     str[i] = VK_SPACE; // то заменяем его на пробел (32/0x20) !
-//
-   DelSpacesTabsAround( str ); // чистка строки str от лидирующих и терминирующих пробелов ......
-//
-   if( p = strstr( str, startComments_1 ) ) // если в str найдена "\"...
-    str[p-str] = startComments_2[0] ; // заменяем на ";" // далее работаем с ";"
-//
-   if( !strlen(str) ) // если длина строки нулевая - просто пропускаем ее !
-   {
-    i -- ; // строку пропускаем
-    continue;
-   }
-//
-   if( str[0] == startComments_2[0] ) // если строка начинается с ";" - просто пропускаем её !..
-   {
-    i -- ; // строку пропускаем
-    continue;
-   }
-//
-// начали разборку (parsing) строки инструкции /////////////////////////////////
-//
-   if( !strpbrk(str,startComments_2) ) // если ";" в строке нет!
-    strcpy(Mem_Instruction[i].Comment, " "); // значит, комментарий пустой....
-   else
-   {
-    strcpy(Mem_Instruction[i].Comment, strstr(str,startComments_2)); // все что за ";" - суть комментарий
-    Mem_Instruction[i].Comment[0] = ' '; // заменяем ";" пробелом
-    DelSpacesTabsAround( Mem_Instruction[i].Comment ); // избавляемся от лидирующих и конечных пробелов
-   }
-//
-   strtok(str,startComments_2); // комментарий (вместе с ";") убрали !
-   DelSpacesTabsAround(str); // "справа" могли остаться пробелы...
-   strcat(str, " "); // добавили 1 пробел на всякий случай (для последующей разборки)
-//
-   p = strtok(str, " "); // "выкусываем" мнемонику команды
-//
-   strcpy(Set, AnsiUpperCase(p).c_str()); // запомнили мнемонику в Set (AnsiUpperCase работает с латиницей)
-   strcpy(Mem_Instruction[i].Set, Set); // запомнили мнемонику инструкции в Mem_Sets[]
-//
-// ---- случаи !false, ~false, !true, ~true в поле предиката--------------------
-//
-////////////////////////////////////////////////////////////////////////////////
-   flagPredicate = !is_Predicat( Set ); // TRUE если в операторе допустимо поле предиката
-////////////////////////////////////////////////////////////////////////////////
-//
-   switch( Get_CountOperandsByInstruction( Set ) ) // число входных операндов инструкции Set
-   {
-    case 1: p = strtok(NULL, ", "); // адрес единственного операнда aOp1.........
-//            strcpy(Mem_Instruction[i].aOp1, p);
-            p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aOp1);
-            strcpy(Mem_Instruction[i].aOp2, ""); // очистка ОБЯЗАТЕЛЬНА !!!
-
-            p = strtok(NULL, ", "); // адрес результата aResult ................
-//            strcpy(Mem_Instruction[i].aResult, p);
-            p ? strcpy(Mem_Instruction[i].aResult, p) : strcpy(Mem_Instruction[i].aResult, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aResult);
-//
-            if( flagPredicate ) // поле предиката возможно
-            {
-             p = strtok(NULL, " "); // адрес флага предиката aPredicate.........
-//
-             p ? strcpy(Mem_Instruction[i].aPredicat, p) : strcpy(Mem_Instruction[i].aPredicat, "true");
-// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
-             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 || Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
-             {
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
-               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
-//
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
-               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
-             }
-//
-// ---- конец  случаев !false, ~false, !true, ~true в поле предиката -----------
-//
-            if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase) )  strcpy(Mem_Instruction[i].aPredicat, trueLowerCase);
-            if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase) ) strcpy(Mem_Instruction[i].aPredicat, falseLowerCase);
-            }
-//
-             Mem_Instruction[i].fExecOut   = FALSE;
-             Mem_Instruction[i].fAddBuffer = FALSE;
-//
-             break;
-
-    case 2: p = strtok(NULL, ", "); // адрес первого операнда aOp1...............
-//            strcpy(Mem_Instruction[i].aOp1, p);
-            p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aOp1);
-
-            p = strtok(NULL, ", "); // адрес второго операнда aOp2...............
-//            strcpy(Mem_Instruction[i].aOp2, p);
-            p ? strcpy(Mem_Instruction[i].aOp2, p) : strcpy(Mem_Instruction[i].aOp2, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aOp2);
-
-            p = strtok(NULL, ", "); // адрес результата aResult .................
-//            strcpy(Mem_Instruction[i].aResult, p);
-            p ? strcpy(Mem_Instruction[i].aResult, p) : strcpy(Mem_Instruction[i].aResult, notDefined);
-// предыдущий оператор выбрасывает исключение в случае оператора SUB y08(07), temp_02
-// вместо правильного SUB y08(07), temp_02, temp_03 ... ПРАВИТЬ!!! Ситуация - нет поля РЕЗУЛЬТАТ
-            DelSpacesTabsAround(Mem_Instruction[i].aResult);
-//
-            if( flagPredicate ) // поле предиката возможно
-            {
-             p = strtok(NULL, " "); // адрес флага предиката aPredicate..........
-//             if( p ) strcpy(Mem_Instruction[i].aPredicate, p);
-//             else    strcpy(Mem_Instruction[i].aPredicate, "true");
-             p ? strcpy(Mem_Instruction[i].aPredicat, p) : strcpy(Mem_Instruction[i].aPredicat, "true");
-//
-// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
-             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 || Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
-             {
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
-               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
-//
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
-               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
-             }
-//
-             if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase ) )  strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
-             if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase ) ) strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
-            }
-//
-             Mem_Instruction[i].fExecOut   = FALSE;
-             Mem_Instruction[i].fAddBuffer = FALSE;
-//
-             break;
-//
-   default: return TRUE;
-
-   } // конец switch...
-//
-//..............................................................................
-   if( !is_SET( Mem_Instruction[i].Set ) ) // если это НЕ инструкция SET
-    bool flag = Test_aResult_Eq_aOperand(i); // тестирование на совпадение адреса результата с адресами операндов
-//..............................................................................
-//
-   Really_Set = i + 1 ; // реальное число инструкций (на 1 больше, ибо счет i с нуля)
-//
-  } // конец цикла по строкам в файле FileNameSets
-//
- fclose(fptr);
-//
- Vizu_Sets(); // визуализировать пул инструкций
-//
- return TRUE ;
-//
-} // конец Read_Instructions -----------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -6255,6 +6073,200 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+bool __fastcall Read_Instructions()
+{ // читаем инструкции из файла FileNameSets в массив структур Mem->Set[]
+ FILE *fptr; // указатель на структуру ФАЙЛ
+ char str[_1024], // строка для считывания и расшифровки инструкций
+      tmp[_512], // рабочая строка
+      Set[_SET_LEN], // мнемоника инструкции
+      *p, *p1,*p2;
+ bool flagPredicate; // TRUE если в операторе допустимо поле предиката
+//
+  RunPreProcessor(); // обработать препроцессором
+//
+ if(!(fptr = fopen(FileNameSetPrP, "r"))) // файл ПОСЛЕ ПРЕПРОЦЕССОРА открыть не удалось...
+ {
+  return FALSE ;
+ }
+//
+ snprintf( tmp,sizeof(tmp), " Загружен файл %s [*%s]", ExtractFileName(FileNameSet), ExtPrP ); // вывод в строку статуса
+ SBM2->Text = tmp;
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+ for(UI i=0; i<Max_Instruction; i++) // по строкам инструкций
+  {
+   if(fgets(str, sizeof(str), fptr) == NULL) // читаем строку из fptr
+    break; // если строки кончились, функция fgets возвращает NULL
+
+   if(str[strlen(str)-1] == 10) // если в конце символ новой строки (10) в десятичной)...
+    str[strlen(str)-1] = ' ';   // ... то заменим на пробел !
+//
+// ----- все Tab в строке str заменяем на пробелы ------------------------------
+   for( int i=0; i<strlen(str); i++ ) // по всем символам строки...
+    if( str[i] == VK_TAB ) // если i-тый символ есть Tab (9/0x9)...
+     str[i] = VK_SPACE; // то заменяем его на пробел (32/0x20) !
+//
+   DelSpacesTabsAround( str ); // чистка строки str от лидирующих и терминирующих пробелов
+//
+   if( !strlen(str) || // если длина строки нулевая...
+       str[0]==startComments_1[0] || // или строка начинается с "/"...
+       str[0]==startComments_2[0] ) // или строка начинается с ";"...
+    {
+     i -- ; // строку пропускаем...!
+     continue;
+    }
+//
+   if( str[strlen(str)-1]!=startComments_1[0] || // если в конце строки не "/"...
+       str[strlen(str)-1]!=startComments_2[0] )  // или не ";"...
+    {
+     strcat( str, " " ); // добавляем " " (пробел)
+     strcat( str, startComments_2 ); // добавляем ";"
+    }
+//
+   p1=strstr(str,startComments_1); // указ. на первый символ "/" (если не найден - на посл. символ строки)
+   p2=strstr(str,startComments_2); // ...первый символ ";"
+//
+   if( p1 < p2 ) // если символ "/" встретился ранее ";"...
+//    tестественный вариант str[p1-str] = startComments_2[0]; почему-то выдаёт
+//    ошибку на СТАДИИ ВЫПОЛНЕНИЯ... будем разбираться!!!
+    for( UI j=0; j<strlen(str); j++ ) // вдоль строки str
+     if( str[j] == startComments_1[0] )
+     {
+      str[j] = startComments_2[0];
+      break;
+     } // конец if( str[j] == startComments_1[0] )
+//
+// начали разборку (parsing) строки инструкции /////////////////////////////////
+//
+   if( !strpbrk(str,startComments_2) ) // если ";" в строке нет!
+    strcpy(Mem_Instruction[i].Comment, " "); // значит, комментарий пустой....
+   else
+   {
+    strcpy(Mem_Instruction[i].Comment, strstr(str,startComments_2)); // все что за ";" - суть комментарий
+    Mem_Instruction[i].Comment[0] = ' '; // заменяем ";" пробелом
+    DelSpacesTabsAround( Mem_Instruction[i].Comment ); // избавляемся от лидирующих и конечных пробелов
+   }
+//
+   strtok(str,startComments_2); // комментарий (вместе с ";") убрали !
+   DelSpacesTabsAround(str); // "справа" могли остаться пробелы...
+   strcat(str, " "); // добавили 1 пробел на всякий случай (для последующей разборки)
+//
+   p = strtok(str, " "); // "выкусываем" мнемонику команды
+//
+   strcpy(Set, AnsiUpperCase(p).c_str()); // запомнили мнемонику в Set (AnsiUpperCase работает с латиницей)
+   strcpy(Mem_Instruction[i].Set, Set); // запомнили мнемонику инструкции в Mem_Sets[]
+//
+// ---- случаи !false, ~false, !true, ~true в поле предиката--------------------
+//
+////////////////////////////////////////////////////////////////////////////////
+   flagPredicate = !is_Predicat( Set ); // TRUE если в операторе допустимо поле предиката
+////////////////////////////////////////////////////////////////////////////////
+//
+   switch( Get_CountOperandsByInstruction( Set ) ) // число входных операндов инструкции Set
+   {
+    case 1: p = strtok(NULL, ", "); // адрес единственного операнда aOp1.........
+//            strcpy(Mem_Instruction[i].aOp1, p);
+            p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
+            DelSpacesTabsAround(Mem_Instruction[i].aOp1);
+            strcpy(Mem_Instruction[i].aOp2, ""); // очистка ОБЯЗАТЕЛЬНА !!!
+
+            p = strtok(NULL, ", "); // адрес результата aResult ................
+//            strcpy(Mem_Instruction[i].aResult, p);
+            p ? strcpy(Mem_Instruction[i].aResult, p) : strcpy(Mem_Instruction[i].aResult, notDefined);
+            DelSpacesTabsAround(Mem_Instruction[i].aResult);
+//
+            if( flagPredicate ) // поле предиката возможно
+            {
+             p = strtok(NULL, " "); // адрес флага предиката aPredicate.........
+//
+             p ? strcpy(Mem_Instruction[i].aPredicat, p) : strcpy(Mem_Instruction[i].aPredicat, "true");
+// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
+             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 || Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
+             {
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
+               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
+//
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
+               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
+             }
+//
+// ---- конец  случаев !false, ~false, !true, ~true в поле предиката -----------
+//
+            if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase) )  strcpy(Mem_Instruction[i].aPredicat, trueLowerCase);
+            if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase) ) strcpy(Mem_Instruction[i].aPredicat, falseLowerCase);
+            }
+//
+             Mem_Instruction[i].fExecOut   = FALSE;
+             Mem_Instruction[i].fAddBuffer = FALSE;
+//
+             break;
+
+    case 2: p = strtok(NULL, ", "); // адрес первого операнда aOp1...............
+//            strcpy(Mem_Instruction[i].aOp1, p);
+            p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
+            DelSpacesTabsAround(Mem_Instruction[i].aOp1);
+
+            p = strtok(NULL, ", "); // адрес второго операнда aOp2...............
+//            strcpy(Mem_Instruction[i].aOp2, p);
+            p ? strcpy(Mem_Instruction[i].aOp2, p) : strcpy(Mem_Instruction[i].aOp2, notDefined);
+            DelSpacesTabsAround(Mem_Instruction[i].aOp2);
+
+            p = strtok(NULL, ", "); // адрес результата aResult .................
+//            strcpy(Mem_Instruction[i].aResult, p);
+            p ? strcpy(Mem_Instruction[i].aResult, p) : strcpy(Mem_Instruction[i].aResult, notDefined);
+// предыдущий оператор выбрасывает исключение в случае оператора SUB y08(07), temp_02
+// вместо правильного SUB y08(07), temp_02, temp_03 ... ПРАВИТЬ!!! Ситуация - нет поля РЕЗУЛЬТАТ
+            DelSpacesTabsAround(Mem_Instruction[i].aResult);
+//
+            if( flagPredicate ) // поле предиката возможно
+            {
+             p = strtok(NULL, " "); // адрес флага предиката aPredicate..........
+//             if( p ) strcpy(Mem_Instruction[i].aPredicate, p);
+//             else    strcpy(Mem_Instruction[i].aPredicate, "true");
+             p ? strcpy(Mem_Instruction[i].aPredicat, p) : strcpy(Mem_Instruction[i].aPredicat, "true");
+//
+// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
+             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 || Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
+             {
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
+               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
+//
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
+               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
+             }
+//
+             if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase ) )  strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
+             if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase ) ) strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
+            }
+//
+             Mem_Instruction[i].fExecOut   = FALSE;
+             Mem_Instruction[i].fAddBuffer = FALSE;
+//
+             break;
+//
+   default: return TRUE;
+
+   } // конец switch...
+//
+//..............................................................................
+   if( !is_SET( Mem_Instruction[i].Set ) ) // если это НЕ инструкция SET
+    bool flag = Test_aResult_Eq_aOperand(i); // тестирование на совпадение адреса результата с адресами операндов
+//..............................................................................
+//
+   Really_Set = i + 1 ; // реальное число инструкций (на 1 больше, ибо счет i с нуля)
+//
+  } // конец цикла по строкам в файле FileNameSets
+//
+ fclose(fptr);
+//
+ Vizu_Sets(); // визуализировать пул инструкций
+//
+ return TRUE ;
+//
+} // конец Read_Instructions -----------------------------------------------------------
 
 
 

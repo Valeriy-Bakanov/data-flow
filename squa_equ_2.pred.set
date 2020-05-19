@@ -18,8 +18,8 @@ SUB BB, AC4, D / BB - AC4 -> D[iskriminant]
 SQR D, sqrt_D, IS_re / sqrt(D) -> sqrt_D
 ADD B_NEG, sqrt_D, W1, IS_re / B_NEG + D_SQRT -> W1
 SUB B_NEG, sqrt_D, W2, IS_re / B_NEG - D_SQRT -> W2
-DIV W1, A2, re_X1, IS_re / W1 / A2 -> re_X1 // #9  | #109
-DIV W2, A2, re_X2, IS_re / W2 / A2 -> re_X2 // #10 | #110 
+DIV W1, A2, re_X1, IS_re / W1/A2 -> re_X1 // #9  | #109
+DIV W2, A2, re_X2, IS_re / W2/A2 -> re_X2 // #10 | #110 
 /
 MUL D, NEG_ONE, NEG_D, !IS_re / NEG_ONE x D -> NEG_D
 SQR NEG_D, sqrt_D, !IS_re / sqrt(NEG_D) -> sqrt_D

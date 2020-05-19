@@ -14,19 +14,18 @@ SQR D, sqrt_D ; sqrt(D) -> sqrt_D
 /
 ADD B_NEG, sqrt_D, W1 ; B_NEG + sqrt_D -> W1
 SUB B_NEG, sqrt_D, W2 ; B_NEG - sqrt_D -> W2
-DIV W1, A2, X1 ; W1 / A2 -> X1 // #9  | #109
-DIV W2, A2, X2 ; W2 / A2 -> X2 // #10 | #110 
+DIV W1, A2, X1 ; W1/A2 -> X1 // #9  | #109
+DIV W2, A2, X2 / W2/A2 -> X2 // #10 | #110 
 /
 SET 1.0, A ; 1.0 -> A
 SET 7.0, B ; 7.0 -> B
 SET 3.0, C ; 3.0 -> C
 /
-SET 2,  TWO  / 2 -> TWO
-SET 4,  FOUR / 4 -> FOUR
-SET -1, NEG_ONE / (-1) -> NEG_ONE
+SET 2,  TWO  ; 2 -> TWO
+SET 4,  FOUR ; 4 -> FOUR
+SET -1, NEG_ONE ; (-1) -> NEG_ONE
 
-/ ADD A1,A,AAA
-/ SQR NEG_ONE, aaaa
+
 
 
 
