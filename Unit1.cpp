@@ -6126,19 +6126,11 @@ bool __fastcall Read_Instructions()
      strcat( str, startComments_2 ); // добавл€ем ";"
     }
 //
-   p1=strstr(str,startComments_1); // указ. на первый символ "/" (если не найден - на посл. символ строки)
+   p1=strstr(str,startComments_1); // указ. на первый символ "/" (если не найден - 0 )
    p2=strstr(str,startComments_2); // ...первый символ ";"
 //
-   if( p1 < p2 ) // если символ "/" встретилс€ ранее ";"...
-//    tестественный вариант str[p1-str] = startComments_2[0]; почему-то выдаЄт
-//    ошибку на —“јƒ»» ¬џѕќЋЌ≈Ќ»я... будем разбиратьс€!!!
-    for( UI j=0; j<strlen(str); j++ ) // вдоль строки str
-     if( str[j] == startComments_1[0] )
-     {
-      str[j] = startComments_2[0];
-      break;
-     } // конец if( str[j] == startComments_1[0] )
-//
+   if( p1 && p2 && p1<p2 ) // если символ "/" встретилс€ ранее ";"...
+    str[p1-str] = startComments_2[0];
 // начали разборку (parsing) строки инструкции /////////////////////////////////
 //
    if( !strpbrk(str,startComments_2) ) // если ";" в строке нет!
