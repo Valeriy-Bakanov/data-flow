@@ -1,0 +1,9 @@
+
+
+SET 2,A ;
+SET 3,B ;
+;
+MUL A, B, C1 ; /明明
+MUL A, B, C2 ; ;明明
+MUL A, B, C3 ; /明明
+MUL A, B, C4 ; ;明明
