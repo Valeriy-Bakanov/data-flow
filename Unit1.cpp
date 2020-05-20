@@ -66,7 +66,7 @@ The author of the software Valery Bakanov is not an ardent supporter of Object-O
 char trueLowerCase[]  = "true",  trueUpperCase[] ="TRUE",
      falseLowerCase[] = "false", falseUpperCase[]="FALSE",
      notDefined[]     ="? ? ?",
-     startComments_1[]  = "/\0", startComments_2[] = ";\0", // символы начала комментария в строке
+     startComments[] = ";\0", // символ начала комментария в строке ";"
      symbolNot_1 = '!', symbolNot_2 = '~', // символы логического отрицания ! или ~
      SET[]       = "SET"; // имя инструкции SET
 //
@@ -1306,7 +1306,7 @@ Line_Set(int i_Set, int Rule)
                         Mem_Instruction[i_Set].Set,
                         ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                         Mem_Instruction[i_Set].aResult, tmp1,
-                        startComments_2,
+                        startComments,
                         Mem_Instruction[i_Set].Comment);
 
           break; // break case 0;
@@ -1319,7 +1319,7 @@ Line_Set(int i_Set, int Rule)
                          Mem_Instruction[i_Set].Set,
                          ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                          Mem_Instruction[i_Set].aResult, tmp1,
-                         startComments_2,
+                         startComments,
                          Mem_Instruction[i_Set].Comment);
 //
           else
@@ -1331,7 +1331,7 @@ Line_Set(int i_Set, int Rule)
                                    Mem_Instruction[i_Set].aOp1,
                                    ACC_REAL, Get_Data(Mem_Instruction[i_Set].aOp1),
                                    Mem_Instruction[i_Set].aResult, tmp1,
-                                   startComments_2,
+                                   startComments,
                                    Mem_Instruction[i_Set].Comment);
                     break;
             case 2: snprintf(tmp,sizeof(tmp), "%s %s {%.*e}, %s {%.*e}, %s {%s} %s %s",
@@ -1341,7 +1341,7 @@ Line_Set(int i_Set, int Rule)
                                    Mem_Instruction[i_Set].aOp2,
                                    ACC_REAL, Get_Data(Mem_Instruction[i_Set].aOp2),
                                    Mem_Instruction[i_Set].aResult, tmp1,
-                                   startComments_2,
+                                   startComments,
                                    Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
@@ -1357,7 +1357,7 @@ Line_Set(int i_Set, int Rule)
                          Mem_Instruction[i_Set].Set,
                          ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                          Mem_Instruction[i_Set].aResult,
-                         startComments_2,
+                         startComments,
                          Mem_Instruction[i_Set].Comment);
 
           else
@@ -1368,7 +1368,7 @@ Line_Set(int i_Set, int Rule)
                                   Mem_Instruction[i_Set].Set,
                                   Mem_Instruction[i_Set].aOp1,
                                   Mem_Instruction[i_Set].aResult,
-                                  startComments_2,
+                                  startComments,
                                   Mem_Instruction[i_Set].Comment);
                     break;
             case 2: snprintf(tmp,sizeof(tmp), "%s %s, %s, %s %s %s",
@@ -1376,7 +1376,7 @@ Line_Set(int i_Set, int Rule)
                                   Mem_Instruction[i_Set].aOp1,
                                   Mem_Instruction[i_Set].aOp2,
                                   Mem_Instruction[i_Set].aResult,
-                                  startComments_2,
+                                  startComments,
                                   Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
@@ -4320,15 +4320,15 @@ int __fastcall RunPreProcessor()
   if(!strlen(str)) // если длина нулевая - просто пропускаем ее !
    continue; // повтор цикла while( 1 ) ========================================
 //
-  if( str[0] == startComments_1[0] ) // если строка начинается с комментария - просто пропускаем ее !
-   continue; // повтор цикла wait( 1 ) =========================================
+  if( str[0] == startComments[0] ) // если строка начинается с комментария - просто пропускаем ее !
+   continue;
 //
 // а вот теперь всё верно..! Начинаем анализировать содержиое строк между "for[c]=n1,n2.n3 {" и "}"
 //
 // ----- проверки корректности значений sIndex,minI,maxI,stepI -----------------
   startPos[0] = '\0'; // строки выводятся без комментариев
   if( minI >= maxI && stepI == 0 )
-   startPos[0] = startComments_1[0]; // все строки комментируются
+   startPos[0] = startComments[0]; // все строки комментируются
 //
 cont_withim_macros_body: // начинаем цикл по строкам тела макроса --------------
 //
@@ -4346,7 +4346,7 @@ cont_withim_macros_body: // начинаем цикл по строкам тела макроса --------------
 //
     DelSpacesTabsAround(str); // чистка строки str от лидирующих и терминирующих пробелов ...
 //
-    if( str[0] != startComments_1[0] && strlen( str ) ) // комментированные или пустые строки тела макроса не добавляем в PM
+    if( str[0] != startComments[0] && strlen( str ) ) // комментированные или пустые строки тела макроса не добавляем в PM
      mPM->Add( str ); // добавили в PM
     goto cont_withim_macros_body; // идём на считывание новой строки тела макроса
    }
@@ -4356,15 +4356,15 @@ enf_of_fptrIn: // конец входного файла fptrIn ----------------------------------
 //  snprintf( tmp,sizeof(tmp), "// start preprocessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
 //  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
   fprintf( fptrOut, "%c%c start pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n",
-                    startComments_1[0],startComments_1[0], sIndex,minI,maxI,stepI );
+                    startComments[0],startComments[0], sIndex,minI,maxI,stepI );
 //
   for( int iRow=0; iRow<mPM->Count; iRow++ ) // по всем строкам в PM
   {
 //   fputs( "// ", fptrOut ); // строки до обработки препроцессором выдаются как комментируемые
 //   fputs( mPM->Strings[iRow].c_str(), fptrOut );  // строка до расширенияя препроцессором
 //   fputs( " / source line (before PreP)\n", fptrOut ); // fputs сама строку не переводит!
-   fprintf( fptrOut, "%c%c %s %c source line (before PreP)\n", startComments_1[0],startComments_1[0],
-                     mPM->Strings[iRow].c_str(), startComments_2[0] );
+   fprintf( fptrOut, "%c%c %s %c source line (before PreP)\n", startComments[0],startComments[0],
+                     mPM->Strings[iRow].c_str(), startComments[0] );
 //
    for( int i=minI; i<=maxI; i+=stepI ) // для каждого значения параметра цикла
     PreProcRow_For1( iRow, sIndex, i ); // расширяем строку iRow тела макроса
@@ -4375,7 +4375,7 @@ enf_of_fptrIn: // конец входного файла fptrIn ----------------------------------
 //  snprintf( tmp,sizeof(tmp), "// end pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
 //  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
   fprintf( fptrOut, "%c%c end pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n",
-                    startComments_1[0],startComments_1[0], sIndex,minI,maxI,stepI );
+                    startComments[0],startComments[0], sIndex,minI,maxI,stepI );
 //
   mPM->Clear(); // очистить PM (TStringList) после обработки очередного макроса
 
@@ -4414,7 +4414,7 @@ char* __fastcall ParseAndCalculateIndex(char* Expression)
    flagAlarmParser = FALSE;
   } // и больше не выдавать..!
 //
-  startPos[0] = startComments_2[0]; // после ошибки все строки комментируются ":"
+  startPos[0] = startComments[0]; // после ошибки все строки комментируются ";"
 //
  } // конец catch( )
 //
@@ -4540,7 +4540,7 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
 //
  for( i=1; ; i++ ) // поиск всех вхождений шаблона [хххх]
  {
-  if( p = strchr(str,startComments_1[0]) ) // если есть символ начала комментария (символ startComments[0])...
+  if( p = strchr(str,startComments[0]) ) // если есть символ начала комментария (символ startComments[0])...
    str[ p-str ] = '\0'; // убираем комментарии вместе с этим символом..!
 //
   pStartSB = strstr( &str[ Start ], "[\0" ); // p_Start указатель на символ '[' (ищем начиная с позиции Start)
@@ -4611,7 +4611,7 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
 //  p = strtok( NULL, "/; " ); // ищем конец вхождения инструкции SET (без комментариев)
 //  strcpy( w, startComments_1 ); // в w "/"
 //  strcat( w, startComments_2 ); // в w "/;"
-  snprintf( w, sizeof(w), "%s%s", startComments_1,startComments_2 ); // в w теперь "/;"
+  snprintf( w, sizeof(w), "%s%s", startComments,startComments ); // в w теперь ";;"
   p = strtok( NULL,  w ); // ищем конец вхождения инструкции SET (без комментариев)
 //
   strcat( work, " " ); // пробел перед результатом операции SET
@@ -4623,7 +4623,7 @@ int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
 //
 // fputs( startPos, fptrOut ); // при некорректности minI,maxI,stepI строки комментируются
 // fputs( str, fptrOut ); // сохраняем расширенную строку макроса ( fputs строку не переводит! )
- fprintf( fptrOut, "%s%s %s line after PrP\n", startPos, str, startComments_2 );
+ fprintf( fptrOut, "%s%s %s line after PrP\n", startPos, str, startComments );
 // fputs( " ; line after PrP\n", fptrOut );
 //
  return 0; // всё Ok
@@ -6112,37 +6112,24 @@ bool __fastcall Read_Instructions()
    DelSpacesTabsAround( str ); // чистка строки str от лидирующих и терминирующих пробелов
 //
    if( !strlen(str) || // если длина строки нулевая...
-       str[0]==startComments_1[0] || // или строка начинается с "/"...
-       str[0]==startComments_2[0] ) // или строка начинается с ";"...
+       str[0]==startComments[0] ) // или строка начинается с ";"...
     {
      i -- ; // строку пропускаем...!
      continue;
     }
 //
-   if( str[strlen(str)-1]!=startComments_1[0] || // если в конце строки не "/"...
-       str[strlen(str)-1]!=startComments_2[0] )  // или не ";"...
-    {
-     strcat( str, " " ); // добавляем " " (пробел)
-     strcat( str, startComments_2 ); // добавляем ";"
-    }
-//
-   p1=strstr(str,startComments_1); // указ. на первый символ "/" (если не найден - 0 )
-   p2=strstr(str,startComments_2); // ...первый символ ";"
-//
-   if( p1 && p2 && p1<p2 ) // если символ "/" встретился ранее ";"...
-    str[p1-str] = startComments_2[0];
 // начали разборку (parsing) строки инструкции /////////////////////////////////
 //
-   if( !strpbrk(str,startComments_2) ) // если ";" в строке нет!
+   if( !strpbrk(str,startComments) ) // если ";" в строке нет!
     strcpy(Mem_Instruction[i].Comment, " "); // значит, комментарий пустой....
    else
    {
-    strcpy(Mem_Instruction[i].Comment, strstr(str,startComments_2)); // все что за ";" - суть комментарий
+    strcpy(Mem_Instruction[i].Comment, strstr(str,startComments)); // все что за ";" - суть комментарий
     Mem_Instruction[i].Comment[0] = ' '; // заменяем ";" пробелом
     DelSpacesTabsAround( Mem_Instruction[i].Comment ); // избавляемся от лидирующих и конечных пробелов
    }
 //
-   strtok(str,startComments_2); // комментарий (вместе с ";") убрали !
+   strtok(str,startComments); // комментарий (вместе с ";") убрали !
    DelSpacesTabsAround(str); // "справа" могли остаться пробелы...
    strcat(str, " "); // добавили 1 пробел на всякий случай (для последующей разборки)
 //
