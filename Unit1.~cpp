@@ -34,7 +34,7 @@ using namespace std;
 #include "parser.h"
 //
 #define  TParser ::TParser // !!! будет действовать в этом модуле и в #include "parser.cpp" !!!
-#include "parser.cpp" // Written by Chaos Master, 11-th of Febrary, 2000
+#include "parser.cpp"
 //------------------------------------------------------------------------------
 #pragma package(smart_init)
 // // #pragma link "TProcTimer"
