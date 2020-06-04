@@ -8,13 +8,27 @@ SET 3, X0 ; константа
 CPY A, X[1] ; создание переменных с инициализацией
 CPY B, X[2]
 ;
-for[i]=3,10,1 { ; значения по индексам 1 и 2 уже присвоены 
-SET 0, X[i]  ; точка вычисления функции
-}
+SET 0, NULL ; рабочие константы
+SET 1, ONE
+SET 2, TWO
+SET 3, THREE
 ;
-for[j]=1,10,1 {  
-MUL X[j],X[j],XX[j] 
-SUB XX[j],X0,Y[j] ; вычисленное значение функции
+for[I]=1,10,1 { ; основной цикл
+;
+SET I,I[I]
+;
+PEQ I[I], ONE, P1[I] ; true <- I==1
+PEQ I[I], TWO, P2[I] ; true <- I==3
+DRE I[I], THREE, W[I] ; W[I] <- остаток I%THREE (#0 при I=1)
+PEQ W[I], NULL,  P3[I] ; true <- I%THREE
+;
+POR P1[I],  P2[I], P12[I] ; P12 <- P1 "или" P2
+POR P12[I], P3[I], P123[I] ; P123 <- P12 "или" P3
+;
+}
+
+;MUL X[j],X[j],XX[j] 
+;SUB XX[j],X0,Y[j] ; вычисленное значение функции
 ;
 
 
