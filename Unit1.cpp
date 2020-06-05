@@ -5302,7 +5302,9 @@ Finalize_Except_SET(int i_Proc) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!!!
              {
               Mem_Instruction[i].fOp1 = TRUE;
               snprintf(tmp,sizeof(tmp), " %d(1|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
-              if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 )
+//
+              if( Mem_Instruction[i].fOp1 &&
+                  Mem_Instruction[i].fOp2 )
                { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
               mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
              }
@@ -5311,7 +5313,9 @@ Finalize_Except_SET(int i_Proc) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!!!
              {
               Mem_Instruction[i].fOp2 = TRUE;
               snprintf(tmp,sizeof(tmp), " %d(2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
-              if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 )
+//
+              if( Mem_Instruction[i].fOp1 &&
+                  Mem_Instruction[i].fOp2 )
                { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
               mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
              }
@@ -5346,7 +5350,9 @@ Finalize_Except_SET(int i_Proc) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!!!
              {
               Mem_Instruction[i].fOp2 = TRUE;
               snprintf(tmp,sizeof(tmp), " %d(2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
-              if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 )
+//
+              if( Mem_Instruction[i].fOp1 &&
+                  Mem_Instruction[i].fOp2 )
                { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
               mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
              }
@@ -5379,7 +5385,9 @@ Finalize_Except_SET(int i_Proc) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!!!
              {
               Mem_Instruction[i].fOp1 = TRUE;
               snprintf(tmp,sizeof(tmp), " %d(1|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
-              if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 )
+//
+              if( Mem_Instruction[i].fOp1 &&
+                  Mem_Instruction[i].fOp2 )
                { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
               mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
              }
@@ -5388,7 +5396,9 @@ Finalize_Except_SET(int i_Proc) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!!!
              {
               Mem_Instruction[i].fOp2 = TRUE;
               snprintf(tmp,sizeof(tmp), " %d(2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
-              if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 )
+//
+              if( Mem_Instruction[i].fOp1 &&
+                  Mem_Instruction[i].fOp2 )
                { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
               mI->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
              }
