@@ -3185,7 +3185,7 @@ TF1::Most_Wonderful(TObject *Sender)
  strcat(tmp, "ОПЕРАТОРОВ (ибо вычисления управляются СОБСТВЕННО\n");
  strcat(tmp, "ДАННЫМИ, а не последовательностью операторов).\n\n");
  strcat(tmp, "Желаете случайным образом ПЕРЕМЕШАТЬ инструкции и далее\n");
- strcat(tmp, "повторить расчет, дабы убедиться в сказанном?");
+ strcat(tmp, "повторить расчёт, дабы убедиться в сказанном?");
 //
 // MessageBeep(0xFFFFFFFF);
 //
@@ -3366,15 +3366,17 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
 
  mI->Repaint();
 
- if(strlen(str))
+ if( strlen(str) ) // строка не пустая
  {
   t_printf( "\n-I- %s(): результат выполнения инструкции #%d используется %d раз/а в качестве операнда/ов: %s -I-",
-                   __FUNC__, mI->Row-1, Really_Select, str);
+//                   __FUNC__, mI->Row-1, Really_Select, str);
+                   "Result_toOperands", mI->Row-1, Really_Select, str);
  }
  else // строка пустая
  {
   t_printf( "\n-I- %s(): результат выполнения инструкции #%d не используется в качестве никакого операнда !!! -I-",
-                   __FUNC__, mI->Row-1, Really_Select, str);
+//                   __FUNC__, mI->Row-1, Really_Select, str);
+                   "Result_toOperands", mI->Row-1, Really_Select, str);
  }
 
 } //----- конец Result_toOperands ----------------------------------------------
@@ -3384,12 +3386,12 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
 void __fastcall TF1::Operand_toResult(TObject *Sender)
 { // показывает цветом все результаты выполнения инструкций, от
 // которых зависит данный входной операнд
-
+//
  char Set[_SET_LEN], aOp1[_ID_LEN], aOp2[_ID_LEN], aResult[_ID_LEN],
       tmp[_512];
  int Col, Row, n_Op,
      i_save, i_save_no = -1234567;
-
+//
  i_save = i_save_no; // предварительное присваивание
 
  if( is_SET(Mem_Instruction[mI->Row-1].Set) ) // для SET действие бессмысленно...
@@ -3445,10 +3447,12 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
 //
  if(i_save != i_save_no) // зависимость найдена!
   t_printf( "\n-I- %s(): %d-й операнд инструкции #%d зависит от результата выполнения инструкции #%d -I-",
-                   __FUNC__, Col-1, mI->Row-1, i_save);
+//                   __FUNC__, Col-1, mI->Row-1, i_save);
+                   "Operand_toResult", Col-1, mI->Row-1, i_save);
  else // зависимость не найдена..
   t_printf( "\n-I- %s(): %d-й операнд инструкции #%d не зависит от результата выполнения никакой инструкции !!! -I-",
-                   __FUNC__, Col-1, mI->Row-1);
+//                   __FUNC__, Col-1, mI->Row-1);
+                   "Operand_toResult", Col-1, mI->Row-1);
 //
 } //----------------------------------------------------------------------------
 
@@ -3554,18 +3558,18 @@ void __fastcall TF1::DrawNotUsedResults(TObject *Sender)
   {
    if( is_SET( Mem_Instruction[j].Set ) ) // инструкцию SET не рассматриваем !!!
     continue;
-
+//
    n_Op = Get_CountOperandsByInstruction(Mem_Instruction[j].Set); // число операндов инструкции j
-
-   if(n_Op == 1 && // если ОДИН операнд... "И"
-      !strcmp(aResult, Mem_Instruction[j].aOp1)) // aResult РАВЕН aOp1
+//
+   if( n_Op == 1 && // если ОДИН операнд... "И"
+       !strcmp(Mem_Instruction[j].aOp1,aResult) ) // aResult РАВЕН aOp1
     goto end_i;
 
-   if(n_Op == 2 && // если ДВА операнда... "И"
-      (
-       !strcmp(aResult, Mem_Instruction[j].aOp1) || // aResult РАВЕН aOp1 "ИЛИ"
-       !strcmp(aResult, Mem_Instruction[j].aOp2) // aResult НЕ РАВЕН aOp2
-      )
+   if( n_Op == 2 && // если ДВА операнда... "И"
+       (
+        !strcmp(Mem_Instruction[j].aOp1,aResult) || // aResult РАВЕН aOp1 "ИЛИ"
+        !strcmp(Mem_Instruction[j].aOp2,aResult) // aResult НЕ РАВЕН aOp2
+       )
      )
     goto end_i;
 
@@ -3809,7 +3813,7 @@ Calc_ConnectedIndex(int Rule) // при Rule # 0 данные выдаются в файл протоколa
      Sum_Repeat_1 = 0, // общее число n_Repeat при n_ResOp >= 2
      n_RepeatEq_1 = 0; // число повторов связей "1->1"
  char tmp[_512]; // рабочий массив
-
+//
  TStringList *CI = new TStringList(); // создать набор строк CI для вычисления индекса связности
 
  CI->Sorted = FALSE; // не сортировать список
@@ -3819,9 +3823,9 @@ Calc_ConnectedIndex(int Rule) // при Rule # 0 данные выдаются в файл протоколa
  {
   if( is_SET( Mem_Instruction[i].Set ) ) // инструкция SET не рассматривается...
    continue;
-
+//
   n_EqResOp = 0; // число операторов, зависимых от РЕЗУЛЬАТА выполнения данного (i-того)
-
+//
   strcpy(aResult, Mem_Instruction[i].aResult); // запомнили адрес aResult для инструкции i
 
   for(UI j=0; j<Really_Set; j++) // ... опять же по всем строкам Mem_Instruction[] для поиска по ОПЕРАНДАМ
@@ -3880,7 +3884,7 @@ Calc_ConnectedIndex(int Rule) // при Rule # 0 данные выдаются в файл протоколa
    CI->Add(tmp); // добавили строку в CI
   }
 
- } // конец ВНЕШНЕГО цикла по Mem_Instruction[i] ///////////////////////////////////////
+ } // конец ВНЕШНЕГО цикла по Mem_Instruction[i] ///////////////////////////////
 
 // начало вычислений статистики ------------------------------------------------
 // вычисляем общее число случаев = СУММА(n_Repeat) кроме строк с n_EqResOp=0
@@ -4215,6 +4219,7 @@ bool __fastcall Test_All_Operands()
      break;
 //
     default:
+//
      break;
 //
    } // конец switch( nInputOperands )
@@ -4222,7 +4227,7 @@ bool __fastcall Test_All_Operands()
   } // конец цикла по j
 //==============================================================================
 // выводим результат -----------------------------------------------------------
-
+//
    switch( nInputOperands ) // число входных операндов инструкции Set
    {
     case 1: if( !flagOp1 )
@@ -4258,16 +4263,19 @@ bool __fastcall Test_All_Operands()
   F1->Master_Timer->Enabled = FALSE; // остановили главный таймер
 //
   snprintf( str,sizeof(str), "%s(): %s", __FUNC__,
-"В программе встречаются операнды, приниципиально не могущие выполниться \
-(нет соответствующих по имени результатов выполнения инструкций); см. данные в окне протоколирования.\n\n\
+"В программе встречаются операции, приниципиально не могущие выполниться \
+вследствие неготовности одного или более операндов; \
+см. данные в окне протоколирования.\n\n\
 Выполнение программы будет остановлено..." );
+//
   MessageBox(0, str, "Проблемы с разрешимостью операндов", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL );
+//  
   return FALSE; // конец выполнения
  }
  else
   return TRUE; // все хорошо... выполняем дальше!
 //
-} //----------------------------------------------------------------------------
+} // ---- Test_All_Operands ----------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
