@@ -3568,7 +3568,7 @@ void __fastcall TF1::DrawNotUsedResults(TObject *Sender)
    if( n_Op == 2 && // если ДВА операнда... "И"
        (
         MI_aOp1(j) || // aResult РАВЕН aOp1 "ИЛИ"
-        MI_aOp2(i) // aResult НЕ РАВЕН aOp2
+        MI_aOp2(j) // aResult РАВЕН aOp2
        )
      )
     goto end_i;
@@ -4299,12 +4299,10 @@ int __fastcall RunPreProcessor()
 //
  if( !(fptrIn  = fopen( FileNameSet,    "r") ) || // исходный файл инструкций открыть не удалось... ИЛИ
      !(fptrOut = fopen( FileNameSetPrP, "w") ) ) // файл инструкций после препроцессора открыть не удалось...
- {
-//
   return -1;
- }
+
 //
- if( ! mPM )
+ if( !mPM )
   mPM = new TStringList(); // создали PM (набор строк для тела исходного макро)
 //
  snprintf( tmp,sizeof(tmp), " Препроцессинг..." ); // вывод в строку статуса
@@ -5052,6 +5050,7 @@ Finalize_Only_SET(int i_Set)
              {
               MI_fOp2(i) = TRUE;
               snprintf(tmp,sizeof(tmp), " %d(2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+//
               if( MI_fOp1(i)  &&
                   MI_fOp2(i) )
                { snprintf(tmp,sizeof(tmp), " %d(*|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
@@ -5427,6 +5426,7 @@ Finalize_Except_SET(int i_Proc) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!!!
              if( MI_fOp1(i) && // первый операнд ГОТОВ...
                  MI_fOp2(i) )  // второй операнд ГОТОВ...
               Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+//
             } // конец if( !s_isPredicat && isPredicat )
 //
 // ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (2 операнда) ...
@@ -5941,7 +5941,7 @@ void __fastcall TF1::ExtendedSave_IGA_Click(TObject *Sender)
 void __fastcall Extended_Save_IGA()
 { // сохранить данные о времени выполнения операторов (формат *.MVR)
  INT i; // номер оператора
- char FileName[256];
+ char FileName[_256];
  FILE *fptr;
 //
 // сохраняем ДАННЫЕ_О_ВРЕМЕНИ_ВЫПОЛНЕНИЯ_ОПЕРАТОРОВ (*.mvr) //////////////////////////////
