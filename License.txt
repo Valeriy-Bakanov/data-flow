@@ -1,29 +1,49 @@
-Russian version see below... 
+English version see below...
+
+=============================================================
+
+Компьютерная программа-симулятор вычислителя потоковой (Data-Flow) 
+архитектуры с предикатныи выполнением операторов. 
+
+© Идея, пользовательский интерфейс, программирование и поддержка - 
+Баканов Валерий, mailto:e881e@mail.ru , http://vbakanov.ru/left_1.htm , 
+2008. Дополнительно см. http://vbakanov.ru/dataflow/dataflow.htm .
+
+Данная программа является свободным программным обеспечением. 
+Вы вправе распространять ее и/или модифицировать в соответствии 
+с условиями версии 2 либо по вашему выбору с условиями более 
+поздней версии Стандартной Общественной Лицензии GNU, 
+опубликованной Free Software Foundation.
+
+Данная программа распространяется в надежде на то, что она 
+будет Вам полезной, однако НЕ ПРЕДОСТАВЛЯЕМ НА НЕЕ НИКАКИХ 
+ГАРАНТИЙ, в том числе ГАРАНТИИ ТОВАРНОГО СОСТОЯНИЯ ПРИ 
+ПРОДАЖЕ и ПРИГОДНОСТИ ДЛЯ ИСПОЛЬЗОВАНИЯ В КОНКРЕТНЫХ 
+ЦЕЛЯХ. Для получения более подробной информации ознакомьтесь 
+со Стандартной Общественной Лицензией GNU.
+
+Вместе с данной программой вы должны были получить экземпляр 
+Стандартной Общественной Лицензии GNU. Если это не так, 
+ознакомьтесь с содержпнием ресурса https://www.gnu.org/licenses/ .
 
 =============================================================
 
 Computer simulator streaming (Data-Flow) architecture with 
 predicate operator execution.
 
-Idea, user interface, programming and support - Valery Bakanov, 
+© Idea, user interface, programming and support - Valery Bakanov, 
 mailto:e881e@mail.ru , http://vbakanov.ru/left_1.htm ,
-2008-2019. Additionally, see http://vbakanov.ru/dataflow/dataflow.htm .
+2008. Additionally, see http://vbakanov.ru/dataflow/dataflow.htm .
 
-Fully free use of this computer is allowed programs "as is" at the 
-level of executable files (format files PE GUI 4.0 for Windows 32 bit). 
-Developer link required when using this software product in research
-work.
+This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or 
+(at your option) any later version.
 
-=============================================================
+This program is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+See the GNU General Public License for more details.
 
-Компьютерная программа-симулятор вычислителя потоковой (Data-Flow) 
-архитектуры с предикатныи выполнением операторов. Идея, 
-пользовательский интерфейс, программирование и поддержка - 
-Баканов Валерий, mailto:e881e@mail.ru , http://vbakanov.ru/left_1.htm , 
-2008-2019. Дополнительно см. http://vbakanov.ru/dataflow/dataflow.htm .
-
-Допускается полностью свободное использование данной компьютерной
-программы "как есть" на уровне исполняемых файлов (файлы 
-формата PE GUI 4.0 для Windows 32 бит). Ссылка на разработчика 
-обязательна при использовании данного программного продукта в 
-исследовательской работе.
+You should have received a copy of the GNU General Public License  
+along with this program. If not, see https://www.gnu.org/licenses/ .
