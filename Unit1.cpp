@@ -1587,7 +1587,7 @@ Install_All_Flags()
  for(UI i=0; i<Really_Set; i++) // по всем инструкциям ... не все ОБНУЛЯЕМ !
  {
   MI_fOp1(i) = FALSE;
-  MI_fOp1(i) = FALSE;
+  MI_fOp2(i) = FALSE;
 //
   Mem_Instruction[i].fPredicat     = FALSE;
   Mem_Instruction[i].fPredicatTRUE = FALSE;
