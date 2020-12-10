@@ -1,0 +1,27 @@
+; Вычисление r = axb + a/c
+
+;
+MUL A,B, AB ; AB <- AxB
+DIV A,C, AC ; AC <- A/C
+ADD AB,AC, R ; R <- AB+AC
+;
+SET 1, A ; 1 -> A
+SET 2, B ; 2 -> B
+SET 3, C ; 3 -> C
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
