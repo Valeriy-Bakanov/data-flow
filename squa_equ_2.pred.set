@@ -8,7 +8,7 @@
 ; in case A = 1, B = 3, C = 3
 ; the solve is: re_X1=-1.5,im_X1=0.866; re_X2=-1.5,im_X2=-0.866 
 ;
-MUL A, TWO, A2, !false ; 2 * A -> A2
+MUL A, TWO, A2  ; 2 * A -> A2
 MUL A, FOUR, A4 ; 4 * A -> A4
 MUL B, NEG_ONE, B_NEG ; NEG_ONE * B -> B_NEG
 POW B, TWO, BB ; B^2 -> BB
