@@ -4719,7 +4719,8 @@ Get_TicksByInstruction(char *Set)
 ////////////////////////////////////////////////////////////////////////////////
 bool __fastcall is_Predicat(char* Set)
 {  // возвращает  TRUE, если Set - мнемоника оператора-предикатора
-//
+// if ( Set[0] != 'P' )
+//  return FALSE;
  if ( !strcmp( Set, "PGE" ) || // оператор PGE
       !strcmp( Set, "PLE" ) || // ...
       !strcmp( Set, "PEQ" ) ||
