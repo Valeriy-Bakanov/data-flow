@@ -113,7 +113,7 @@ __published:	// IDE-managed Components
         TMenuItem *N10;
         
         void __fastcall Main_Form_OnCreate(TObject *Sender);
-        void __fastcall F1_OnClose(TObject *Sender, TCloseAction &Action);
+        void __fastcall OnClose_F1(TObject *Sender, TCloseAction &Action);
         void __fastcall Stop_Calculations(TObject *Sender);
         void __fastcall Run_Calculations(TObject *Sender);
         void __fastcall SG_Sets_DrawCell(TObject *Sender, int ACol, int ARow, TRect &Rect, TGridDrawState State);
@@ -141,12 +141,12 @@ __published:	// IDE-managed Components
         void __fastcall DrawNotExecuteSets(TObject *Sender);
         void __fastcall DrawNotUsedResults(TObject *Sender);
         void __fastcall DrawNotDetermineOperands(TObject *Sender);
-        void __fastcall F1_OnShow(TObject *Sender);
+        void __fastcall OnShow_F1(TObject *Sender);
         void __fastcall OnOf_Execute(int Rule);
         void __fastcall About_Cuda(TObject *Sender);
         void __fastcall Save_IGA_Click(TObject *Sender);
         void __fastcall About_SPF(TObject *Sender);
-        void __fastcall F1_OnResize(TObject *Sender);
+        void __fastcall OnResize_F1(TObject *Sender);
         void __fastcall INC0_Connected(TObject *Sender);
         void __fastcall INC0_Disconnected(TObject *Sender);
         void __fastcall INC0_OnStatus(TObject *axSender,
@@ -163,7 +163,7 @@ __published:	// IDE-managed Components
         void __fastcall OnKeyPress_E_AIU(TObject *Sender, char &Key);
         void __fastcall SelectColors(TObject *Sender);
         void __fastcall CD_1_Show(TObject *Sender);
-        void __fastcall F1_OnKeyUp(TObject *Sender, WORD &Key, TShiftState Shift);
+        void __fastcall OnKeyUp_F1(TObject *Sender, WORD &Key, TShiftState Shift);
         void __fastcall Save_Data(TObject *Sender);
         void __fastcall SG_Data_Info(TObject *Sender,
                         TMouseButton Button, TShiftState Shift, int X, int Y);

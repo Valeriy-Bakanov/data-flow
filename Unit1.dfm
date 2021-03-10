@@ -1,8 +1,8 @@
 object F1: TF1
-  Left = 277
-  Top = 284
-  Width = 1145
-  Height = 622
+  Left = 222
+  Top = 167
+  Width = 1024
+  Height = 600
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   ActiveControl = BitBtn_Run
@@ -45,21 +45,21 @@ object F1: TF1
   KeyPreview = True
   Menu = Main_Menu
   OldCreateOrder = False
-  Position = poScreenCenter
-  ShowHint = True
-  OnClose = F1_OnClose
-  OnKeyUp = F1_OnKeyUp
-  OnResize = F1_OnResize
-  OnShow = F1_OnShow
+  Position = poDefault
+  Scaled = False
+  OnClose = OnClose_F1
+  OnKeyUp = OnKeyUp_F1
+  OnResize = OnResize_F1
+  OnShow = OnShow_F1
   DesignSize = (
-    1127
-    561)
+    1006
+    539)
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
     Left = 950
     Top = 185
-    Width = 54
+    Width = -67
     Height = 16
     Hint = #1042#1099#1095#1080#1089#1083#1077#1085#1085#1099#1077' '#1076#1072#1085#1085#1099#1077' ('#1079#1072#1087#1086#1083#1085#1077#1085#1085#1086#1089#1090#1100' '#1073#1091#1092#1077#1088#1072' '#1076#1072#1085#1085#1099#1093')'
     Alignment = taRightJustify
@@ -145,8 +145,8 @@ object F1: TF1
   end
   object StatusBarMain: TStatusBar
     Left = 0
-    Top = 542
-    Width = 1127
+    Top = 520
+    Width = 1006
     Height = 19
     Hint = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1089#1086#1089#1090#1086#1103#1085#1080#1080' '#1089#1080#1089#1090#1077#1084#1099' '#1080' '#1074#1099#1087#1086#1083#1085#1103#1077#1084#1086#1084' '#1076#1077#1081#1089#1090#1074#1080#1080
     AutoHint = True
