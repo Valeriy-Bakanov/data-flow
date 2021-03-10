@@ -77,13 +77,13 @@ CodePage=1251
 [Version Info Keys]
 CompanyName=Bakanov (http://vbakanov.ru/left_1.htm)
 FileDescription=DataFlow
-FileVersion=4.2.0.0
-InternalName=2009-2020
+FileVersion=4.2.0.1
+InternalName=2009-2021
 LegalCopyright=
 LegalTrademarks=DATA-FLOW
 OriginalFilename=
 ProductName=DATA-FLOW
-ProductVersion=4.4.2 april 2020
+ProductVersion=4.4.3 march 2021
 Comments=http://vbakanov.ru/dataflow/
 
 [HistoryLists\hlIncludePath]
