@@ -1,0 +1,32 @@
+
+C:\DataFlow>echo on 
+
+C:\DataFlow>del /S *.tmp 
+
+C:\DataFlow>del /S *.~* 
+
+C:\DataFlow>del /S *.wbk  
+
+C:\DataFlow>del /S *.il? 
+
+C:\DataFlow>del /S *.td? 
+
+C:\DataFlow>del /S *.obj 
+
+C:\DataFlow>del /S *.map 
+
+C:\DataFlow>del /S *.pro 
+
+C:\DataFlow>del /S *.tst 
+
+C:\DataFlow>del /S *.coi 
+
+C:\DataFlow>del /S *.dat 
+
+C:\DataFlow>del /S *.tpr 
+
+C:\DataFlow>del /S *.set_PrP 
+
+C:\DataFlow>rd /s /q Out!Data 
+
+C:\DataFlow>rd /s /q In!Data 

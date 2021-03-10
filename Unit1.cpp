@@ -480,7 +480,7 @@ ULI localTick = 0,  // общее число тиков (происшедших тактов) по счётчику Master
     waitAboveOfEndLastExecuteSet = 1000; // через сколько тиков закнчивать программу
 int tick_Interval = 10; // цена деления тика таймера в миллисекундах (умолчание)
 ////////////////////////////////////////////////////////////////////////////////
-const int minW_F1 = 1024, minH_F1 = 600; // минимальный размер окна главной формы (F1)
+const int minW_F1 = 900, minH_F1 = 600; // минимальный размер окна главной формы (F1)
 ////////////////////////////////////////////////////////////////////////////////
 ULI  FileSizeFromServer; // размер файла для выгрузки с сервера
 char NameSubDirOutData[] = "Out!Data", // имя подкаталога для сброса рассчитанных данных
@@ -533,8 +533,6 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 ////////////////////////////////////////////////////////////////////////////////
  strcpy(FileNameINI, ChangeFileExt(ParamStr(0), ".ini").c_str()); // путь к INI-файлу
 //
- Read_Config(); // читаем файл конфигурации (и перераспределяем память динамических массивов)
-//
 ////////////////////////////////////////////////////////////////////////////////
 //
  mB->Cells[0][0] = " #/Мнемоника"; // буфер инструкци (команд)
@@ -577,10 +575,6 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
  mD->Cells[1][0] = " Значение";
  mD->ColWidths[1]= 100;
-//
-////////////////////////////////////////////////////////////////////////////////
-//
- F1_OnResize( NULL ); // перерисуем главное окно
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -636,13 +630,13 @@ void __fastcall // удаляет пробелы и Tabs слева и справа строки str
 DelSpacesTabsAround(char *str)
 {  // Trim, TrimLeft, TrimRight работают только с AnsiString
 // strcpy(str, Trim(AnsiString(str)).c_str());
-
+//
 // удаляем пробелы и Tabs с начала строки
  int i=0, j;
-
+//
  while((str[i] == ' ') || (str[i] == '\t'))
   i++;
-
+//
  if(i>0)
  {
   for(j=0;j<strlen(str);j++)
@@ -650,16 +644,16 @@ DelSpacesTabsAround(char *str)
 //
  str[j]='\0';
  }
-
+//
 // удаляем пробелы и Tabs с конца строки
  i=strlen(str)-1;
-
+//
  while((str[i] == ' ') || (str[i] == '\t'))
   i--;
-
+//
  if(i<(strlen(str)-1))
   str[i+1]='\0';
-
+//
 } // --- конец функции DelSpacesTabsAround -------------------------------------
 
 
@@ -853,8 +847,6 @@ void __fastcall TF1::About_SPF(TObject *Sender)
 void __fastcall // перечитать все файлы
 TF1::Rewrite_Files(TObject *Sender)
 {
- Read_Config(); // читаем файл конфигурации
-//
  Read_Instructions(); // читаем FileNameSet в Mem_Instruction[]
 //
  mR->Clear(); // очистили Memo_Run .............................................
@@ -948,7 +940,7 @@ void __fastcall Read_Config()
 //
  Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
 //
- F1->Top    = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var1,      20); // // положение и размеры главной формы
+ F1->Top    = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var1,      20); // положение и размеры главной формы
  F1->Left   = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var2,      20);
  F1->Width  = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var3, minW_F1);
  F1->Height = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var4, minH_F1);
@@ -1001,7 +993,7 @@ void __fastcall Write_Config()  // сохраняет данные в файл конфигурации
  tINI->WriteInteger(RWC.Sect4, RWC.Sect4_Var2, How_Calc_Prior); // как вычислять приоритет
  tINI->WriteInteger(RWC.Sect1, RWC.Sect1_Var3, StrToInt(F1->E_AIU->Text)); //Max_Proc); // число задействованных АИУ
 //
- tINI->WriteInteger(RWC.Sect8, RWC.Sect8_Var1, F1->Top); // // положение и размеры главной формы
+ tINI->WriteInteger(RWC.Sect8, RWC.Sect8_Var1, F1->Top); // положение и размеры главной формы
  tINI->WriteInteger(RWC.Sect8, RWC.Sect8_Var2, F1->Left);
  tINI->WriteInteger(RWC.Sect8, RWC.Sect8_Var3, F1->Width);
  tINI->WriteInteger(RWC.Sect8, RWC.Sect8_Var4, F1->Height);
@@ -1190,7 +1182,7 @@ void __fastcall // попытка закрытия приложения
 TF1::F1_OnClose(TObject *Sender, TCloseAction &Action)
 {
  Write_Config(); // сохранение файла конфигурации
-
+//
  if(ParamCount() == 4) // берем нужное число параметров командной строки (не считая нулевого)
  {
   Action=caFree; // закрываем приложение без вопросов
@@ -1602,8 +1594,6 @@ Install_All_Flags()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::Load_Sets(TObject *Sender)
 { // открыть файл программы (файл *.set)
-//
- Read_Config(); // перечитать файл конфигурации
 //
  OD_1->Files->Clear(); // чистим историю
 //
@@ -3757,6 +3747,8 @@ void __fastcall Draw_ReadyOperands()
 void __fastcall TF1::F1_OnShow(TObject *Sender)
 { // вызывается при отрисовке главной формы
 //
+ Read_Config(); // перечитать файл конфигурации
+//
  if(ParamCount() == 4) // берем нужное число параметров командной строки (не считая нулевого)
  {
   strcpy(FileNameSet, ParamStr(1).c_str()); // имя файла инструкицй (и проекта)
@@ -3764,8 +3756,7 @@ void __fastcall TF1::F1_OnShow(TObject *Sender)
   How_Calc_Param = StrToInt(ParamStr(3).c_str()); // как вычислять параметры приоритета
   How_Calc_Prior = StrToInt(ParamStr(4).c_str()); // как вычислять собственно приоритет
 //
-  Write_Config(); // сохранить в INI-файл
-  Read_Config(); // перечитываем INI-файл...
+  Write_Config(); // сохранить в INI-файл только что запомненные параметры
 //
   BitBtn_Run->Click(); // программно нажали кнопку СЧЁТ !!!
 //
@@ -3984,70 +3975,63 @@ StrToReal(char *str, int i_Set)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::F1_OnResize(TObject *Sender)
-{ // вызывается при кадомй перерисовке главного окна
+{ // вызывается при каждой перерисовке главного окна F1
  int tmp,  // рабочая переменная
-     dH = 40, // расстояние по высоте между подокном протокола и нижней группой окон
-     W = F1->Width, // взяли текущий размер главного окна программы
-     H = F1->Height;
-//     Scrollbar_Width  = GetSystemMetrics(SM_CXVSCROLL), // ширина вертикального ScrollBar'a
-//     Scrollbar_Height = GetSystemMetrics(SM_CYHSCROLL); // высота горизонтального ScrollBar'a
+     dH = 40; // расстояние по высоте между подокном протокола и нижней группой окон
+//   Scrollbar_Width  = GetSystemMetrics(SM_CXVSCROLL), // ширина вертикального ScrollBar'a
+//   Scrollbar_Height = GetSystemMetrics(SM_CYHSCROLL); // высота горизонтального ScrollBar'a
  float partProtocolH = 0.35; // относительная доля по высоте окна вывода протокола решения задачи
-// MessageBeep( MB_OK );
-
- if( W < minW_F1 ) // окно не может быть менее minW_F1 * minH_F1
-  W = minW_F1;
-
- if( H < minH_F1 ) // ...
-  H = minH_F1;
-
+//
+ Read_Config(); // читаем файл конфигурации
+//
 // установим размер главного окна F1
- F1->Width  = W; // новый размер главного окна F1
- F1->Height = H;
-
+ F1->Width  = max( F1->Width,  minW_F1 ); // новый размер главного окна F1
+ F1->Height = max( F1->Height, minH_F1 );
+//
 // установим размер и положение внутренних компонентов окна F1
-
+//
 // верхний фрейм - окно вывода протокола расчёта -------------------------------
  mR->Height = F1->Height * partProtocolH;
  mR->Width  = F1->ClientWidth - 8;
-
+//
 // нижний ряд фреймов (координаты верхов) --------------------------------------
  tmp = F1->M1->Top + F1->M1->Height + dH;
  mB->Top  = tmp; // присваивания "цепочкой" недопустимы для СВОЙСТВ (Properties)
  mP->Top  = tmp;
  mI->Top  = tmp;
  mD->Top  = tmp;
-
+//
 // нижний ряд фреймов (высоты) -------------------------------------------------
  tmp = F1->ClientHeight - F1->SG_Buffer->Top - F1->StatusBarMain->Height - 3;
  F1->SG_Buffer->Height  = tmp; // присваивания "цепочкой" недопустИмы для СВОЙСТВ (Properties)
  F1->PB_1->Height       = tmp;
  F1->SG_Set->Height     = tmp;
  F1->SG_Data->Height    = tmp;
-
+//
 // нижний ряд фреймов (по ширине) ----------------------------------------------
  mB->Width = mB->ColWidths[0] + mB->ColWidths[1] + 6; // F1->ClientWidth * partBufferW;
  mP->Left  = mB->Left + mB->Width + 2;
  mI->Left  = mP->Left + mP->Width + 4;
-
+//
  mI->Width = F1->ClientWidth - mI->Left - mD->Width - 8;
  mD->Left  = F1->ClientWidth - mD->Width - 4; // mI->Left  + mI->Width + 2;
  mD->Width = mD->ColWidths[0] + mD->ColWidths[1] + 6; //F1->ClientWidth - mD->Left - 6;
-
+//
 // средний ряд (кнопки) --------------------------------------------------------
  tmp = mR->Top + mR->Height + ( dH - F1->BitBtn_Run->Height ) / 2;
  F1->BitBtn_Run->Top  = tmp; F1->BitBtn_Run->Left  = mB->Left;
  F1->BitBtn_Stop->Top = tmp; F1->BitBtn_Stop->Left = mI->Left;
-
+//
 // средний ряд ( E_AIU + Label_AIU ) -------------------------------------------
  F1->E_AIU->Top     = tmp + 2; F1->E_AIU->Left     = F1->BitBtn_Stop->Left + F1->BitBtn_Stop->Width + 70;
  F1->Label_AIU->Top = tmp + 5; F1->Label_AIU->Left = F1->E_AIU->Left + F1->E_AIU->Width + 7;
-
+//
 // средний ряд (надписи) -------------------------------------------------------
  tmp = mR->Top + mR->Height + ( dH - F1->BitBtn_Run->Height ) / 2 + F1->BitBtn_Run->Height - F1->Label_Buffer->Height;
  F1->Label_Buffer->Top = tmp; F1->Label_Buffer->Left = mB->Left + mB->Width - F1->Label_Buffer->Width;
  F1->Label_Set->Top    = tmp; F1->Label_Set->Left    = mI->Left + mI->Width - F1->Label_Set->Width;
  F1->Label_Data->Top   = tmp; F1->Label_Data->Left   = mD->Left + mD->Width - F1->Label_Data->Width;
-
+//
 // определяем ширину последнего столбца SG_Set (столбец комментариев к инструкции)
  tmp = mI->ColWidths[0] + mI->ColWidths[1] + mI->ColWidths[2]  // ширина первых 0-5 столбцов
      + mI->ColWidths[3] + mI->ColWidths[4] + mI->ColWidths[5];
@@ -4061,7 +4045,7 @@ void __fastcall TF1::F1_OnResize(TObject *Sender)
  SBM0->Width = 3 * F1->ClientWidth / 8;
  SBM1->Width = SBM0->Width;
  SBM2->Width = F1->ClientWidth / 4;
-
+//
 } //----- конец F1_OnResize ----------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
