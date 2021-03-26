@@ -23,7 +23,7 @@
 class TF1 : public TForm
 {
 __published:	// IDE-managed Components
-        TStatusBar *StatusBarMain;
+        TStatusBar *SB;
         TLabel *Label_Data;
         TLabel *Label_Set;
         TStringGrid *SG_Data;

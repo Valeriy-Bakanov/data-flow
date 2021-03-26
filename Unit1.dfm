@@ -1,8 +1,8 @@
 object F1: TF1
-  Left = 222
-  Top = 167
-  Width = 1024
-  Height = 600
+  Left = 555
+  Top = 204
+  Width = 1046
+  Height = 611
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   ActiveControl = BitBtn_Run
@@ -52,14 +52,14 @@ object F1: TF1
   OnResize = OnResize_F1
   OnShow = OnShow_F1
   DesignSize = (
-    1006
-    539)
+    1028
+    550)
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
-    Left = 950
+    Left = 936
     Top = 185
-    Width = -67
+    Width = 54
     Height = 16
     Hint = #1042#1099#1095#1080#1089#1083#1077#1085#1085#1099#1077' '#1076#1072#1085#1085#1099#1077' ('#1079#1072#1087#1086#1083#1085#1077#1085#1085#1086#1089#1090#1100' '#1073#1091#1092#1077#1088#1072' '#1076#1072#1085#1085#1099#1093')'
     Alignment = taRightJustify
@@ -143,23 +143,26 @@ object F1: TF1
     ParentFont = False
     WordWrap = True
   end
-  object StatusBarMain: TStatusBar
+  object SB: TStatusBar
     Left = 0
-    Top = 520
-    Width = 1006
+    Top = 531
+    Width = 1028
     Height = 19
     Hint = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1089#1086#1089#1090#1086#1103#1085#1080#1080' '#1089#1080#1089#1090#1077#1084#1099' '#1080' '#1074#1099#1087#1086#1083#1085#1103#1077#1084#1086#1084' '#1076#1077#1081#1089#1090#1074#1080#1080
     AutoHint = True
     Panels = <
       item
-        Width = 380
+        Width = 120
       end
       item
-        Width = 350
+        Width = 330
       end
       item
-        Width = 50
+        Width = 100
       end>
+    ParentColor = True
+    ParentShowHint = False
+    ShowHint = True
     SimplePanel = False
   end
   object SG_Data: TStringGrid
@@ -169,6 +172,7 @@ object F1: TF1
     Height = 308
     Hint = #1044#1072#1085#1085#1099#1077' ('#1087#1088#1086#1089#1084#1086#1090#1088' - '#1083#1077#1074#1072#1103' '#1082#1085#1086#1087#1082#1072' '#1084#1099#1096#1080', '#1088#1072#1089#1087#1077#1095#1072#1090#1082#1072' Alt+F2)'
     TabStop = False
+    Anchors = [akRight, akBottom]
     ColCount = 2
     DefaultColWidth = 98
     DefaultRowHeight = 19
@@ -189,6 +193,7 @@ object F1: TF1
       #1083#1103' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1103' '#1086#1087#1077#1088#1072#1094#1080#1081'); '#1087#1088#1072#1074#1072#1103' '#1082#1085#1086#1087#1082#1072' '#1082#1085#1086#1087#1082#1072' '#1084#1099#1096#1080' - '#1086#1087#1088#1077#1076#1077#1083#1077#1085#1080#1077 +
       #13#10#1080#1085#1092#1086#1088#1084#1072#1094#1080#1086#1085#1085#1099#1093' '#1089#1074#1103#1079#1077#1081' '#1084#1077#1078#1076#1091' '#1086#1087#1077#1088#1072#1085#1076#1072#1084#1080' '#1080' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1072#1084#1080
     TabStop = False
+    Anchors = [akLeft, akRight, akBottom]
     ColCount = 8
     DefaultColWidth = 90
     DefaultRowHeight = 19
@@ -244,6 +249,7 @@ object F1: TF1
     Height = 308
     Hint = #1041#1091#1092#1077#1088' '#1082#1086#1084#1072#1085#1076' ('#1085#1091#1084#1077#1088#1072#1094#1080#1103' '#1089' 1)'
     TabStop = False
+    Anchors = [akLeft, akRight, akBottom]
     ColCount = 2
     DefaultColWidth = 100
     DefaultRowHeight = 19
@@ -260,6 +266,7 @@ object F1: TF1
     Height = 308
     Cursor = crCross
     Hint = #1059#1088#1086#1074#1077#1085#1100' '#1079#1072#1087#1086#1083#1085#1077#1085#1085#1086#1089#1090#1080' '#1073#1091#1092#1077#1088#1072' '#1080#1085#1089#1090#1088#1091#1082#1094#1080#1081
+    Anchors = [akLeft, akBottom]
     Min = 0
     Max = 100
     Orientation = pbVertical

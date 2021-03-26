@@ -33,7 +33,7 @@
     <OTHERFILES value=""/>
   </MACROS>
   <OPTIONS>
-    <IDLCFLAGS value="-I$(BCB)\include -I$(BCB)\include\vcl -src_suffix cpp -boa"/>
+    <IDLCFLAGS value="-src_suffix cpp -I$(BCB)\include -I$(BCB)\include\vcl -boa"/>
     <CFLAG1 value="-O2 -H=$(BCB)\lib\vcl60.csm -Hc -w -Vx -Ve -fp -X- -a2 -5 -b- -k- -vi -c 
       -tW -tWM"/>
     <PFLAGS value="-$Y- -$L- -$I- -$D- -$A8 -v -JPHNE -M"/>
@@ -77,7 +77,7 @@ CodePage=1251
 [Version Info Keys]
 CompanyName=Bakanov (http://vbakanov.ru/left_1.htm)
 FileDescription=DataFlow
-FileVersion=4.2.0.1
+FileVersion=4.2.0.0
 InternalName=2009-2021
 LegalCopyright=
 LegalTrademarks=DATA-FLOW
@@ -85,6 +85,9 @@ OriginalFilename=
 ProductName=DATA-FLOW
 ProductVersion=4.4.3 march 2021
 Comments=http://vbakanov.ru/dataflow/
+
+[Excluded Packages]
+c:\program files (x86)\borland\cbuilder6\Bin\dclsoap60.bpl=Borland SOAP Components
 
 [HistoryLists\hlIncludePath]
 Count=1
