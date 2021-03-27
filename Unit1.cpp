@@ -1,4 +1,4 @@
-
+//
 #include "Unit1.h"
 #include "Unit2.h" // чтобы был доступ к F2 (форма вывода графика интенсивности вычислений)
 #include "Unit3.h" // чтобы был доступ к F3 (форма вывода графика Ганнта)
@@ -111,7 +111,7 @@ char trueLowerCase[]  = "true",  trueUpperCase[] ="TRUE",
 //------------------------------------------------------------------------------
 char uniqueStr[_512] = "\0"; // уникальная строка для имен файлов ( дата + время до мсек )
 //
-void   __fastcall Read_Config();
+void   __fastcall Read_Config( int Rule ); // управление считываем положения и размеров F1
 void   __fastcall Write_Config();
 void   __fastcall Delay(long mSecs);  // ждать mSecs миллисекунд (с возможность поработать WINDOWS)
 void   __fastcall RunExternal(char* CommandLine, byte RuleParent, byte Priority, bool RuleMessage);
@@ -280,7 +280,7 @@ struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
 } RWC = {
  "Max_Lengths", // [1] значения параметров
   "Max_Instruction","Max_Data","Max_Proc","Max_Buffer",
- "Times", // [2] секция времён выполнения инструкций
+ "Ticks", // [2] секция времён выполнения инструкций в Тиках
  "Editor_File", // [3] секция имени текстового редактора
   "File","Mode",
  "Strategy", // [4] стратегия порядка выбора инструкций из буфера
@@ -423,7 +423,7 @@ INT StartNumb = 100; // начальный номер операторов для вывода в виде ИГА
 struct ip {
  char Set[_SET_LEN]; // мнемоника инструкции (3 символа + терминирующий "0")
  int nInputOperands, // число ВХОДНЫХ операндов инструкции
-     Time; // время выполнения инструкции (в тИках)
+     Ticks; // время выполнения инструкции (в тИках)
 } I_P, Set_Params[] = {
  {"SET", 1,    0},
  {"ADD", 2,   20}, // мнемоника инструкции, число ВХОДНЫХ операндов, время выполнения в тиках
@@ -530,7 +530,7 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
  strcpy(FileNameINI, ChangeFileExt(ParamStr(0), ".ini").c_str()); // путь к INI-файлу тот же,что к EXE
 //
- Read_Config(); // читаем файл конфигурации (и перераспределяем память динамических массивов)
+ Read_Config( 0 ); // читаем файл конфигурации (и перераспределяем память динамических массивов)
 //
 // StatusBarMain->Visible = TRUE;
 //
@@ -904,8 +904,9 @@ Delay(long mSecs)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall Read_Config()
+void __fastcall Read_Config( int Rule)
 {// восстанавливает данные из файла конфигурации
+// (при Rule=1 не восстанвливаютя положение и размер F1)
 //
  TIniFile *tINI = new TIniFile(ExpandFileName(FileNameINI)); // создали объект типа TIniIFile
 //------------------------------------------------------------------------------
@@ -948,17 +949,20 @@ void __fastcall Read_Config()
  tick_Interval = tINI->ReadInteger(RWC.Sect7, RWC.Sect7_Var1, 10); // период тика (миллисекунд)
  F1->Master_Timer->Interval = tick_Interval;
 //
- F1->Top    = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var1,      20); // положение и размеры главной формы
- F1->Left   = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var2,      20);
- F1->Width  = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var3, minW_F1);
- F1->Height = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var4, minH_F1);
+ if( Rule != 1 ) // при Rule==1 не надо изменять положение и размер формы F1
+ {
+  F1->Top    = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var1,      20); // положение и размеры главной формы
+  F1->Left   = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var2,      20);
+  F1->Width  = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var3, minW_F1);
+  F1->Height = tINI->ReadInteger(RWC.Sect8, RWC.Sect8_Var4, minH_F1);
+ }
 //
  strcpy( FileNameSet, tINI->ReadString(RWC.Sect9, RWC.Sect9_Var1, "DataFlow.set").c_str()); // имя файла программы
 //
 //------------------------------------------------------------------------------
 //
  for(int i=0; i<Count_Sets; i++) // по списку инструкций
-  Set_Params[i].Time = tINI->ReadInteger(RWC.Sect2, Set_Params[i].Set, Set_Params[i].Time);
+  Set_Params[i].Ticks = tINI->ReadInteger(RWC.Sect2, Set_Params[i].Set, Set_Params[i].Ticks);
 //
  strcpy(FileNameEditor, tINI->ReadString(RWC.Sect3, RWC.Sect3_Var1, "notepad.exe").c_str()); // файл текстового редактора
  modeEdit = tINI->ReadBool(RWC.Sect3, RWC.Sect3_Var2, FALSE); // режим вызова текстового редактора
@@ -1054,27 +1058,27 @@ Vizu_Sets()
    mS->Cells[j][1] = "";
   return TRUE;
  }
-
+//
  mS->RowCount = Really_Set + 1; // настроили число строк в визуализируемом объекте
-
+//
  for(UI i=0; i<Really_Set; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Set)...
   {
    for(int j=0; j<7; j++) // по всем колонкам строки i
     mS->Cells[j][i+1] = ""; // очистили !
-
+//
 ////////////////////////////////////////////////////////////////////////////////
    mS->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
 
 // нулевой столбец /////////////////////////////////////////////////////////////
    snprintf(tmp,sizeof(tmp), "%7d", i); // число 'прижато' к правому краю (умолчание)
    mS->Cells[0][i+1] = tmp; // номер инструкции
-
+//
 // первый столбец - мнемоника инструкции ///////////////////////////////////////
    strcpy(Set, Mem_Instruction[i].Set); // в Set - мнемоника инструкции (так легче работать...)
-
+//
    snprintf(tmp,sizeof(tmp), "  %s", Set); // два пробела перед мнемоникой
    mS->Cells[1][i+1] = tmp; // мнемоника инструкции
-
+//
 ////////////////////////////////////////////////////////////////////////////////
    switch( Get_CountOperandsByInstruction(Set) ) // ... число входных операндов инструкции Set
    {
@@ -1907,7 +1911,8 @@ Vizu_Flow_Exec() // визуализировать процент выполнения программы
 void __fastcall // начали вычисления (нажатие кнопки СЧЕТ)
 TF1::Run_Calculations(TObject *Sender)
 {
-// flagGraph = TRUE; // управление отрисовкой графика функции интенсивности вычислений
+//
+ Read_Config( 1 ); // перечитали файл конфигурации (без изменения положения и размеров F1)
 //
 // --- полный путь к каталогу сброса рассчитанных данных (включая слэш в конце)
  snprintf( PathToSubDirOutData,sizeof(PathToSubDirOutData), "%s%s\\", ExtractFilePath ( Application->ExeName ), NameSubDirOutData);
@@ -3373,11 +3378,11 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
               strcat(str, tmp); }
 //
 ////////////////////////////////////////////////////////////////////////////////
-
+//
  } // конец цикла по Mem_Instruction[]
-
+//
  mS->Repaint();
-
+//
  if( strlen(str) ) // строка не пустая
  {
   t_printf( "\n-I- %s(): результат выполнения инструкции #%d используется %d раз/а в качестве операнда/ов: %s -I-",
@@ -3390,7 +3395,7 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
 //                   __FUNC__, mS->Row-1, Really_Select, str);
                      __FUNC__ + 5, mS->Row-1, Really_Select, str); // избавляемся от TF1::
  }
-
+//
 } //----- конец TF!::Result_toOperands -----------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3405,21 +3410,21 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
      i_save, i_save_no = -1234567;
 //
  i_save = i_save_no; // предварительное присваивание
-
+//
  if( is_SET(Mem_Instruction[mS->Row-1].Set) ) // для SET действие бессмысленно...
   return;
-
+//
  Clear_AllCells(); // очистим цвета всех ячеек таблицы инструкций
-
+//
  Col = mS->Col; // запомнили номер столбца (2-й соответствует aOp1, 3-й - aOp2)
  Row = mS->Row;
-
+//
  if(Col == 2)
   strcpy(aOp1, Mem_Instruction[mS->Row-1].aOp1); // запомнили адрес aOp1
  else
  if(Col == 3)
   strcpy(aOp2, Mem_Instruction[mS->Row-1].aOp2); // запомнили адрес aOp2 (может не быть!!!)
-
+//
  strcpy(Set, Mem_Instruction[Row-1].Set); //  взяли мнемонику выделенной инструкции
  n_Op = Get_CountOperandsByInstruction(Set); // число ее входных операндов
 //
@@ -3428,7 +3433,7 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
  for(ULI i=0; i<Really_Set; i++) // по всем строкам Mem_Instruction[]
  {
   strcpy(aResult, Mem_Instruction[i].aResult); // взяли адрес результата i-той инструкции
-
+//
   if(Col == 2) // первый входной операнд ( aOp1 )
    if(!strcmp(aOp1, Mem_Instruction[i].aResult)) // есть совпадение aOp1 с aResult ?
     {
@@ -3440,7 +3445,7 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
      Really_Select ++ ;
      i_save = i;
     }
-
+//
   if(Col == 3 && n_Op == 2) // второй (из двух) входной операнд ( aOp2 )
      if(!strcmp(aOp2, Mem_Instruction[i].aResult)) // есть совпадение aOp2 с aResult ?
     {
@@ -3452,9 +3457,9 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
      Really_Select ++ ;
      i_save = i;
     }
-
+//
  } // конец цикла по Mem_Instruction[]
-
+//
  mS->Repaint();
 //
  if(i_save != i_save_no) // зависимость найдена!
@@ -3758,7 +3763,7 @@ void __fastcall Draw_ReadyOperands()
 void __fastcall TF1::OnShow_F1(TObject *Sender)
 { // вызывается при отрисовке главной формы
 //
- Read_Config(); // перечитать файл конфигурации
+ Read_Config( 0 ); // перечитать файл конфигурации
 //
  if( ParamCount() == 4 ) // берём нужное число параметров командной строки
  {
@@ -4412,12 +4417,22 @@ void __fastcall TF1::Show_Graph(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
 { // вызывается при нажатии клавиши в E_AIU (ввод числа АИУ)
+//
+ if( Key == VK_RETURN ) // нажали Enter
+ {
+  Write_Config(); // переписать файл конфигурации
+  Max_Proc = StrToInt(F1->E_AIU->Text); // перевели в число (глобал)
+  Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
+  Key = NULL; // ничего кроме '0-9', BackSpace, Esc не пропускаем..!
+ }
+ else
+//
  if( !( isdigit( Key ) || Key == VK_BACK || Key == VK_ESCAPE ) )
  {
   Beep( 440, 100 ); // звуковое предупреждение...
   Beep( 880, 150 );
 //  Beep( 2048, 100 );
-  Key = NULL; // ничего кроме '0-9', BackSpace не пропускаем..!
+  Key = NULL; // ничего кроме '0-9', BackSpace, Esc не пропускаем..!
  }
 } //----------------------------------------------------------------------------
 
@@ -4442,30 +4457,30 @@ char* __fastcall strReplace( char* dest, int num, const char* source, const char
   size_t len1 = strlen(orig);
   size_t len2 = strlen(rep);
   char*  tmp  = dest;
-
+//
   num -= 1;
-
+//
   while( (ptr = strstr(source, orig)) != NULL )
   {
    num -= (ptr - source) + len2;
    if( num < 1 )
      break;
-
+//
    strncpy( dest, source, (size_t)(ptr - source) );
    dest += ptr - source;
    strncpy(dest, rep, len2);
    dest += len2;
    source  = ptr + len1;
   } // конец while
-
+//
   for( ; (*dest = *source) && (num > 0); --num)
   {
    ++dest;
    ++source;
   }
-
+//
   return tmp;
-
+//
 } //  --------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4623,7 +4638,7 @@ Get_TicksByInstruction(char *Set)
  {
   if( !strcmp( Set_Params[i].Set, Set ) )
 // return Set_Params[i].Time
-   return Set_Params[i].Time > 0 ? Set_Params[i].Time : 0 ; // return 0 при Set_Params[i].Time <= 0
+   return Set_Params[i].Ticks > 0 ? Set_Params[i].Ticks : 0 ; // return 0 при Set_Params[i].Ticks <= 0
  }
 //
 // не нашли... информируем об этом !!! /////////////////////////////////////////
@@ -5881,7 +5896,7 @@ void __fastcall Extended_Save_IGA()
           AnsiUpperCase(ExtractFileName(FileNameSet) ) );
 //
  for(i=0; i<Really_Set; i++) // по всем инcтрукциям (операторам)
-  fprintf(fptr, "=%d/%d: -Times %d ; [%s,%s,%s,%s,%s,%s]\n",
+  fprintf(fptr, "=%d/%d: -Tiслы %d ; [%s,%s,%s,%s,%s,%s]\n",
                  i+StartNumb,i+StartNumb,Get_TicksByInstruction(Mem_Instruction[i].Set),
                  Mem_Instruction[i].Set,
                  Mem_Instruction[i].aOp1,Mem_Instruction[i].aOp2,Mem_Instruction[i].aResult,
@@ -6321,4 +6336,5 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
 // SBM2->Width = F1->ClientWidth / 4;
 //
 } //----- конец F1_OnResize ----------------------------------------------------
+
 
