@@ -208,7 +208,7 @@ void  __fastcall Save_IGA(); // сохраняем граф в виде списка дуг (формат *.GV)
 void  __fastcall Extended_Save_IGA(); // сохраняем данные о времени выполнения операторов (формат *.MVR)
 char* __fastcall PutDateTimeToString(INT flag); // выдача текущих даты и времени в строку с форматированием
 //
-void  __fastcall Move_Row( INT Row ); // сделать строку Row (начинаем с 0) текущей
+void  __fastcall Make_Row_Current( INT Row ); // сделать строку Row (начинаем с 0) текущей
 //
 struct timeb t0, t1; // момент начала выборки инструкций
 void   ftime(struct timeb *buf);
@@ -279,12 +279,12 @@ struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
       *Sect17, *Sect17_Var1;
 } RWC = {
  "Max_Lengths", // [1] значения параметров
-  "Max_Instruction","Max_Data","Max_Proc","Max_Buffer",
+  "max_Instruction","max_Data","max_Proc","max_Buffer",
  "Ticks", // [2] секция времён выполнения инструкций в Тиках
  "Editor_File", // [3] секция имени текстового редактора
   "File","Mode",
  "Strategy", // [4] стратегия порядка выбора инструкций из буфера
-  "How_Calc_Param","How_Calc_Prior",
+  "how_Calc_Param","how_Calc_Prior",
  "Delay_Vizu_Buffer", // [5] время визуализации буфера (при #0 ВРЕМЯ ВЫПОЛНЕНИЯ ПРОГРАММЫ будет завЫшено)
   "Delay",
  "Graph", // [6] управление режимами вывода графика интенсивности вычислений
@@ -355,7 +355,7 @@ struct mp {
 // double t_Start; // момент времени начала выполнения инструкции
  ULI tick_Start; // момент (тик, такт) старта выполнения инструкции
 } M_P, *Mem_Proc=NULL;
-ULI Max_Proc = _128, // первоначальный захват
+ULI max_Proc = _128, // первоначальный захват
     Free_Proc; // текущее число свободных АИУ
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +375,7 @@ struct mi {
       fAddBuffer;  // признак того, что инструкция добавлена в буффер
  char Comment[_256];  // комментарий к инструкции
 } M_I, *Mem_Instruction=NULL;
-ULI Max_Instruction = _128,   // первоначальный захват
+ULI max_Instruction = _128,   // первоначальный захват
     Really_Set = 0,   // текущее значение
     Already_Exec = 0; // уже выполнено
 //
@@ -396,7 +396,7 @@ struct md {
  REAL Data; // содержимое ячейки
  ULI i_Set; // номер инструкции, в результате котрой было вычислено это значеник
 } M_D, *Mem_Data=NULL;
-ULI Max_Data = _128,  // первоначальный захват
+ULI max_Data = _128,  // первоначальный захват
     Really_Data = 0; // текущее значение
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,7 +407,7 @@ struct mb {
  float Param, // параметр для определения ПОЛЕЗНОСТИ
        Priority; // собственно ПРИОРИТЕТ (чем больше - тем раньше инструкция запускается на исполнение)
 } M_B, *Mem_Buffer=NULL;
-ULI Max_Buffer = _128,  // первоначальный захват
+ULI max_Buffer = _128,  // первоначальный захват
     Really_Buffer = 0, // текущая длина
     Really_Buffer_Old; // то же до последнего изменения
 bool buffer_Fill = FALSE; // если TRUE - буфер заполнен
@@ -496,8 +496,8 @@ char NameSubDirOutData[] = "Out!Data", // имя подкаталога для сброса рассчитанны
 ////////////////////////////////////////////////////////////////////////////////
 // Определение стратегии порядка выбора инструкций из буфера
 ////////////////////////////////////////////////////////////////////////////////
-int How_Calc_Prior = 0, // вычисление приоритета (0 - прямо пропорц. Parameter, 1 - обратно
-    How_Calc_Param = 0; // вычисление параметра (0 - одинаковый,
+int how_Calc_Prior = 0, // вычисление приоритета (0 - прямо пропорц. Parameter, 1 - обратно
+    how_Calc_Param = 0; // вычисление параметра (0 - одинаковый,
                         // 1 - время выполнения инструкции,
                         // 2 - случайное число,
                         // 3 - число иных инструкций, для которых результаты данной является одним
@@ -512,7 +512,8 @@ bool flagAlarmData   = TRUE,
      flagAlarmParser = TRUE;
 //
 ULI dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длиной 0 тиков
-    pass_Counts = 0; // пропускаем pass_Counts выполненных операторов при перемещении фокуса в SG_Set[][]
+    pass_Counts = 0, // пропускаем pass_Counts выполненных операторов при перемещении фокуса в SG_Set[][]
+    count_Ops=0; // номер выполненного оператора по очереди (идёт с накоплением)
 //
 //==============================================================================
 //
@@ -536,11 +537,11 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- Mem_Instruction = ( mi* ) malloc( Max_Instruction      * sizeof( mi ) ); // первоначальный захват памяти под динамические массивы
- Sel_Cell        = ( sc* ) malloc( 10 * Max_Instruction * sizeof( sc ) );
- Mem_Proc        = ( mp* ) malloc( Max_Proc             * sizeof( mp ) );
- Mem_Data        = ( md* ) malloc( Max_Data             * sizeof( md ) );
- Mem_Buffer      = ( mb* ) malloc( Max_Buffer           * sizeof( mb ) );
+ Mem_Instruction = ( mi* ) malloc( max_Instruction      * sizeof( mi ) ); // первоначальный захват памяти под динамические массивы
+ Sel_Cell        = ( sc* ) malloc( 10 * max_Instruction * sizeof( sc ) );
+ Mem_Proc        = ( mp* ) malloc( max_Proc             * sizeof( mp ) );
+ Mem_Data        = ( md* ) malloc( max_Data             * sizeof( md ) );
+ Mem_Buffer      = ( mb* ) malloc( max_Buffer           * sizeof( mb ) );
 //
 ////////////////////////////////////////////////////////////////////////////////
  Tpr = new TStringList(); // создать набор строк для анализа загруженности АИУ
@@ -771,6 +772,9 @@ TF1::SG_Sets_Edit(TObject *Sender) // вызов редактора файла инструкций
   Rewrite_Files( Sender ); // перечитать файл
  }
 //
+ Read_Config( 1 ); // перечитать файлы без изменения положения и размеров F1
+ MessageBeep( MB_OK ); // звуковое предупреждение...
+//
 } // конец SG_Sets_Edit --------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -789,6 +793,7 @@ void __fastcall TF1::INI_Edit(TObject *Sender)
   Rewrite_Files( Sender ); // перечитать файл
  }
 //
+ Read_Config( 1 ); // перечитать файлы без изменения положения и размеров F1
  MessageBeep( MB_OK ); // звуковое предупреждение...
 //
 } // конец INI_Edit ------------------------------------------------------------
@@ -911,36 +916,36 @@ void __fastcall Read_Config( int Rule)
  TIniFile *tINI = new TIniFile(ExpandFileName(FileNameINI)); // создали объект типа TIniIFile
 //------------------------------------------------------------------------------
 //
- Max_Instruction  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var1, MAX_INSTRUCTION); // число строк пула команд
-  Max_Instruction = (Max_Instruction >  MAX_INSTRUCTION) ? MAX_INSTRUCTION : Max_Instruction;
-  Max_Instruction = (Max_Instruction <= 0) ? 1 : Max_Instruction;
+ max_Instruction  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var1, MAX_INSTRUCTION); // число строк пула команд
+  max_Instruction = (max_Instruction >  MAX_INSTRUCTION) ? MAX_INSTRUCTION : max_Instruction;
+  max_Instruction = (max_Instruction <= 0) ? 1 : max_Instruction;
 //
- Max_Data  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var2, MAX_DATA); // число строк пула данных
-  Max_Data = (Max_Data >  MAX_DATA) ? MAX_DATA : Max_Data;
-  Max_Data = (Max_Data <= 0) ? 1 : Max_Data;
+ max_Data  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var2, MAX_DATA); // число строк пула данных
+  max_Data = (max_Data >  MAX_DATA) ? MAX_DATA : max_Data;
+  max_Data = (max_Data <= 0) ? 1 : max_Data;
 //
- Max_Proc  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var3, MAX_PROC); // число задействованных АИУ
-  Max_Proc = (Max_Proc >  MAX_PROC) ? MAX_PROC : Max_Proc;
-  Max_Proc = (Max_Proc <= 0) ? 1 : Max_Proc;
+ max_Proc  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var3, MAX_PROC); // число задействованных АИУ
+  max_Proc = (max_Proc >  MAX_PROC) ? MAX_PROC : max_Proc;
+  max_Proc = (max_Proc <= 0) ? 1 : max_Proc;
 //
- F1->E_AIU->Text = Max_Proc; // вывели в E_AIU =================================
+ F1->E_AIU->Text = max_Proc; // вывели в E_AIU =================================
 //
- Max_Buffer  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var4, MAX_BUFFER); // число строк буфера инструкций
-  Max_Buffer = (Max_Buffer >  MAX_BUFFER) ? MAX_BUFFER : Max_Buffer;
-  Max_Buffer = (Max_Buffer <= 0) ? 1 : Max_Buffer;
-//
-////////////////////////////////////////////////////////////////////////////////
-//
- Mem_Instruction = ( mi* ) realloc( Mem_Instruction, Max_Instruction * sizeof( mi ) ); // переопределяем память под динамические массивы
- Sel_Cell        = ( sc* ) realloc( Sel_Cell,   10 * Max_Instruction * sizeof( sc ) ); // если "старый" указатель=NULL, то аналог malloc()
- Mem_Proc        = ( mp* ) realloc( Mem_Proc,   Max_Proc   * sizeof( mp ) );
- Mem_Data        = ( md* ) realloc( Mem_Data,   Max_Data   * sizeof( md ) );
- Mem_Buffer      = ( mb* ) realloc( Mem_Buffer, Max_Buffer * sizeof( mb ) );
+ max_Buffer  = tINI->ReadInteger(RWC.Sect1, RWC.Sect1_Var4, MAX_BUFFER); // число строк буфера инструкций
+  max_Buffer = (max_Buffer >  MAX_BUFFER) ? MAX_BUFFER : max_Buffer;
+  max_Buffer = (max_Buffer <= 0) ? 1 : max_Buffer;
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- How_Calc_Param = tINI->ReadInteger(RWC.Sect4, RWC.Sect4_Var1, 0); // как вычислять параметр
- How_Calc_Prior = tINI->ReadInteger(RWC.Sect4, RWC.Sect4_Var2, 0); // как вычислять приоритет
+ Mem_Instruction = ( mi* ) realloc( Mem_Instruction, max_Instruction * sizeof( mi ) ); // переопределяем память под динамические массивы
+ Sel_Cell        = ( sc* ) realloc( Sel_Cell,   10 * max_Instruction * sizeof( sc ) ); // если "старый" указатель=NULL, то аналог malloc()
+ Mem_Proc        = ( mp* ) realloc( Mem_Proc,   max_Proc   * sizeof( mp ) );
+ Mem_Data        = ( md* ) realloc( Mem_Data,   max_Data   * sizeof( md ) );
+ Mem_Buffer      = ( mb* ) realloc( Mem_Buffer, max_Buffer * sizeof( mb ) );
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+ how_Calc_Param = tINI->ReadInteger(RWC.Sect4, RWC.Sect4_Var1, 0); // как вычислять параметр
+ how_Calc_Prior = tINI->ReadInteger(RWC.Sect4, RWC.Sect4_Var2, 0); // как вычислять приоритет
 //
  Delay_Buffer = abs (tINI->ReadInteger(RWC.Sect5, RWC.Sect5_Var1, 0)); // задержка визуализации буфера (миллисек)
 //
@@ -1007,7 +1012,7 @@ void __fastcall Write_Config()  // сохраняет данные в файл конфигурации
 //
 // tINI->WriteInteger(RWC.Sect4, RWC.Sect4_Var1, How_Calc_Param); // как вычислять параметр приоритета
 // tINI->WriteInteger(RWC.Sect4, RWC.Sect4_Var2, How_Calc_Prior); // как вычислять приоритет
- tINI->WriteInteger(RWC.Sect1, RWC.Sect1_Var3, StrToInt(F1->E_AIU->Text)); // Max_Proc - число задействованных АИУ
+ tINI->WriteInteger(RWC.Sect1, RWC.Sect1_Var3, StrToInt(F1->E_AIU->Text)); // max_Proc - число задействованных АИУ
 //
  tINI->WriteInteger(RWC.Sect8, RWC.Sect8_Var1, F1->Top); // положение и размеры главной формы
  tINI->WriteInteger(RWC.Sect8, RWC.Sect8_Var2, F1->Left);
@@ -1131,10 +1136,11 @@ Vizu_Data()
 //
  mD->RowCount = Really_Data + 1; // настроили число строк в визуализируемом объекте
 //
- for(UI i=0; i<Really_Data; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Set)...
+ for(UI i=0; i<Really_Data; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Data)...
   {
    mD->Cells[0][i+1] = Mem_Data[i].Addr; // значение адреса
-   snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Mem_Data[i].Data); // значение числа по данному адресу
+//   snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Mem_Data[i].Data); // значение числа по данному адресу
+   snprintf(tmp,sizeof(tmp), "%.*g", ACC_REAL, Mem_Data[i].Data); // значение числа по данному адресу
    mD->Cells[1][i+1] = tmp;
 // вывод значений логических предикатов ========================================
 //
@@ -1165,16 +1171,17 @@ Vizu_Buffer() // визуализация данных в SG_Buffer из массива структур Mem_Buffer[
    mB->Cells[j][1] = " ";
   return;
  }
-
+//
  mB->RowCount = Really_Buffer + 1; // настроили число строк в визуализируемом объекте
-
+//
  for(UI i=0; i<Really_Buffer; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Buffer)...
   {
    snprintf(tmp,sizeof(tmp), "%7d / %s",  // номер инструкции и ее мнемоника как строка
                              Mem_Buffer[i].i_Set, Mem_Instruction[Mem_Buffer[i].i_Set].Set);
    mB->Cells[0][i+1] = tmp;
-
-   snprintf(tmp,sizeof(tmp), "%.3f / %.3f", // готовим строку вмда "Param / Priority"
+//
+//   snprintf(tmp,sizeof(tmp), "%.3f / %.3f", // готовим строку вмда "Param / Priority"
+   snprintf(tmp,sizeof(tmp), "%.3g / %.3g", // готовим строку вмда "Param / Priority"
                              Mem_Buffer[i].Param,
                              Mem_Buffer[i].Priority);
    mB->Cells[1][i+1] = tmp;
@@ -1498,19 +1505,19 @@ Add_toData(int i_Set, char* aResult, REAL Data)
 //
 // такой строки не существует... УРА!!! Можно добавлять ........................
 //
- if( Really_Data > 0.5*Max_Data ) // информировать об опасности заполненности массива..!
+ if( Really_Data > 0.5*max_Data ) // информировать об опасности заполненности массива..!
  {
-  snprintf( tmp,sizeof(tmp), "Данные (%d%)", int( 1e2*Really_Data/Max_Data) );
+  snprintf( tmp,sizeof(tmp), "Данные (%d%)", int( 1e2 * Really_Data / max_Data) );
   F1->Label_Data->Caption = tmp; // число адресов (имён) данных
   F1->Label_Data->Repaint();
  }
 //
- if( Really_Data >= Max_Data-1 ) // опасность превышЕния размеры пула данных
+ if( Really_Data >= max_Data-1 ) // опасность превышЕния размеры пула данных
  {
   if( flagAlarmData ) // надо выдавать сообщения...
   {
    t_printf( "-\n-W- %s(): память данных (%d) исчерпана, возможна потеря информации (%s)... -W-\n-",
-              __FUNC__, Max_Data, Get_Time_asLine());
+              __FUNC__, max_Data, Get_Time_asLine());
    ShowMessage( "Память данных исчерпана, при дальнейшей работе возможна потеря информации..." );
    MessageBeep( MB_ICONASTERISK ); // предупреждение...
 //
@@ -1531,9 +1538,10 @@ Add_toData(int i_Set, char* aResult, REAL Data)
            __FUNC__, ACC_REAL, Data, i_Set, aResult, Get_Time_asLine());
 //
  mD->RowCount = Really_Data + 2; // обязательно 2 (чтобы при Really_Data=0 было 2, а не 1)
- snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Data);
- mD->Cells[0][Really_Data+1] = aResult;
+// snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Data);
+ snprintf(tmp,sizeof(tmp), "%.*g", ACC_REAL, Data);
  mD->Cells[1][Really_Data+1] = tmp; // вывели в ОКНО_ДАННЫХ
+ mD->Cells[0][Really_Data+1] = aResult;
 //
  Really_Data ++ ;
 } // ----- конец Add_toData ----------------------------------------------------
@@ -1745,7 +1753,7 @@ Calc_Stat_Proc()
                    (t1.time + 1.0e-3*t1.millitm) - (t0.time + 1.0e-3*t0.millitm),
                    all_maxProcs, // всего АИУ было использовано
                    simult_maxProcs, // max ОДНОВРЕМЕННО работающих АИУ
-                   Max_Proc ); // всего в системе задано
+                   max_Proc ); // всего в системе задано
 //
  t_printf( "последовательное = %ld тактов", serial_Ticks );
 //
@@ -1896,8 +1904,8 @@ Vizu_Flow_Exec() // визуализировать процент выполнения программы
  char tmp[_512];
 //
  snprintf(tmp,sizeof(tmp), " АИУ: %d/%d | буфер %.1f%% | выполнено %.1f%% (%d/%d) инструкций",
-                Max_Proc - Free_Proc, Max_Proc,
-                1.0e2 * Really_Buffer / Max_Buffer,
+                max_Proc - Free_Proc, max_Proc,
+                1.0e2 * Really_Buffer / max_Buffer,
                 1.0e2 * Already_Exec  / Really_Set,
                 Already_Exec, Really_Set);
  SBM0->Text = tmp; // вывод текста в StatusBarMain (секция 0)
@@ -1913,6 +1921,8 @@ TF1::Run_Calculations(TObject *Sender)
 {
 //
  Read_Config( 1 ); // перечитали файл конфигурации (без изменения положения и размеров F1)
+//
+ count_Ops = 0; // количество выполненных операторов в данном сеансе (глобал)
 //
 // --- полный путь к каталогу сброса рассчитанных данных (включая слэш в конце)
  snprintf( PathToSubDirOutData,sizeof(PathToSubDirOutData), "%s%s\\", ExtractFilePath ( Application->ExeName ), NameSubDirOutData);
@@ -1944,38 +1954,40 @@ TF1::Run_Calculations(TObject *Sender)
 //
 // Label_AIU->Caption = E_AIU->Text;
 //
- ULI Max_Proc_New = StrToInt( E_AIU->Text ); // взяли число АИУ (параллельных вычислителей)
+ ULI max_Proc_New = StrToInt( E_AIU->Text ); // взяли число АИУ (параллельных вычислителей)
 //
- Max_Proc = (Max_Proc >  MAX_PROC) ? MAX_PROC : Max_Proc;
- Max_Proc = (Max_Proc <=        0) ? 1        : Max_Proc;
- E_AIU->Text = Max_Proc_New;
+ max_Proc = (max_Proc >  MAX_PROC) ? MAX_PROC : max_Proc;
+ max_Proc = (max_Proc <=        0) ? 1        : max_Proc;
+ E_AIU->Text = max_Proc_New;
  E_AIU->Repaint(); // принудительно перерисуем...
 //
- if( Max_Proc_New != Max_Proc ) // заказали иное число АИУ, чем было
+ if( max_Proc_New != max_Proc ) // заказали иное число АИУ, чем было
  {
-  Max_Proc = Max_Proc_New; // заменили...
+  max_Proc = max_Proc_New; // заменили...
 //
   Write_Config(); // запомнили это число в файле настроек
 //
-  Mem_Proc = ( mp* ) realloc( Mem_Proc, Max_Proc * sizeof( mp ) ); // перераспределили ТОЛЬКО память под АИУ
- } // конец  if( Max_Proc_New != Max_Proc )
+  Mem_Proc = ( mp* ) realloc( Mem_Proc, max_Proc * sizeof( mp ) ); // перераспределили ТОЛЬКО память под АИУ
+ } // конец  if( max_Proc_New != max_Proc )
 //
   mR->Clear(); // очистили Memo_Run .............................................
 //
-  Install_All_Flags(); // очистили все флаги в Mem_Sets[]
-  Vizu_Sets(); // визуализировали все инструкции в ОКНЕ_ИНСТРУКЦИЙ
+ Install_All_Flags(); // очистили все флаги в Mem_Sets[]
+ Vizu_Sets(); // визуализировали все инструкции в ОКНЕ_ИНСТРУКЦИЙ
 //
-  Really_Data = 0; // очистили пул данных
-  Vizu_Data();  // визуализировали данные в ОКНЕ_ДАННЫХ
+ Really_Data = 0; // очистили пул данных
+ Vizu_Data();  // визуализировали данные в ОКНЕ_ДАННЫХ
 //
-  Really_Buffer = 0; // очистили буфер команд
-  Vizu_Buffer();  // визуализировали инструкции в БУФЕРЕ_ИНСТРУКЦИЙ
+ Really_Buffer = 0; // очистили буфер команд
+ Vizu_Buffer();  // визуализировали инструкции в БУФЕРЕ_ИНСТРУКЦИЙ
 //
-  Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
+ Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
 //
 //  Rewrite_Files( Sender ); // перечитать файл программы !!!!!!!!!!!!!!!!!!!!!!
 //
  Clear_AllCells(); // очистили все ячейки
+//
+ Make_Row_Current( 0 ); // установили текущей первую команду
 //
  Start_DataFlow_Process( 0 ); // начинаем счет по кнопке ВЫПОЛНИТЬ
 //
@@ -1993,10 +2005,10 @@ Start_DataFlow_Process(int Mode)
 //
  Regim = 1;  // начать выполнение программы
 //
- for(UI i=0; i<Max_Proc; i++) // все АИУ...
+ for(UI i=0; i<max_Proc; i++) // все АИУ...
   Mem_Proc[i].Busy = FALSE; // "СВОБОДНЫ"
 //
- Free_Proc = Max_Proc; // пока все АИУ свободны
+ Free_Proc = max_Proc; // пока все АИУ свободны
 //
  mR->Clear(); // очистили Memo_Run
 //
@@ -2092,7 +2104,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
 //
 ////////////////////////////////////////////////////////////////////////////////
 // ищем свободное АИУ для исполнения инструкции номер i_Set ....................
- for(i_Proc=0; i_Proc<Max_Proc; i_Proc++) // по всем АИУ .......................
+ for(i_Proc=0; i_Proc<max_Proc; i_Proc++) // по всем АИУ .......................
   if(!Mem_Proc[i_Proc].Busy) // процессор (АИУ) i_Proc свободен ................
    goto find_free_proc;
 //
@@ -2140,7 +2152,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //
 // запомним момент времени (в тиках) начала выполнения данной инструкции
-   Mem_Proc[i_Proc].tick_Start = localTick; // номер тика начала выполнения.........
+ Mem_Proc[i_Proc].tick_Start = localTick; // номер тика начала выполнения.........
 //
 ////////////////////////////////////////////////////////////////////////////////
  if(!strcmp(Set, "ADD")) // это инструкция ADD
@@ -2668,8 +2680,10 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
    t_printf( "-I- %s(): инструкция #%d [%s] была выполнена на АИУ номер %d -I-",
                      __FUNC__, i_Set, Line_Set(i_Set, -1), i_Proc);
 //
-  if( pass_Counts>0 && i_Set%pass_Counts ) // каждые pass_Counts раз
-    Move_Row( i_Set ); // сделаем данную строку в SG_Set[][] текущей
+  if( pass_Counts>0 && !(count_Ops % pass_Counts) ) // каждые pass_Counts раз
+    Make_Row_Current( i_Set ); // сделаем данную строку в SG_Set[][] текущей
+//
+   count_Ops ++ ; // номер оператора по очереди обработки ( без излишеств не стал писать count_Ops ++ )
 //
 } // конец ExecuteInstructions_ExceptSET ---------------------------------------
 
@@ -2721,7 +2735,7 @@ Add_toBuffer(int i_Set) // добавляет в буфер команд Mem_Buffer[] строку номер i_
  char tmp[_512];
  static bool flagColor = TRUE; // флаг предупреждения о переполнении Mem_Buffer[]
 //
- if(Really_Buffer >= Max_Buffer) // буфер полон
+ if(Really_Buffer >= max_Buffer) // буфер полон
  {
   if( flagAlarmBuffer ) // один раз выведем сообщение
   {
@@ -2771,7 +2785,7 @@ Add_toBuffer(int i_Set) // добавляет в буфер команд Mem_Buffer[] строку номер i_
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- if(Really_Buffer == Max_Buffer) // буфер полный
+ if(Really_Buffer == max_Buffer) // буфер полный
  {
   t_printf( "-W- %s(): буфер полон, больше инструкций добавлять нельзя (%s) -W-",
                     __FUNC__, Get_Time_asLine());
@@ -2790,7 +2804,7 @@ Calc_Priority(float Param) // по значению Param (ПОЛЕЗНОСТЬ) определяется
 // ПРИОРИТЕТ данной инструкции при ее запуске на свободном АИУ
 {
 //
- if(!How_Calc_Prior) // если НОЛЬ - прямо пропорционально
+ if(!how_Calc_Prior) // если НОЛЬ - прямо пропорционально
   return (Param);
 //
  else // если НЕ НОЛЬ - обратно пропорционально
@@ -2810,27 +2824,27 @@ Calc_Param(int i_Set) // для инструкции i_Set определяется ее параметр ПОЛЕЗНОСТ
 // char Set[_SET_LEN];
  float Param = 1.0; // умолчание
 //
- if(!How_Calc_Param) // если НОЛЬ - все одинаковые
+ if(!how_Calc_Param) // если НОЛЬ - все одинаковые
   Param = 1.0;
 //
  else
- if(How_Calc_Param == 1) // если ЕДИНИЦА - случайное число =====================
+ if(how_Calc_Param == 1) // если ЕДИНИЦА - случайное число =====================
   Param = rand() % 1000;
 //
  else  // если ДВОЙКА - пропорционально времени выполнения инструкции ==========
- if(How_Calc_Param == 2)
+ if(how_Calc_Param == 2)
   Param = 1.0 * Get_TicksByInstruction(Mem_Instruction[i_Set].Set);
 //
  else  // если ТРОЙКА - общее число иных инструкций, для кот.результат данной совпадает ХОТЬ С ОДНИМ вх.операндов
- if(How_Calc_Param == 3)
+ if(how_Calc_Param == 3)
   Param = Calc_01_Param_Instruction(i_Set);
 //
  else  // если ЧЕТВЕРКА - общее число операндов иных инструкций, совпадающих по адресу с результатом данной
- if(How_Calc_Param == 4)
+ if(how_Calc_Param == 4)
   Param = Calc_02_Param_Instruction(i_Set);
 //
  else  // если ПЯТЕРКА - с УЧЕТОМ ВЕСоВ при совпадении НЕГОТОВЫХ входн.операндов с рез.выполнения данной
- if(How_Calc_Param == 5)
+ if(how_Calc_Param == 5)
   Param = Calc_03_Param_Instruction(i_Set);
 //
  return Param; // вернули значение полезности
@@ -2846,11 +2860,11 @@ Test_Visu_Buffer_Fill() // тестирует и индицирует наполнение буфера интструкций 
  float level[]={0.25, 0,50, 0,75, 0,90}, // уровни тестрирвания
        now,old; // текущее и предыдущее заполнение буфера инструкций
 //
- now = Really_Buffer / Max_Buffer;
- old = Really_Buffer_Old / Max_Buffer;
+ now = Really_Buffer / max_Buffer;
+ old = Really_Buffer_Old / max_Buffer;
 ///
  F1->PB_1->Position = (F1->PB_1->Max - F1->PB_1->Min) *
-                       Really_Buffer / Max_Buffer; // положение ползунка
+                       Really_Buffer / max_Buffer; // положение ползунка
 //
  for(int i=0; i<3; i++) // по уровням level
   {
@@ -2947,10 +2961,10 @@ Calc_Level_Buffer_Fill() // вычисляет наполненность буфера в %% в глобале Level_
 {
  char tmp[_512];
 
- Level_Buffer_Fill = (100.0 * Really_Buffer) / Max_Buffer;
+ Level_Buffer_Fill = (100.0 * Really_Buffer) / max_Buffer;
 
  snprintf(tmp,sizeof(tmp), "Выборка из буфера ( %d / %d = %.3f%% )",
-              Really_Buffer,Max_Buffer,Level_Buffer_Fill);
+              Really_Buffer,max_Buffer,Level_Buffer_Fill);
 // F1->BitBtn_Select_fromBuffer->Caption = tmp;
 
 } // конец Calc_Level_Buffer_Fill ----------------------------------------------
@@ -3018,7 +3032,7 @@ Get_Free_Proc() // возвращает число свободных АИУ
 {
  int Free_Proc = 0; // число свободных АИУ
 //
- for(UI i=0; i<Max_Proc; i++) // по списку АИУ
+ for(UI i=0; i<max_Proc; i++) // по списку АИУ
   if( !Mem_Proc[i].Busy ) // если АИУ номер i свободно...
    Free_Proc ++ ;
 //
@@ -3239,7 +3253,7 @@ TF1::On_Master_Timer(TObject *Sender)
  localTick ++ ; // увеличили число тиков (глобальное) на 1
 ////////////////////////////////////////////////////////////////////////////////
 //
- for(i_Proc=0; i_Proc<Max_Proc; i_Proc++) // по всем АИУ
+ for(i_Proc=0; i_Proc<max_Proc; i_Proc++) // по всем АИУ
   {
    if( !Mem_Proc[i_Proc].Busy ) // АИУ номер i_Proc свободно
     continue; // переход к следующему АИУ
@@ -3768,10 +3782,10 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
  if( ParamCount() == 4 ) // берём нужное число параметров командной строки
  {
   strcpy(FileNameSet, ParamStr(1).c_str()); // имя файла инструкицй (и проекта)
-  Max_Proc        = StrToInt(ParamStr(2).c_str()); // число АИУ (это необязательно - значение берётся из F1->E_AIU->Text)
+  max_Proc        = StrToInt(ParamStr(2).c_str()); // число АИУ (это необязательно - значение берётся из F1->E_AIU->Text)
   F1->E_AIU->Text = ParamStr(2).c_str(); // вывели на форму (всё берётся именно отсюда)
-  How_Calc_Param  = StrToInt(ParamStr(3).c_str()); // как вычислять параметры приоритета
-  How_Calc_Prior  = StrToInt(ParamStr(4).c_str()); // как вычислять собственно приоритет
+  how_Calc_Param  = StrToInt(ParamStr(3).c_str()); // как вычислять параметры приоритета
+  how_Calc_Prior  = StrToInt(ParamStr(4).c_str()); // как вычислять собственно приоритет
 //
   Write_Config(); // сохранить в INI-файл только что запомненные параметры
 //
@@ -4394,7 +4408,7 @@ void __fastcall TF1::Show_Graph(TObject *Sender)
  snprintf( str,sizeof(str), "параллельное вычисление: %d тактов, ускорение = %.*e", parallel_Ticks, ACC_REAL, 1.0 * serial_Ticks / parallel_Ticks );
  F2->Chart_IC->Foot->Text->Add( str );
 //
- snprintf( str,sizeof(str), "всего задействовано %d штук/и АИУ из %d доступных", all_maxProcs, Max_Proc );
+ snprintf( str,sizeof(str), "всего задействовано %d штук/и АИУ из %d доступных", all_maxProcs, max_Proc );
  F2->Chart_IC->Foot->Text->Add( str );
 //
  snprintf( str,sizeof(str), "из них одновременно не более %d штук/и АИУ", simult_maxProcs );
@@ -4421,7 +4435,7 @@ void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
  if( Key == VK_RETURN ) // нажали Enter
  {
   Write_Config(); // переписать файл конфигурации
-  Max_Proc = StrToInt(F1->E_AIU->Text); // перевели в число (глобал)
+  max_Proc = StrToInt(F1->E_AIU->Text); // перевели в число (глобал)
   Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
   Key = NULL; // ничего кроме '0-9', BackSpace, Esc не пропускаем..!
  }
@@ -4443,8 +4457,8 @@ void __fastcall Out_Data_SBM1()
  char tmp[_512];
 //
  snprintf(tmp,sizeof(tmp), " АИУ/инстр./данн./буф./такт (страт.) = %d/%d/%d/%d/%d (%d|%d/%d)",
-              Max_Proc, Max_Instruction, Max_Data, Max_Buffer, F1->Master_Timer->Interval,
-              How_Calc_Param, How_Calc_Prior, pass_Counts);
+              max_Proc, max_Instruction, max_Data, max_Buffer, F1->Master_Timer->Interval,
+              how_Calc_Param, how_Calc_Prior, pass_Counts);
  SBM1->Text=tmp;
 } // ------ конец Out_Data_SBM1 ------------------------------------------------
 
@@ -5456,7 +5470,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
      n_i, // число выполняемых инструкций в момент времени
      n_proc, // номер АИУ
      n_set,  // номер инструкции
-     simult_Max_Proc = 0, // максимальное ОДНОВРЕМЕННО работающее число АИУ (процессоров)
+     simult_max_Proc = 0, // максимальное ОДНОВРЕМЕННО работающее число АИУ (процессоров)
      i_tick; // надо..!
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -5500,7 +5514,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
    if( (i_tick >= tick_1) && (i_tick < tick_2) ) // момент (i_tick) находится между (tick_1) и (tick_2)
    {
     n_i ++ ; // число выполняемых инструкций в момент времени времени tick_i
-    simult_Max_Proc = max( simult_Max_Proc, n_i ); // максимальное ОДНОВРЕМЕННО работающее число АИУ
+    simult_max_Proc = max( simult_max_Proc, n_i ); // максимальное ОДНОВРЕМЕННО работающее число АИУ
    } // конец  if( (i_tick >= tick_1) && (i_tick < tick_2) )
 //
   } // конец цикла по строкам Tpr
@@ -5520,7 +5534,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
 //
 ended: /////////////////////////////////////////////////////////////////////////
 //
- return simult_Max_Proc ; // максимальное ОДНОВРЕМЕННО работающее число АИУ
+ return simult_max_Proc ; // максимальное ОДНОВРЕМЕННО работающее число АИУ
 //
 } // ------- конец процедуры Work_TimeSets_Protocol ----------------------------
 
@@ -5591,7 +5605,7 @@ void __fastcall Save_Protocol_Data()
   if( is_ResultIsPredicat( Mem_Data[i].Addr ) ) // это результат выполнения инструкции-ПРЕДИКАТА...
    fprintf( fptr, "%20s%20s     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data ? trueLowerCase : falseLowerCase, tmp );
   else
-   fprintf( fptr, "%20s%20.5e     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data, tmp );
+   fprintf( fptr, "%20s%20.7g     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data, tmp );
 //
  } // конец цикла for( ULI i=0; i<Really_Data; i++ )
 //
@@ -5929,7 +5943,7 @@ void __fastcall TF1::Show_AIU(TObject *Sender)
  snprintf( str,sizeof(str), "параллельное вычисление: %d тактов, ускорение = %.*e", parallel_Ticks, ACC_REAL, 1.0 * serial_Ticks / parallel_Ticks );
  F3->Chart_AIU->Foot->Text->Add( str );
 //
- snprintf( str,sizeof(str), "всего задействовано %d штук/и АИУ из %d доступных", all_maxProcs, Max_Proc );
+ snprintf( str,sizeof(str), "всего задействовано %d штук/и АИУ из %d доступных", all_maxProcs, max_Proc );
  F3->Chart_AIU->Foot->Text->Add( str );
 //
  snprintf( str,sizeof(str), "из них одновременно не более %d штук/и АИУ", simult_maxProcs );
@@ -6037,7 +6051,7 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  char tmp[_512], cnst[_512];
 //
  snprintf( cnst, sizeof(cnst), "!%s!AIU=%d_Param=%d_Prior=%d!%s.txt", ExtractFileName(FileNameSet),
-                                Max_Proc, How_Calc_Param, How_Calc_Prior, uniqueStr ); // постоянная часть имени файла
+                                max_Proc, how_Calc_Param, how_Calc_Prior, uniqueStr ); // постоянная часть имени файла
 //
  Save_Protocol_Master(); // сохраняем главный протокол (*.pro)
   snprintf( tmp, sizeof(tmp), "%s\\pro%s", NameSubDirOutData, cnst );
@@ -6094,7 +6108,7 @@ bool __fastcall Read_Instructions()
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- for(UI i=0; i<Max_Instruction; i++) // по строкам инструкций
+ for(UI i=0; i<max_Instruction; i++) // по строкам инструкций
   {
    if(fgets(str, sizeof(str), fptr) == NULL) // читаем строку из fptr
     break; // если строки кончились, функция fgets возвращает NULL
@@ -6249,7 +6263,7 @@ bool __fastcall Read_Instructions()
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall Move_Row( INT Row )
+void __fastcall Make_Row_Current( INT Row )
 { // сделать текущей заданную строку в таблице инструкций
 //
  if( Row>=0 && Row<=mS->RowCount-2 ) // номера строк от 0 до max-2
