@@ -109,6 +109,27 @@ char trueLowerCase[]  = "true",  trueUpperCase[] ="TRUE",
 #define _SET_LEN 4  // длина строки мнемоники инструкции (3 символа + "\0")
 #define _ID_LEN  33 // 33 // длина строки имени переменной (32 символа + "\0")
 //------------------------------------------------------------------------------
+#define do_Run \
+{ F1->BitBtn_Run->Enabled = TRUE; /* "включили" все кнопки Выполнение */ \
+  F1->E_AIU->Enabled      = TRUE; \
+  F1->Files->Enabled      = TRUE; \
+  F1->Edit->Enabled       = TRUE; \
+  F1->Work->Enabled       = TRUE; \
+  F1->Wonderful->Enabled  = TRUE; \
+  F1->Analize->Enabled    = TRUE; \
+  F1->Label_Data->Font->Color   = clBlack; \
+  F1->Label_Buffer->Font->Color = clBlack; }
+//
+#define do_Stop \
+{ F1->BitBtn_Run->Enabled = FALSE; /* "выключили" все кнопки Выполнение */ \
+  F1->E_AIU->Enabled      = FALSE; \
+  F1->Files->Enabled      = FALSE; \
+  F1->Edit->Enabled       = FALSE; \
+  F1->Work->Enabled       = FALSE; \
+  F1->Wonderful->Enabled  = FALSE; \
+  F1->Analize->Enabled    = FALSE; }
+//
+//------------------------------------------------------------------------------
 char uniqueStr[_512] = "\0"; // уникальная строка для имен файлов ( дата + время до мсек )
 //
 void   __fastcall Read_Config( int Rule ); // управление считываем положения и размеров F1
@@ -209,6 +230,7 @@ void  __fastcall Extended_Save_IGA(); // сохраняем данные о времени выполнения о
 char* __fastcall PutDateTimeToString(INT flag); // выдача текущих даты и времени в строку с форматированием
 //
 void  __fastcall Make_Row_Current( INT Row ); // сделать строку Row (начинаем с 0) текущей
+void  __fastcall Run_Repeat( INT Count ); // повтор последней программы Count раз
 //
 struct timeb t0, t1; // момент начала выборки инструкций
 void   ftime(struct timeb *buf);
@@ -276,7 +298,8 @@ struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
       *Sect14, *Sect14_Var1,*Sect14_Var2,*Sect14_Var3,*Sect14_Var4,
       *Sect15, *Sect15_Var1,*Sect15_Var2,
       *Sect16, *Sect16_Var1,
-      *Sect17, *Sect17_Var1;
+      *Sect17, *Sect17_Var1,
+      *Sect18, *Sect18_Var1;
 } RWC = {
  "Max_Lengths", // [1] значения параметров
   "max_Instruction","max_Data","max_Proc","max_Buffer",
@@ -310,7 +333,9 @@ struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
  "StartNumbOps", // [16] начальный номер операторов при конвертации в *.gv
   "StartNumb",
  "Vizu_Dynamic", // [17] число раз пропуска перемещения фокуса в SG_Set[][] вслед за исполнением программы
-  "pass_Counts"
+  "pass_Counts",
+ "Repeat", // [18] число повторов при нажатии Ctr+I / Ctr+i
+  "count_Repeat"
 } ; // [ReadWriteConfig] имена секций и значений файла конфигурации
 //
 int outGlobal; // тэг варианта меню, из которого вызвана функция выбора цвета
@@ -513,7 +538,8 @@ bool flagAlarmData   = TRUE,
 //
 ULI dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длиной 0 тиков
     pass_Counts = 0, // пропускаем pass_Counts выполненных операторов при перемещении фокуса в SG_Set[][]
-    count_Ops=0; // номер выполненного оператора по очереди (идёт с накоплением)
+    count_Ops=0, // номер выполненного оператора по очереди (идёт с накоплением)
+    count_Repeat=0; // число повторов при нажатии Ctrl+I / Ctrl+i
 //
 //==============================================================================
 //
@@ -602,7 +628,7 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
  }
  else // не удалось прочитать
  {
-  BitBtn_Run->Enabled = FALSE; // "выключили" ВЫПОЛНЕНИЕ
+  BitBtn_Run->Enabled = FALSE; // "выключили" кнопку ВЫПОЛНЕНИЕ
   SBM0->Text = " Выберите файл программы для выполнения..."; // вывод текста в StatusBarMain
   MessageBeep( MB_ICONASTERISK ); // предупреждение...
   Delay( 1000 ); // ждать 1000 мсек
@@ -993,9 +1019,11 @@ void __fastcall Read_Config( int Rule)
  DGR.clGraphStart = tINI->ReadInteger(RWC.Sect15, RWC.Sect15_Var1, RGB(255,0,0)); // начало тела графика интенсивности вычислений
  DGR.clGraphEnd   = tINI->ReadInteger(RWC.Sect15, RWC.Sect15_Var2, RGB(0,255,0)); // конец тела графика интенсивности вычислений
 //
- StartNumb   = tINI->ReadInteger(RWC.Sect16, RWC.Sect16_Var1, 100); // начальный номер операторов
+ StartNumb    = tINI->ReadInteger(RWC.Sect16, RWC.Sect16_Var1, 100); // начальный номер операторов
 //
- pass_Counts = tINI->ReadInteger(RWC.Sect17, RWC.Sect17_Var1, 0); // число прОпусков при перемещении фокуса в SG_Set[][]
+ pass_Counts  = tINI->ReadInteger(RWC.Sect17, RWC.Sect17_Var1, 0); // число прОпусков при перемещении фокуса в SG_Set[][]
+//
+ count_Repeat = tINI->ReadInteger(RWC.Sect18, RWC.Sect18_Var1, 10); // число повторов счёта при Ctrl+I / Ctrl+i
 //
  delete tINI; // уничтожили объект - более не нужен !...
 //
@@ -1283,8 +1311,6 @@ StopCalculations( int Rule )
     break;
  } // конец switch
 //
- F1->OnOf_Execute( 0 ); // "выключили" визуальную индикацию режима СЧЁТ
-//
  MessageBeep( MB_OK ); // звуковое предупреждение...
 //
  if( Rule != 0 ) // при останове по кнопке не надо вычислять статистику выполнения программы
@@ -1561,7 +1587,7 @@ TF1::Mixed_Sets(TObject *Sender)
  Vizu_Buffer();  // визуализировали данные в буфере
 //
 ////////////////////////////////////////////////////////////////////////////////
- BitBtn_Run->Enabled = FALSE; // "выключили" вариант меню ПЕРЕМЕШАТЬ_ИНСТРУКЦИИ
+ BitBtn_Run->Enabled = FALSE; // включили" кнопку Выполнение
 
  srand((unsigned) time(&t)); // инициализации датчика случайных чисел текущим временем
 
@@ -1592,7 +1618,7 @@ TF1::Mixed_Sets(TObject *Sender)
  SBM0->Text = " Инструкции перемешаны случайным образом"; // вывод текста в StatusBarMain
 //
 ////////////////////////////////////////////////////////////////////////////////
- BitBtn_Run->Enabled = TRUE; // "включили" вариант меню ПЕРЕМЕШАТЬ_ИНСТРУКЦИИ
+ BitBtn_Run->Enabled = TRUE; // включили кнопку Выполнение
 } //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1644,7 +1670,7 @@ void __fastcall TF1::Load_Sets(TObject *Sender)
    Clear_AllCells(); // очистим цвета всех ячеек таблицы инструкций
 //
    SBM0->Text = " Начните работу с нажатия кнопки ВЫПОЛНЕНИЕ..."; // вывод текста в StatusBarMain
-   BitBtn_Run->Enabled = TRUE; // "включили" кнопку ВЫПОЛНИТЬ
+   BitBtn_Run->Enabled = TRUE; // включили кнопку ВЫПОЛНИТЬ
 //
 //   REAL index = Calc_ConnectedIndex( 1 ); // подсчет ИНДЕКСОВ СВЯЗНОСТИ c сохранением в файл
   }
@@ -1746,8 +1772,6 @@ Calc_Stat_Proc()
 //
  t_printf( "===========================" );
 //
-// char format[] = "\nВремя выполнения программы:\n===========================\nпараллельное = %ld тактов (%.3f сек), использовано %d (мах %d одновременно) АИУ из %d доступных";
-//
  t_printf( "параллельное = %d тактов (%.3f сек), использовано %d (мах %d одновременно) штук/и АИУ из %d доступных",
                    parallel_Ticks,
                    (t1.time + 1.0e-3*t1.millitm) - (t0.time + 1.0e-3*t0.millitm),
@@ -1762,10 +1786,8 @@ Calc_Stat_Proc()
  REAL index = Calc_ConnectedIndex( 0 );  // подсчет ИНДЕКСОВ СВЯЗНОСТИ без сохранения в файл
 //
  if (index != ERR_ALTERNAT) // реально вычислен, а не БЕСКОНЕЧНОСТЬ!!!
- {
   t_printf( "показатель альтернативности графа программы = %.3f \n",
-                   index); // подсчет ИНДЕКСОВ СВЯЗНОСТИ без сохранения в
- }
+             index); // подсчет ИНДЕКСОВ СВЯЗНОСТИ без сохранения в
 //
  t_printf( "всего выполнилось %d инструкций (не учитывая SET)\n", mTpr->Count);
 //
@@ -1812,15 +1834,10 @@ Calc_Stat_Proc()
    }
   } // конец цикла по списку инструкций
 //
-// Внимание ! Сумма всех (sum_tProc/parallel_time) может быть > 100% (а по отношению к serial_time = 100%)
-// snprintf(tmp,sizeof(tmp), "арифм.исполн.у-во (АИУ) номер %d работало %ld тактов ( %5.1f% )",
-//               i, sum_tProc, 100.0 * sum_tProc / parallel_Ticks);
  t_printf( "арифм.исполн.у-во (АИУ) номер %d работало %ld тактов ( %5.1f% )",
                   i, sum_tProc, 100.0 * sum_tProc / parallel_Ticks);
 //
  } // конец цикла про АИУ
-//
- F1->OnOf_Execute( 0 ); // "выключили" визуальную индикацию режима СЧЁТ
 //
  Save_All_Protocols_To_Out_Dir(); // сохранение протоколов в Out!Data
 //
@@ -1890,7 +1907,7 @@ Display_Error(char *str)
 // MessageDlg(str, mtError, TMsgDlgButtons() << mbOK, 0);
  F1->Master_Timer->Enabled = FALSE; // остановили главный таймер
 //
- F1->OnOf_Execute( 0 ); // "выключили" визуальную индикацию режима СЧЁТ
+ do_Run // "включили" все кнопки Выполнение 
 //
  MessageBox( 0, str, "Проблемы с арифметикой", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL );
 //
@@ -2001,7 +2018,7 @@ Start_DataFlow_Process(int Mode)
 // Mode = 0 соответствует нажатию кнопки ВЫПОЛНИТЬ
 // Mode = 1 -,-,-,-,- "Перемешать инструкции и выполнить"
 //
- F1->OnOf_Execute( 1 ); // "включили" визуальную индикацию режима СЧЁТ
+ do_Stop // "выключили" все кнопки Выполнение 
 //
  Regim = 1;  // начать выполнение программы
 //
@@ -2041,7 +2058,7 @@ Start_DataFlow_Process(int Mode)
 //
  if( !Test_All_Operands() ) // выполнение продолжить нельзя..!
  {
-  F1->OnOf_Execute( 0 ); // "выключили" визуальную индикацию режима СЧЁТ
+  do_Run // "включили" все кнопки Выполнение 
   return; // заканчиваем выполнение программы
  }
 //
@@ -3791,40 +3808,11 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
 //
   BitBtn_Run->Click(); // программно нажали кнопку СЧЁТ !!!
 //
-  OnOf_Execute( 1 ); // "включили" визуальную индикацию режима СЧЁТ
+  do_Stop // "выключили" все кнопки Выполнение 
  } // конец  if ParamCount...
 //
 } //----- конец F1_OnShow ------------------------------------------------------
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::OnOf_Execute(int Rule) // "включает/выключает" кнопки при останове/счете
-{
- if(Rule) // режим СЧЁТ
- {
-  BitBtn_Run->Enabled = FALSE; // "выключили" кнопки
-  E_AIU->Enabled      = FALSE;
-  Files->Enabled      = FALSE;
-  Edit->Enabled       = FALSE;
-  Work->Enabled       = FALSE;
-  Wonderful->Enabled  = FALSE;
-  Analize->Enabled    = FALSE;
- }
- else
- {
-  BitBtn_Run->Enabled = TRUE; // "включили" кнопки
-  E_AIU->Enabled      = TRUE;
-  Files->Enabled      = TRUE;
-  Edit->Enabled       = TRUE;
-  Work->Enabled       = TRUE;
-  Wonderful->Enabled  = TRUE;
-  Analize->Enabled    = TRUE;
-//
-  Label_Data->Font->Color   = clBlack;
-  Label_Buffer->Font->Color = clBlack;
- }
-//
-} //============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -4432,22 +4420,27 @@ void __fastcall TF1::Show_Graph(TObject *Sender)
 void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
 { // вызывается при нажатии клавиши в E_AIU (ввод числа АИУ)
 //
+//
  if( Key == VK_RETURN ) // нажали Enter
  {
+  Key = NULL;
+//
   Write_Config(); // переписать файл конфигурации
   max_Proc = StrToInt(F1->E_AIU->Text); // перевели в число (глобал)
   Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
-  Key = NULL; // ничего кроме '0-9', BackSpace, Esc не пропускаем..!
  }
+// 
  else
 //
  if( !( isdigit( Key ) || Key == VK_BACK || Key == VK_ESCAPE ) )
  {
+  Key = NULL; // ничего кроме '0-9', BackSpace, Esc не пропускаем..!
+//
   Beep( 440, 100 ); // звуковое предупреждение...
   Beep( 880, 150 );
 //  Beep( 2048, 100 );
-  Key = NULL; // ничего кроме '0-9', BackSpace, Esc не пропускаем..!
  }
+//
 } //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4794,7 +4787,15 @@ void __fastcall TF1::OnKeyUp_F1(TObject *Sender, WORD &Key,
 { // вызывается при отпускании клавиш Ctrl+S на главной форме (останов счёта)
 //
  if( Shift.Contains(ssCtrl) && ( Key == 'S' || Key == 's' ) )
-  Stop_Calculations( Sender ); // остановить выполнение
+  BitBtn_Stop->Click(); // программно нажать кнопку BitBtn_Stop
+//  Stop_Calculations( Sender ); // остановить выполнение
+//
+ else
+//
+ if( Shift.Contains(ssCtrl) && ( Key == 'I' || Key == 'i' ) )
+  Run_Repeat( count_Repeat ); // повтор последне йпрограммы count_Repeat раз
+//
+ Key = NULL; // очистили код нажатой кнопки
 //
 } //----------------------------------------------------------------------------
 
@@ -5042,7 +5043,10 @@ Finalize_Only_SET(int i_Set)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::Save_All_Protocols(TObject *Sender)
-{ // сохранение всех протоколов данного расчёта
+{ // сохранение всех протоколов данного расчёта (вызывается по F2 из главного меню)
+//
+ do_Stop // "выключили" все кнопки Выполнение 
+//
  Save_Protocol_Master(); // сохраняем главный протокол (*.pro)
  Save_Protocol_AIU(); // сохраняем протокол использвания АИУ по времени (*.aiuAIU)
  Save_Protocol_Data(); // сохраняем протокол рассчитанных данных (*.dat)
@@ -5050,16 +5054,19 @@ void __fastcall TF1::Save_All_Protocols(TObject *Sender)
  Save_Protocol_ConnectedGraph(); // сохраняем протокол свЯзности в информ.графе (*.coi)
 //
  SBM0->Text = " Выбранные протоколы сохранены !.."; // вывод текста в StatusBarMain
+//
+ do_Run // "включили" все кнопки Выполнение
+//
  Delay(300); // ...чтобы увидеть!..
 } // ---------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::Save_Data(TObject *Sender)
-{ // сохранить данные расчёта
+{ // сохранить данные расчёта (вызывается по Alt+F2 изглавного меню)
  Save_Protocol_Data(); // сохраняем протокол рассчитанных данных (*.dat)
 //
- SBM0->Text = " Выбранные протоколы сохранены !.."; // вывод текста в StatusBarMain
+ SBM0->Text = " Протоколы данных сохранён !.."; // вывод текста в StatusBarMain
  Delay(300); // ...чтобы увидеть!..
 //
 } //----------------------------------------------------------------------------
@@ -6050,6 +6057,8 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
 { // сохранение всех протоколов данного расчёта и перенос подкаталог Out!Data
  char tmp[_512], cnst[_512];
 //
+ do_Stop // "выключили" все кнопки Выполнение
+//
  snprintf( cnst, sizeof(cnst), "!%s!AIU=%d_Param=%d_Prior=%d!%s.txt", ExtractFileName(FileNameSet),
                                 max_Proc, how_Calc_Param, how_Calc_Prior, uniqueStr ); // постоянная часть имени файла
 //
@@ -6082,6 +6091,8 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
   MoveFile( ChangeFileExt( FileNameSet, ".mvr").c_str(), tmp );
 //
  SBM0->Text = " Все файлы протоколов сохранены...";
+//
+ do_Run // "включили" все кнопки Выполнение
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
 
@@ -6350,5 +6361,36 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
 // SBM2->Width = F1->ClientWidth / 4;
 //
 } //----- конец F1_OnResize ----------------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall Run_Repeat( INT Count )
+{ // повтор последней программы Count раз
+//
+  for( ULI i=1; i<=Count; i++ ) // сделать count_Repeat (глобал) раз
+  {
+//
+   t_printf( "\n-I- Повтор= %d (из %d) -I-\n", i, Count );
+//
+   while( 1 ) // ждём возобновления активности кнопки F1->BitBtn_Run
+   {
+    Delay( -5 ); // ждать 5 сек
+    if( F1->BitBtn_Run->Enabled ) // если кнопка F1->BitBtn_Run стала активна...
+    {
+     F1->BitBtn_Run->Click(); // программно нажать кнопку F1->BitBtn_Run
+     Delay( -60 ); // ждать 30 сек
+     break; // выход из while( 1 )
+    } // конец if( F1->BitBtn_Run->Enabled )
+//
+   } // конец while( 1 )
+//
+  } // конец for( ULI i=1; i<=count_Repeat; i++ )
+//
+} // --- конец Run_Repeat ------------------------------------------------------
+
+
+
+
 
 

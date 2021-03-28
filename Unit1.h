@@ -142,7 +142,6 @@ __published:	// IDE-managed Components
         void __fastcall DrawNotUsedResults(TObject *Sender);
         void __fastcall DrawNotDetermineOperands(TObject *Sender);
         void __fastcall OnShow_F1(TObject *Sender);
-        void __fastcall OnOf_Execute(int Rule);
         void __fastcall About_Cuda(TObject *Sender);
         void __fastcall Save_IGA_Click(TObject *Sender);
         void __fastcall About_SPF(TObject *Sender);
