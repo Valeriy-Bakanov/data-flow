@@ -1167,7 +1167,6 @@ Vizu_Data()
  for(UI i=0; i<Really_Data; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Data)...
   {
    mD->Cells[0][i+1] = Mem_Data[i].Addr; // значение адреса
-//   snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Mem_Data[i].Data); // значение числа по данному адресу
    snprintf(tmp,sizeof(tmp), "%.*g", ACC_REAL, Mem_Data[i].Data); // значение числа по данному адресу
    mD->Cells[1][i+1] = tmp;
 // вывод значений логических предикатов ========================================
@@ -1209,9 +1208,9 @@ Vizu_Buffer() // визуализация данных в SG_Buffer из массива структур Mem_Buffer[
    mB->Cells[0][i+1] = tmp;
 //
 //   snprintf(tmp,sizeof(tmp), "%.3f / %.3f", // готовим строку вмда "Param / Priority"
-   snprintf(tmp,sizeof(tmp), "%.3g / %.3g", // готовим строку вмда "Param / Priority"
-                             Mem_Buffer[i].Param,
-                             Mem_Buffer[i].Priority);
+   snprintf(tmp,sizeof(tmp), "%.*g / %.*g", // готовим строку вмда "Param / Priority"
+                             ACC_REAL,Mem_Buffer[i].Param,
+                             ACC_REAL,Mem_Buffer[i].Priority);
    mB->Cells[1][i+1] = tmp;
   }
 
@@ -1359,7 +1358,7 @@ Line_Set(int i_Set, int Rule)
   case 0: strcpy(tmp1, "?");
 //
           if( is_SET( Set )) // это SET ........................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s {%s} %s %s",
+           snprintf(tmp,sizeof(tmp), "%s {%.*g}, %s {%s} %s %s",
                         Mem_Instruction[i_Set].Set,
                         ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                         Mem_Instruction[i_Set].aResult, tmp1,
@@ -1369,10 +1368,10 @@ Line_Set(int i_Set, int Rule)
           break; // break case 0;
 //
 ////////////////////////////////////////////////////////////////////////////////
-  case 1: snprintf(tmp1,sizeof(tmp1), "%.*e", ACC_REAL, Get_Data(Mem_Instruction[i_Set].aResult)); // содержимое по адресу (строка!) aResult
+  case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL, Get_Data(Mem_Instruction[i_Set].aResult)); // содержимое по адресу (строка!) aResult
 //
-          if( is_SET(  Set ) ) // это SET ......................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s {%s} %s %s",
+          if( is_SET( Set ) ) // это SET .......................................
+           snprintf(tmp,sizeof(tmp), "%s {%.*g}, %s {%s} %s %s",
                          Mem_Instruction[i_Set].Set,
                          ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                          Mem_Instruction[i_Set].aResult, tmp1,
@@ -1383,7 +1382,7 @@ Line_Set(int i_Set, int Rule)
 //==============================================================================
           switch( Get_CountOperandsByInstruction(Set) )
            { // ... по числу входных операндов инструкции Set
-            case 1: snprintf(tmp,sizeof(tmp), "%s %s {%.*e}, %s {%s} %s %s",
+            case 1: snprintf(tmp,sizeof(tmp), "%s %s {%.*g}, %s {%s} %s %s",
                                    Mem_Instruction[i_Set].Set,
                                    Mem_Instruction[i_Set].aOp1,
                                    ACC_REAL, Get_Data(Mem_Instruction[i_Set].aOp1),
@@ -1391,7 +1390,7 @@ Line_Set(int i_Set, int Rule)
                                    startComments,
                                    Mem_Instruction[i_Set].Comment);
                     break;
-            case 2: snprintf(tmp,sizeof(tmp), "%s %s {%.*e}, %s {%.*e}, %s {%s} %s %s",
+            case 2: snprintf(tmp,sizeof(tmp), "%s %s {%.*g}, %s {%.*g}, %s {%s} %s %s",
                                    Mem_Instruction[i_Set].Set,
                                    Mem_Instruction[i_Set].aOp1,
                                    ACC_REAL, Get_Data(Mem_Instruction[i_Set].aOp1),
@@ -1410,7 +1409,7 @@ Line_Set(int i_Set, int Rule)
 
 ////////////////////////////////////////////////////////////////////////////////
   case -1:if( is_SET( Set ) ) // это SET .......................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*e}, %s %s %s",
+           snprintf(tmp,sizeof(tmp), "%s {%.*g}, %s %s %s",
                          Mem_Instruction[i_Set].Set,
                          ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                          Mem_Instruction[i_Set].aResult,
@@ -1482,15 +1481,14 @@ Add_toData(int i_Set, char* aResult, REAL Data)
 //
    if( Data == Mem_Data[i].Data ) // если записываемое значение равно уже существующему...
    {
-    t_printf( "-\n-W- %s(): Обнаружена ситуация попытки переписи элемента данных %s тем же значением %.*e (%s)... -W-\n-",
-              __FUNC__, Mem_Data[i].Addr, Data, Get_Time_asLine());
-//    MessageBeep( MB_ICONASTERISK ); // предупреждение...
+    t_printf( "-\n-W- %s(): Обнаружена ситуация попытки переписи элемента данных %s тем же значением %.*g (%s)... -W-\n-",
+              __FUNC__, Mem_Data[i].Addr, ACC_REAL,Data, Get_Time_asLine());
     return;
    }  // конец if( Data == Mem_Data[i].Data )
 //
    F1->Master_Timer->Enabled = FALSE; // выключили таймер
 //
-   strcpy(tmp, "Результат {%.*e} выполнения инструкция #%d должен быть записан по адресу %s, однако там уже находятся данные {%.*e}. ");
+   strcpy(tmp, "Результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, однако там уже находятся данные {%.*g}. ");
    strcat(tmp, "Налицо явное нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ, вследствие чего КОНЕЧНЫЙ результат выполнения программы может быть непредсказуем !");
    strcat(tmp, "\n\nПереписать данные / оставить прежние значения / завершить выполнение программы ?\n");
    snprintf(tmp1,sizeof(tmp1), tmp, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data);
@@ -1500,9 +1498,9 @@ Add_toData(int i_Set, char* aResult, REAL Data)
    switch (out) // принЯтие решения по коду возврАта из MessageDlg()...
    {
     case mrOk: // переписАть данные по этому адресу
-               snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Data);
+               snprintf(tmp,sizeof(tmp), "%.*g", ACC_REAL, Data);
                mD->Cells[1][i+1] = tmp; // вЫвели в ОКНО_ДАННЫХ
-               t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*e} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*e}. Данные перезапИсаны... -W-",
+               t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*g}. Данные перезапИсаны... -W-",
                           __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
                Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
 //
@@ -1511,7 +1509,7 @@ Add_toData(int i_Set, char* aResult, REAL Data)
                return;
 //
     case mrCancel: // отказаться от пЕреписи и сохранить предыдУщие значения
-               t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*e} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*e}. Данные НЕ перезапИсаны... -W-",
+               t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*g}. Данные НЕ перезапИсаны... -W-",
                           __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
 //
                F1->Master_Timer->Enabled = TRUE; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
@@ -1560,11 +1558,10 @@ Add_toData(int i_Set, char* aResult, REAL Data)
  Mem_Data[Really_Data].i_Set = i_Set; // номер оператора, который это вычислил
 //
 // успешно добавлено ...........................................................
- t_printf( "-I- %s(): данные {%.*e} (результат выполнения инструкции #%d) по адресу %s успешно добавлены в память данных (%s) -I-",
+ t_printf( "-I- %s(): данные {%.*g} (результат выполнения инструкции #%d) по адресу %s успешно добавлены в память данных (%s) -I-",
            __FUNC__, ACC_REAL, Data, i_Set, aResult, Get_Time_asLine());
 //
  mD->RowCount = Really_Data + 2; // обязательно 2 (чтобы при Really_Data=0 было 2, а не 1)
-// snprintf(tmp,sizeof(tmp), "%.*e", ACC_REAL, Data);
  snprintf(tmp,sizeof(tmp), "%.*g", ACC_REAL, Data);
  mD->Cells[1][Really_Data+1] = tmp; // вывели в ОКНО_ДАННЫХ
  mD->Cells[0][Really_Data+1] = aResult;
@@ -1772,21 +1769,21 @@ Calc_Stat_Proc()
 //
  t_printf( "===========================" );
 //
- t_printf( "параллельное = %d тактов (%.3f сек), использовано %d (мах %d одновременно) штук/и АИУ из %d доступных",
+ t_printf( "параллельное = %d тактов (%.*g сек), использовано %d (мах %d одновременно) штук/и АИУ из %d доступных",
                    parallel_Ticks,
-                   (t1.time + 1.0e-3*t1.millitm) - (t0.time + 1.0e-3*t0.millitm),
+                   ACC_REAL,(t1.time + 1.0e-3*t1.millitm) - (t0.time + 1.0e-3*t0.millitm),
                    all_maxProcs, // всего АИУ было использовано
                    simult_maxProcs, // max ОДНОВРЕМЕННО работающих АИУ
                    max_Proc ); // всего в системе задано
 //
  t_printf( "последовательное = %ld тактов", serial_Ticks );
 //
- t_printf( "ускорение (убыстрение) вычислений = %.*e\n", ACC_REAL, 1.0*serial_Ticks / parallel_Ticks);
+ t_printf( "ускорение (убыстрение) вычислений = %.*g\n", ACC_REAL, 1.0*serial_Ticks / parallel_Ticks);
 //
  REAL index = Calc_ConnectedIndex( 0 );  // подсчет ИНДЕКСОВ СВЯЗНОСТИ без сохранения в файл
 //
  if (index != ERR_ALTERNAT) // реально вычислен, а не БЕСКОНЕЧНОСТЬ!!!
-  t_printf( "показатель альтернативности графа программы = %.3f \n",
+  t_printf( "показатель альтернативности графа программы = %.3g \n",
              index); // подсчет ИНДЕКСОВ СВЯЗНОСТИ без сохранения в
 //
  t_printf( "всего выполнилось %d инструкций (не учитывая SET)\n", mTpr->Count);
@@ -1812,7 +1809,7 @@ Calc_Stat_Proc()
     n_Sets ++ ;
   } // конец цикла по строкам Tpr
 //
-  if(n_Sets) // только если выполнилась хотя бы раз...
+  if( n_Sets ) // только если выполнилась хотя бы раз...
    t_printf( "инструкция %s выполнилась %d раз ( %5.1f% )", Set, n_Sets, 100.0 * n_Sets / mTpr->Count);
 //
  } // конец цикла по списку инструкций в Set_Params[]
@@ -2200,7 +2197,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  {
   if( fabs (Op2) <= MIN_FLOAT) // нельзя делить на ОЧЕНЬ МАЛЕНЬКОЕ ЧИСЛО...
    {
-    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена (делитель = {%.*e}). Выборка инструкций остановлена... -E-",
+    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена (делитель = {%.*g}). Выборка инструкций остановлена... -E-",
                   __FUNC__, Set, i_Set, ACC_REAL, Op2);
     AddLineToProtocol(tmp);
     Display_Error(tmp);
@@ -2268,7 +2265,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  {
   if(Op1 < 0.0) // нельзя вычислять квадратный корень из отрицательного числа...
   {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена над отрицательным числом {%.*e}. Выборка инструкций остановлена... -E-",
+   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена над отрицательным числом {%.*g}. Выборка инструкций остановлена... -E-",
                  __FUNC__, Set, i_Set, ACC_REAL, Op1);
    AddLineToProtocol(tmp);
    Display_Error(tmp);
@@ -2304,7 +2301,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
    Result = asin ( Op1 );
   else
   {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументе {%.*e}. Выборка инструкций остановлена... -E-",
+   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументе {%.*g}. Выборка инструкций остановлена... -E-",
                  __FUNC__, Set, i_Set, ACC_REAL, Op1);
    AddLineToProtocol(tmp);
    Display_Error(tmp);
@@ -2322,7 +2319,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
 //
   else
   {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументе {%.*e}. Выборка инструкций остановлена... -E-",
+   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументе {%.*g}. Выборка инструкций остановлена... -E-",
                  __FUNC__, Set, i_Set, ACC_REAL, Op1);
    AddLineToProtocol(tmp);
    Display_Error(tmp);
@@ -2338,7 +2335,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
   {
    if( fabs ( Op1 ) > M_PI_2 - MIN_FLOAT ) // MIN_FLOAT ) // избегаем машинной бесконечности
    {
-    snprintf(tmp,sizeof(tmp), "-W- %s(): инструкция %s (#%d) не может быть корректно выполнена при аргументе {%.*e}. Принято MAX значение... -W-",
+    snprintf(tmp,sizeof(tmp), "-W- %s(): инструкция %s (#%d) не может быть корректно выполнена при аргументе {%.*g}. Принято MAX значение... -W-",
                   __FUNC__, Set,Set, i_Set, ACC_REAL, Op1);
     AddLineToProtocol(tmp);
     Display_Error(tmp);
@@ -2365,7 +2362,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
  {
   if( Op1 < EPS ) // ошибка вычисления логарифма...
   {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументеа {%.*e}. Выборка инструкций остановлена... -E-",
+   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументеа {%.*g}. Выборка инструкций остановлена... -E-",
                  __FUNC__, Set, i_Set, ACC_REAL, Op1);
    AddLineToProtocol(tmp);
    Display_Error(tmp);
@@ -2424,7 +2421,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
    } // конец if( f_Op2 )
    else // величина Op2 - нецелое
    {
-    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена. Отрицательное число {%.*e} не может быть возведено в нецелую степень {%.*e}. Выборка инструкций остановлена... -E-",
+    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена. Отрицательное число {%.*g} не может быть возведено в нецелую степень {%.*g}. Выборка инструкций остановлена... -E-",
                   __FUNC__, Set, i_Set, ACC_REAL, Op1, ACC_REAL, Op2);
     AddLineToProtocol(tmp);
     Display_Error(tmp);
@@ -2437,7 +2434,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
 // обработка случая Op1 = 0.0 'и' Op2 = 0.0 ....................................
    if( ( Op1 == 0.0 ) && ( Op2 == 0.0 ) ) // ноль в степени ноль - не определено
    {
-    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена. Ноль {%.*e} невозможно возвести в нулевую степень {%.*e}. Выборка инструкций остановлена... -E-",
+    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена. Ноль {%.*g} невозможно возвести в нулевую степень {%.*g}. Выборка инструкций остановлена... -E-",
                   __FUNC__, Set, i_Set, ACC_REAL, Op1, ACC_REAL, Op2);
     AddLineToProtocol(tmp);
     Display_Error(tmp);
@@ -2462,7 +2459,7 @@ void __fastcall ExecuteInstructions_ExceptSET(int i_Set) // выполнение инструкци
 //..............................................................................
   else
   {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументах {%.*e} / {%.*e}. Выборка инструкций остановлена... -E-",
+   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументах {%.*g} / {%.*g}. Выборка инструкций остановлена... -E-",
                  __FUNC__, Set, i_Set, ACC_REAL, Op1, ACC_REAL, Op2);
    AddLineToProtocol(tmp);
    Display_Error(tmp);
@@ -2887,14 +2884,14 @@ Test_Visu_Buffer_Fill() // тестирует и индицирует наполнение буфера интструкций 
   {
    if(now >= level[i] && old < level[i]) // движение  ВВЕРХ через levels[i]
     {
-     t_printf( "-I- %s(): буфер заполнен более чем на %.0f %%  (%s) -I-",
+     t_printf( "-I- %s(): буфер заполнен более чем на %.0g %%  (%s) -I-",
                       __FUNC__, 1.0e2*level[i], Get_Time_asLine());
     }
 //
    else
    if(now <= level[i] && old > level[i]) // движение  ВНИЗ через levels[i]
     {
-     t_printf( "-I- %s(): буфер заполнен менее чем на %.0f %% (%s) -I-",
+     t_printf( "-I- %s(): буфер заполнен менее чем на %.0g %% (%s) -I-",
                       __FUNC__, 1.0e2*level[i], Get_Time_asLine());
     }
 //
@@ -2930,9 +2927,10 @@ Select_Set_fromBuffer() // возвращает номер инструкции из буфера по условию мах 
 //
 // итак, i_Set_Prior_Max - инструкция с максимальном приоритетом ///////////////
 //
- t_printf( "-I- %s(): инструкция #%d/%d [%s] (приор. = %.4f) выбрана из буфера для исполнения (%s) -I-",
+ t_printf( "-I- %s(): инструкция #%d/%d [%s] (приор. = %.*g) выбрана из буфера для исполнения (%s) -I-",
                   __FUNC__, i_Set_Prior_Max, i_Buffer,
-                  Line_Set(i_Set_Prior_Max, -1), Mem_Buffer[i_Buffer].Priority,
+                  Line_Set(i_Set_Prior_Max, -1),
+                  ACC_REAL,Mem_Buffer[i_Buffer].Priority,
                   Get_Time_asLine());
 //
 // теперь уберем инструкцию i_Set_Prior_Max из буфера
@@ -2980,10 +2978,9 @@ Calc_Level_Buffer_Fill() // вычисляет наполненность буфера в %% в глобале Level_
 
  Level_Buffer_Fill = (100.0 * Really_Buffer) / max_Buffer;
 
- snprintf(tmp,sizeof(tmp), "Выборка из буфера ( %d / %d = %.3f%% )",
+ snprintf(tmp,sizeof(tmp), "Выборка из буфера ( %d / %d = %.3п%% )",
               Really_Buffer,max_Buffer,Level_Buffer_Fill);
-// F1->BitBtn_Select_fromBuffer->Caption = tmp;
-
+//
 } // конец Calc_Level_Buffer_Fill ----------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3980,7 +3977,7 @@ StrToReal(char *str, int i_Set)
  }
  catch (Exception* exception)
  {
-  snprintf(tmp,sizeof(tmp), "Ошибка конвертации строки ''%s'' в вещественное число в инструкции #%d (получено %.*e). \n\nРезультат преобразования",
+  snprintf(tmp,sizeof(tmp), "Ошибка конвертации строки ''%s'' в вещественное число в инструкции #%d (получено %.*g). \n\nРезультат преобразования",
                 str, i_Set, ACC_REAL, out);
   strcat(tmp, "  не определен, но ВЫ ПРЕДУПРЕЖДЕНЫ о возможности получения неожиданных данных при расчёте !..");
   MessageBox(0, tmp, "Предупреждение", MB_OK | MB_ICONWARNING | MB_TOPMOST);
@@ -4393,7 +4390,7 @@ void __fastcall TF1::Show_Graph(TObject *Sender)
  F2->Chart_IC->Title->Text->Add( "" );
 //
  F2->Chart_IC->Foot->Text->Clear(); // очистка TSting перед новым заполнением
- snprintf( str,sizeof(str), "параллельное вычисление: %d тактов, ускорение = %.*e", parallel_Ticks, ACC_REAL, 1.0 * serial_Ticks / parallel_Ticks );
+ snprintf( str,sizeof(str), "параллельное вычисление: %d тактов, ускорение = %.*g", parallel_Ticks, ACC_REAL, 1.0 * serial_Ticks / parallel_Ticks );
  F2->Chart_IC->Foot->Text->Add( str );
 //
  snprintf( str,sizeof(str), "всего задействовано %d штук/и АИУ из %d доступных", all_maxProcs, max_Proc );
@@ -5947,7 +5944,8 @@ void __fastcall TF1::Show_AIU(TObject *Sender)
 //
  F3->Chart_AIU->Foot->Text->Clear(); // очистка TSting перед новым заполнением
 //
- snprintf( str,sizeof(str), "параллельное вычисление: %d тактов, ускорение = %.*e", parallel_Ticks, ACC_REAL, 1.0 * serial_Ticks / parallel_Ticks );
+ snprintf( str,sizeof(str), "параллельное вычисление: %d тактов, ускорение = %.*g",
+                             parallel_Ticks, ACC_REAL, 1.0 * serial_Ticks / parallel_Ticks );
  F3->Chart_AIU->Foot->Text->Add( str );
 //
  snprintf( str,sizeof(str), "всего задействовано %d штук/и АИУ из %d доступных", all_maxProcs, max_Proc );
@@ -6022,10 +6020,7 @@ int __fastcall Work_TimeSets_Protocol_AIU()
        ( Get_CountOperandsByInstruction(Mem_Instruction[ii_Set].Set) == 2 && // два операнда...
         (MI_aOp1(ii_Set) ||
          MI_aOp2(ii_Set) ) ) )
-    {
-     F3->Series1->NextTask->Value[i_Op] = ii_Op ; // ниточка связи бАров "i_Op <-> ii_Op"
-//     t_printf( "i_Set/ii_Set: %d/%d   i_Op/ii_Op: %d/%d ", i_Set,ii_Set, i_Op,ii_Op );
-    }
+    F3->Series1->NextTask->Value[i_Op] = ii_Op ; // ниточка связи бАров "i_Op <-> ii_Op"
 //
   }  // конец  for( ii_Op=0; ii_Op < mTpr->Count; ii_Op++ )
 //
@@ -6342,8 +6337,6 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
  F1->Label_Buffer->Top = tmp; F1->Label_Buffer->Left = mB->Left + mB->Width - F1->Label_Buffer->Width;
  F1->Label_Set->Top    = tmp; F1->Label_Set->Left    = mS->Left + mS->Width - F1->Label_Set->Width;
  F1->Label_Data->Top   = tmp; F1->Label_Data->Left   = mD->Left + mD->Width - F1->Label_Data->Width;
-//
-// t_printf( "%d   %d %d %d    %d", F1->Width, mD->Left, mD->Width, F1->Label_Data->Width, F1->Label_Data->Left );
 //
 // определяем ширину последнего столбца SG_Set (столбец комментариев к инструкции)
  tmp = mS->ColWidths[0] + mS->ColWidths[1] + mS->ColWidths[2]  // ширина первых 0-5 столбцов
