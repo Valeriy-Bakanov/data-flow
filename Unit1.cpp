@@ -230,7 +230,7 @@ void  __fastcall Extended_Save_IGA(); // сохраняем данные о времени выполнения о
 char* __fastcall PutDateTimeToString(INT flag); // выдача текущих даты и времени в строку с форматированием
 //
 void  __fastcall Make_Row_Current( INT Row ); // сделать строку Row (начинаем с 0) текущей
-void  __fastcall Run_Repeat( INT Count ); // повтор последней программы Count раз
+void  __fastcall Run_Infinity(); // повтор загруженной программы бесконечное число раз
 //
 struct timeb t0, t1; // момент начала выборки инструкций
 void   ftime(struct timeb *buf);
@@ -298,8 +298,7 @@ struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
       *Sect14, *Sect14_Var1,*Sect14_Var2,*Sect14_Var3,*Sect14_Var4,
       *Sect15, *Sect15_Var1,*Sect15_Var2,
       *Sect16, *Sect16_Var1,
-      *Sect17, *Sect17_Var1,
-      *Sect18, *Sect18_Var1;
+      *Sect17, *Sect17_Var1;
 } RWC = {
  "Max_Lengths", // [1] значения параметров
   "max_Instruction","max_Data","max_Proc","max_Buffer",
@@ -333,9 +332,7 @@ struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
  "StartNumbOps", // [16] начальный номер операторов при конвертации в *.gv
   "StartNumb",
  "Vizu_Dynamic", // [17] число раз пропуска перемещения фокуса в SG_Set[][] вслед за исполнением программы
-  "pass_Counts",
- "Repeat", // [18] число повторов при нажатии Ctr+I / Ctr+i
-  "count_Repeat"
+  "pass_Counts"
 } ; // [ReadWriteConfig] имена секций и значений файла конфигурации
 //
 int outGlobal; // тэг варианта меню, из которого вызвана функция выбора цвета
@@ -355,7 +352,8 @@ char FileNameINI[_512]    = "data_flow.ini", // имя файла настроек
 FILE *fptrIn, *fptrOut; // указатели на рабочие массивы
 //
 bool modeEdit  = FALSE, // режим вызова текстового редактора
-     modeGraph = TRUE; // режим отрисовки графика интенсивности вычислений
+     modeGraph = TRUE, // режим отрисовки графика интенсивности вычислений
+     modeStopRunInfinity = TRUE; // остановить бесконечное выполнение последней загруженной программы
 //
 int Regim = 1; // при Regim = 1 вычисления начинаются
                // при Regim = 0 вычисления остановлены пользователем
@@ -538,8 +536,7 @@ bool flagAlarmData   = TRUE,
 //
 ULI dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длиной 0 тиков
     pass_Counts = 0, // пропускаем pass_Counts выполненных операторов при перемещении фокуса в SG_Set[][]
-    count_Ops=0, // номер выполненного оператора по очереди (идёт с накоплением)
-    count_Repeat=0; // число повторов при нажатии Ctrl+I / Ctrl+i
+    count_Ops=0; // номер выполненного оператора по очереди (идёт с накоплением)
 //
 //==============================================================================
 //
@@ -1023,8 +1020,6 @@ void __fastcall Read_Config( int Rule)
 //
  pass_Counts  = tINI->ReadInteger(RWC.Sect17, RWC.Sect17_Var1, 0); // число прОпусков при перемещении фокуса в SG_Set[][]
 //
- count_Repeat = tINI->ReadInteger(RWC.Sect18, RWC.Sect18_Var1, 10); // число повторов счёта при Ctrl+I / Ctrl+i
-//
  delete tINI; // уничтожили объект - более не нужен !...
 //
  Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar --------------------
@@ -1279,12 +1274,12 @@ StopCalculations( int Rule )
 //
  F1->Master_Timer->Enabled = FALSE; // ещё раз на всякий случай..!
 //
- Regim = 0; // останов счета пользователем
+ Regim = 0; // останов счета пользователем (глобал)
 //
  switch( Rule )
  {
   case 0:
-    strcpy(tmp, "\n-I- Выполнение программы завершено по требованию пользователя -I-");
+    strcpy(tmp, "\n-I- Выполнение программы завершается по требованию пользователя -I-");
     SBM0->Text = tmp; // вывод текста в StatusBarMain
     AddLineToProtocol( tmp );
     break;
@@ -1294,14 +1289,14 @@ StopCalculations( int Rule )
      if( strcmp( Mem_Instruction[i].Set,"SET" ) ) // если это не SET...
       countSets++;
 //
-    snprintf(tmp,sizeof(tmp), "\n-W- Программа завершена: в течение %d (задано) тактов не выявлено ни одной ГКВ-инструкции (выполнено/всего инструкий: %d/%d исключая SET) -W-",
+    snprintf(tmp,sizeof(tmp), "\n-W- Программа завершается: в течение %d (задано) тактов не выявлено ни одной ГКВ-инструкции (выполнено/всего инструкий: %d/%d исключая SET) -W-",
              waitAboveOfEndLastExecuteSet, mTpr->Count, countSets );
     SBM0->Text = tmp; // вывод текста в StatusBarMain
     AddLineToProtocol( tmp );
     break;
 //
   case 2:
-    snprintf(tmp,sizeof(tmp), "-I- Выпонение программы остановлено... -I-");
+    snprintf(tmp,sizeof(tmp), "-I- Выполнение программы завершается... -I-");
     SBM0->Text = tmp; // вывод текста в StatusBarMain
     AddLineToProtocol( tmp ); // вывод текста в подокно протокола выполнения
     break;
@@ -1810,7 +1805,8 @@ Calc_Stat_Proc()
   } // конец цикла по строкам Tpr
 //
   if( n_Sets ) // только если выполнилась хотя бы раз...
-   t_printf( "инструкция %s выполнилась %d раз ( %5.1f% )", Set, n_Sets, 100.0 * n_Sets / mTpr->Count);
+   t_printf( "инструкция %s выполнилась %d раз (%.3g%% )",
+              Set, n_Sets, 100.0 * n_Sets / mTpr->Count);
 //
  } // конец цикла по списку инструкций в Set_Params[]
 //
@@ -1831,8 +1827,8 @@ Calc_Stat_Proc()
    }
   } // конец цикла по списку инструкций
 //
- t_printf( "арифм.исполн.у-во (АИУ) номер %d работало %ld тактов ( %5.1f% )",
-                  i, sum_tProc, 100.0 * sum_tProc / parallel_Ticks);
+ t_printf( "арифм.исполн.у-во (АИУ) номер %d работало %ld тактов (%.3g%% )",
+            i, sum_tProc, 100.0 * sum_tProc / parallel_Ticks);
 //
  } // конец цикла про АИУ
 //
@@ -1904,7 +1900,7 @@ Display_Error(char *str)
 // MessageDlg(str, mtError, TMsgDlgButtons() << mbOK, 0);
  F1->Master_Timer->Enabled = FALSE; // остановили главный таймер
 //
- do_Run // "включили" все кнопки Выполнение 
+ do_Run // "включили" все кнопки Выполнение
 //
  MessageBox( 0, str, "Проблемы с арифметикой", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL );
 //
@@ -4790,7 +4786,11 @@ void __fastcall TF1::OnKeyUp_F1(TObject *Sender, WORD &Key,
  else
 //
  if( Shift.Contains(ssCtrl) && ( Key == 'I' || Key == 'i' ) )
-  Run_Repeat( count_Repeat ); // повтор последне йпрограммы count_Repeat раз
+  Run_Infinity(); // повтор загруженной программы бесконечное число раз
+//
+ else
+ if( Shift.Contains(ssCtrl) && ( Key == 'A' || Key == 'a' ) )
+  modeStopRunInfinity = TRUE ; // остановить бесконечное выполнение последней загруженно йпрограммы
 //
  Key = NULL; // очистили код нажатой кнопки
 //
@@ -6358,27 +6358,29 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall Run_Repeat( INT Count )
-{ // повтор последней программы Count раз
+void __fastcall Run_Infinity()
+{ // повтор загруженно йпрограммы бесконечное число раз (до Alt+A)
 //
-  for( ULI i=1; i<=Count; i++ ) // сделать count_Repeat (глобал) раз
+ modeStopRunInfinity = FALSE ; // выполнятьбесконечное число раз
+//
+ while( 1 ) // сделать бесконечное число раз
+ {
+//
+  if( modeStopRunInfinity ) // установлен флагоконсания бесконечного выполнения
   {
+   StopCalculations( 0 ); // выполнение остановлено пользователем
+   break; // выход из цикла
+  }
 //
-   t_printf( "\n-I- Повтор= %d (из %d) -I-\n", i, Count );
+  Delay( -5 ); // ждать 5 сек
 //
-   while( 1 ) // ждём возобновления активности кнопки F1->BitBtn_Run
-   {
-    Delay( -5 ); // ждать 5 сек
-    if( F1->BitBtn_Run->Enabled ) // если кнопка F1->BitBtn_Run стала активна...
-    {
-     F1->BitBtn_Run->Click(); // программно нажать кнопку F1->BitBtn_Run
-     Delay( -60 ); // ждать 30 сек
-     break; // выход из while( 1 )
-    } // конец if( F1->BitBtn_Run->Enabled )
+  if( F1->BitBtn_Run->Enabled ) // если кнопка F1->BitBtn_Run стала активна...
+  {
+   F1->BitBtn_Run->Click(); // программно нажать кнопку F1->BitBtn_Run
+   Delay( -20 ); // ждать 20 сек показа графика интенсивности вычислений
+  } // конец if( F1->BitBtn_Run->Enabled )
 //
-   } // конец while( 1 )
-//
-  } // конец for( ULI i=1; i<=count_Repeat; i++ )
+ } // конец while( 1 )
 //
 } // --- конец Run_Repeat ------------------------------------------------------
 
