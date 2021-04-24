@@ -281,7 +281,7 @@ struct { // DrawGraph (отрисовка графмка интенсивности вычислений)
         clGraphEnd;
 } DGR; // [DrawGraph] цвет тела графика интенсивности вычислений
 //
-struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
+struct { // Read-Write-Config (имена секций и значений файла конфигурации системы)
  char *Sect1,  *Sect1_Var1,*Sect1_Var2,*Sect1_Var3,*Sect1_Var4,
       *Sect2, // список инструкций - выполняется автоматически
       *Sect3,  *Sect3_Var1,*Sect3_Var2,
@@ -333,7 +333,7 @@ struct { // ReadWriteConfig (имена секций и значений файла конфигурации системы)
   "StartNumb",
  "Vizu_Dynamic", // [17] число раз пропуска перемещения фокуса в SG_Set[][] вслед за исполнением программы
   "pass_Counts"
-} ; // [ReadWriteConfig] имена секций и значений файла конфигурации
+} ; // [Read-Write-Config] имена секций и значений файла конфигурации
 //
 int outGlobal; // тэг варианта меню, из которого вызвана функция выбора цвета
 //
@@ -1259,6 +1259,9 @@ TF1::OnClose_F1(TObject *Sender, TCloseAction &Action)
 void __fastcall // нажатие кнопки СТОП
 TF1::Stop_Calculations(TObject *Sender)
 {
+
+ Write_Config();
+
  StopCalculations( 0 ); // выполнение остановлено пользователем
 } // конец Stop_Calculations ---------------------------------------------------
 
@@ -6377,7 +6380,7 @@ void __fastcall Run_Infinity()
   if( F1->BitBtn_Run->Enabled ) // если кнопка F1->BitBtn_Run стала активна...
   {
    F1->BitBtn_Run->Click(); // программно нажать кнопку F1->BitBtn_Run
-   Delay( -20 ); // ждать 20 сек показа графика интенсивности вычислений
+   Delay( -60 ); // ждать 60 сек показа графика интенсивности вычислений
   } // конец if( F1->BitBtn_Run->Enabled )
 //
  } // конец while( 1 )

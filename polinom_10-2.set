@@ -1,0 +1,106 @@
+; Баканов В.М., e881e@mail.ru, http://vbakanov.ru/left_1.htm
+; Вычисление полинома 10-го порядка в точке Х
+; используем алгоритм с предварительным возведением 
+; в степень путём последовательного умножения
+;
+SET  1, X ; точка вычислени яполинома
+;
+SET  0, a_00 : коэффициенты полинома
+SET  1, a_01
+SET  2, a_02
+SET  3, a_03
+SET  4, a_04
+SET  5, a_05
+SET  6, a_06
+SET  7, a_07
+SET  8, a_08
+SET  9, a_09
+SET 10, a_10
+;
+SET  0, exp_00 ; показатель степени 0 
+SET  1, exp_01 
+SET  2, exp_02 
+SET  3, exp_03 
+SET  4, exp_04 
+SET  5, exp_05 
+SET  6, exp_06 
+SET  7, exp_07 
+SET  8, exp_08 
+SET  9, exp_09 
+SET 10, exp_10 
+;
+CPY X, tmp_01 ; X^1
+MUL X, tmp_01, tmp_02 ; X^2
+MUL X, tmp_02, tmp_03 
+MUL X, tmp_03, tmp_04 
+MUL X, tmp_04, tmp_05 
+MUL X, tmp_05, tmp_06 
+MUL X, tmp_06, tmp_07 
+MUL X, tmp_07, tmp_08 
+MUL X, tmp_08, tmp_09 
+MUL X, tmp_09, tmp_10 ; X^10
+;
+CPY a_00, sum_00 ; нулевой элемент полинома
+;
+MUL a_01, tmp_01, tmp_01_0 ; ; нулевой элемент полинома
+ADD sum_00, tmp_01_0, sum_01
+;
+MUL a_02, tmp_02, tmp_02_0
+ADD sum_01, tmp_02_0, sum_02
+;
+MUL a_03, tmp_03, tmp_03_0
+ADD sum_02, tmp_03_0, sum_03
+;
+MUL a_04, tmp_04, tmp_04_0
+ADD sum_03, tmp_04_0, sum_04
+;
+MUL a_05, tmp_05, tmp_05_0
+ADD sum_04, tmp_05_0, sum_05
+;
+MUL a_06, tmp_06, tmp_06_0
+ADD sum_05, tmp_06_0, sum_06
+;
+MUL a_07, tmp_07, tmp_07_0
+ADD sum_06, tmp_07_0, sum_07
+;
+MUL a_08, tmp_08, tmp_08_0
+ADD sum_07, tmp_08_0, sum_08
+;
+MUL a_09, tmp_09, tmp_09_0
+ADD sum_08, tmp_09_0, sum_09
+;
+MUL a_10, tmp_10, tmp_10_0
+ADD sum_09, tmp_10_0, sum_10 ; результат
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
