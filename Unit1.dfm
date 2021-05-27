@@ -57,7 +57,7 @@ object F1: TF1
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
-    Left = 936
+    Left = 938
     Top = 185
     Width = 54
     Height = 16
@@ -166,8 +166,8 @@ object F1: TF1
     SimplePanel = False
   end
   object SG_Data: TStringGrid
-    Left = 810
-    Top = 207
+    Left = 812
+    Top = 209
     Width = 190
     Height = 308
     Hint = #1044#1072#1085#1085#1099#1077' ('#1087#1088#1086#1089#1084#1086#1090#1088' - '#1083#1077#1074#1072#1103' '#1082#1085#1086#1087#1082#1072' '#1084#1099#1096#1080', '#1088#1072#1089#1087#1077#1095#1072#1090#1082#1072' Alt+F2)'
@@ -185,8 +185,8 @@ object F1: TF1
   end
   object SG_Set: TStringGrid
     Left = 235
-    Top = 207
-    Width = 557
+    Top = 209
+    Width = 559
     Height = 308
     Hint = 
       #1054#1087#1077#1088#1072#1094#1080#1080' ('#1084#1072#1096#1080#1085#1085#1099#1077' '#1080#1085#1089#1090#1088#1091#1082#1094#1080#1080') '#1080' '#1080#1093' '#1086#1087#1077#1088#1072#1085#1076#1099' ('#1080#1089#1093#1086#1076#1085#1099#1077' '#1076#1072#1085#1085#1099#1077#13#10#1076 +
@@ -244,8 +244,8 @@ object F1: TF1
   end
   object SG_Buffer: TStringGrid
     Left = 4
-    Top = 207
-    Width = 197
+    Top = 209
+    Width = 199
     Height = 308
     Hint = #1041#1091#1092#1077#1088' '#1082#1086#1084#1072#1085#1076' ('#1085#1091#1084#1077#1088#1072#1094#1080#1103' '#1089' 1)'
     TabStop = False
@@ -261,7 +261,7 @@ object F1: TF1
   end
   object PB_1: TProgressBar
     Left = 206
-    Top = 207
+    Top = 209
     Width = 17
     Height = 308
     Cursor = crCross
