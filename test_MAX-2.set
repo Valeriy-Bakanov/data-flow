@@ -1,0 +1,29 @@
+;                                                      ;
+SET 1, m01 ; первый элемент массива
+SET 2, m02
+SET 0,  m03
+
+ADD m01,m02, aaa, false
+SUB m01,m03, bbb, false
+;
+;PNT m01, ccc
+;
+;PAN m02,m01, _ddd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,8 +1,8 @@
 object F1: TF1
-  Left = 555
-  Top = 204
+  Left = 389
+  Top = 256
   Width = 1046
-  Height = 611
+  Height = 618
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   ActiveControl = BitBtn_Run
@@ -53,7 +53,7 @@ object F1: TF1
   OnShow = OnShow_F1
   DesignSize = (
     1028
-    550)
+    557)
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
@@ -145,7 +145,7 @@ object F1: TF1
   end
   object SB: TStatusBar
     Left = 0
-    Top = 531
+    Top = 538
     Width = 1028
     Height = 19
     Hint = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1089#1086#1089#1090#1086#1103#1085#1080#1080' '#1089#1080#1089#1090#1077#1084#1099' '#1080' '#1074#1099#1087#1086#1083#1085#1103#1077#1084#1086#1084' '#1076#1077#1081#1089#1090#1074#1080#1080
@@ -167,7 +167,7 @@ object F1: TF1
   end
   object SG_Data: TStringGrid
     Left = 812
-    Top = 209
+    Top = 216
     Width = 190
     Height = 308
     Hint = #1044#1072#1085#1085#1099#1077' ('#1087#1088#1086#1089#1084#1086#1090#1088' - '#1083#1077#1074#1072#1103' '#1082#1085#1086#1087#1082#1072' '#1084#1099#1096#1080', '#1088#1072#1089#1087#1077#1095#1072#1090#1082#1072' Alt+F2)'
@@ -185,7 +185,7 @@ object F1: TF1
   end
   object SG_Set: TStringGrid
     Left = 235
-    Top = 209
+    Top = 216
     Width = 559
     Height = 308
     Hint = 
@@ -204,6 +204,7 @@ object F1: TF1
     TabOrder = 5
     OnDblClick = SG_Sets_Edit
     OnDrawCell = SG_Sets_DrawCell
+    OnMouseUp = SG_MouseUp
     OnSelectCell = SG_SetSelectCell
     RowHeights = (
       19
@@ -244,7 +245,7 @@ object F1: TF1
   end
   object SG_Buffer: TStringGrid
     Left = 4
-    Top = 209
+    Top = 216
     Width = 199
     Height = 308
     Hint = #1041#1091#1092#1077#1088' '#1082#1086#1084#1072#1085#1076' ('#1085#1091#1084#1077#1088#1072#1094#1080#1103' '#1089' 1)'
@@ -261,7 +262,7 @@ object F1: TF1
   end
   object PB_1: TProgressBar
     Left = 206
-    Top = 209
+    Top = 216
     Width = 17
     Height = 308
     Cursor = crCross
@@ -594,6 +595,7 @@ object F1: TF1
     Top = 29
   end
   object SG_PopUpMenu: TPopupMenu
+    AutoPopup = False
     OnPopup = OnPopup_Determine_Links
     Left = 626
     Top = 347
@@ -664,6 +666,7 @@ object F1: TF1
     object NotePad1: TMenuItem
       Caption = #1054#1090#1082#1088#1099#1090#1100' '#1089#1086#1076#1077#1088#1078#1080#1084#1086#1077' '#1074' NotePad'
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1090#1077#1082#1089#1090' '#1087#1088#1086#1090#1086#1082#1086#1083#1072' '#1088#1077#1096#1077#1085#1080#1103' '#1074' NotePad'
+      ShortCut = 16467
       OnClick = M1_CopyToNotepad
     end
   end

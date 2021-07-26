@@ -71,16 +71,15 @@ char Ident[] = "Bakanov Valery Mikhailovich, Moscow, Russia, 2009-2021\n \
 The author of the software Valery Bakanov is not an ardent supporter of Object-Oriented Programming \
 (Linus Torvalds definitely sits inside the author!) and therefore most of the code does not use OOP";
 //
-char trueLowerCase[]  = "true",        trueUpperCase[] ="TRUE",
-     falseLowerCase[] = "false",       falseUpperCase[]="FALSE",
-     trueOutput[]     = "1 | true",    falseOutput[] = "0 | false", // вывод результатавыполнения предикатных функций (\x00A6 - прерывистая вертикальная черта)
+char trueLowerCase[]  = "true",  trueUpperCase[] ="TRUE",
+     falseLowerCase[] = "false", falseUpperCase[]="FALSE",
      notDefined[]     ="? ? ?",
      startComments[] = ";\0", // символ начала комментария в строке ";"
-     symbolNot_1 = '!',                symbolNot_2 = '~', // символы логического отрицания ! или ~
+     symbolNot_1 = '!', symbolNot_2 = '~', // символы логического отрицания ! или ~
      SET[]       = "SET"; // имя инструкции SET
 //
 #define is_SET(Set) ( !strcmp( Set, SET ) ) // это инструкция SET
-#define is_PredicatOrSET(Set) ( is_Predicat( Set ) || !strcmp( Set, SET ) ) // это ПРЕДИКАТ или DET
+#define is_PredicatOrSET(Set) ( is_Predicat( Set ) || !strcmp( Set, SET ) )
 //
 #define strNcpy(d,s) strncpy(d,s,sizeof(d)) // безопасный вариант
 //------------------------------------------------------------------------------
@@ -146,15 +145,18 @@ void   __fastcall Vizu_Buffer(); // визуализация данных в SG_Buffer из массива с
 char*  __fastcall Vizu_Flags(INT i_Set); // визуализация флагов инструкции Mem_Sets[i_Set]
 //
 void   __fastcall Primary_Init_Data(); // первоначальное присваивание данных ячейкам памяти etc etc
-void   __fastcall ExecuteInstructions_Except_SET(INT i_Set); // выполняет все (кроме SET) инструкции номер i_Set
+void   __fastcall ExecuteInstructions_Except_SET(int i_Set); // выполняет все (кроме SET) инструкции номер i_Set
 void   __fastcall Install_All_Flags(); // очищаем ВСЕ ФЛАГИ в Mem_Sets[]
 void   __fastcall Calc_Stat_Proc();  // вычисляется статистика использования АИУ
+void   __fastcall Test_ReadyForExec_and_AddToBuffer(int i_Set); // тестирует инструкцию i_Set на готовность
 //
-float  __fastcall Calc_Param(INT i_Set); // вычисляется ПОЛЕЗНОСТЬ инструкции i_Set
+float  __fastcall Calc_Param(int i_Set); // вычисляется ПОЛЕЗНОСТЬ инструкции i_Set
 float  __fastcall Calc_Priority(float Param); // по значению Param (ПОЛЕЗНОСТЬ) определяется
 // ПРИОРИТЕТ данной инструкции при ее запуске на свободном АИУ
 // условие ГКВ (Готовность К Выполнению) и при успехе добавляет ее в буфер Mem_Buffer[]
-bool   __fastcall Test_aResult_Eq_aOperand(INT i_Set); // тест на совпадение адреса результата с адресами одного или обоих операндов
+bool   __fastcall Test_aResult_Eq_aOperand(int i_Set); // тест на совпадение
+// адреса результата с адресами одного или обоих операндов
+//
 char*  __fastcall Get_Time_asLine(); // вернуть время (в тактах начиная с 0) в строке
 //
 void   __fastcall AttemptExecMaxInstructions_fromBuffer(); // пытается выбрать из буфера и выполнить максимум ГКВ-инструкций
@@ -163,20 +165,20 @@ void   __fastcall Start_DataFlow_Process(int Mode); // начали счет (в заданном M
 //
 int    __fastcall Get_CountOperandsByInstruction(char *Set); // возвращает число операндов инструкции Set
 char*  __fastcall GetSubString(char *Str, int n1, int n2); // вернуть подстроку из Str от n1 до n2 символов включительно
-char*  __fastcall Line_Set(INT i_Set, int Rule); // возвращает текст инструкции из Mem_Sets[i]
-void   __fastcall Add_toData(INT i_Set, char* aResult, REAL Data); // добавляет в Mem_Data[] число по адресу (строка!) Addr
-void   __fastcall Add_toBuffer(INT i_Set, int Rule); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set (Rule определяет точку вызова функции)
+char*  __fastcall Line_Set(int i_Set, int Rule); // возвращает текст инструкции из Mem_Sets[i]
+void   __fastcall Add_toData(int i_Set, char* aResult, REAL Data); // добавляет в Mem_Data[] число по адресу (строка!) Addr
+void   __fastcall Add_toBuffer(int i_Set); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set
 int    __fastcall Get_TicksByInstruction(char *Set); // возвращает из Set_Params->Time время выполнения инструкции Set(char *Set);
 int    __fastcall Get_Free_Proc(); // возвращает число свободных АИУ
-REAL   __fastcall Get_Data(char Addr[]); // возвращает из Mem_Data[] число по адресу (строка!) Addr
+REAL   __fastcall Get_Data(char *Addr); // возвращает из Mem_Data[] число по адресу (строка!) Addr
 void   __fastcall Display_Error(char *str); // информация об арифметической ошибке
 void   __fastcall Test_Visu_Buffer_Fill(); // тестирование индикация заполненности буфера
 int    __fastcall Select_Instruction_fromBuffer(); // возвращает номер инструкции из буфера по условию мах ПРИОРИТЕТА
 void   __fastcall Calc_Level_Buffer_Fill(); // вычисляет наполненность буфера в %% в глобале Level_Buffer_Fill
 //
-float  __fastcall Calc_01_Param_Instruction(INT i_Set); // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 01-му методу
-float  __fastcall Calc_02_Param_Instruction(INT i_Set); // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 02-му методу
-float  __fastcall Calc_03_Param_Instruction(INT i_Set); // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 03-му методу
+float  __fastcall Calc_01_Param_Instruction(int i_Set); // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 01-му методу
+float  __fastcall Calc_02_Param_Instruction(int i_Set); // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 02-му методу
+float  __fastcall Calc_03_Param_Instruction(int i_Set); // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 03-му методу
 //
 int    __fastcall Work_TimeSets_Protocol_IC();  // работаем с данными интенсивности вычислений
 int    __fastcall Work_TimeSets_Protocol_AIU(); // работаем с загруженностью АИУ (диаграмма Гантта)
@@ -186,14 +188,14 @@ void   __fastcall Finalize_Except_SET(INT i_Proc); // вызывается для завершения 
 void   __fastcall Delay_Vizu_Buffer(); // ждет Delay_Buffer миллисек для визуализации буфера
 ////////////////////////////////////////////////////////////////////////////////
 REAL   __fastcall Calc_ConnectedIndex(int Rule); // вычисление характеристик информационного графа программы
-REAL   __fastcall StrToReal(char *str, INT i_Set); // конвертация строки в REAL с проверкой при выполнении инструкции номер i_Set
+REAL   __fastcall StrToReal(char * str, int i_Set); // конвертация строки в REAL с проверкой при выполнении инструкции номер i_Set
 //
 void   __fastcall GetFileFromServer( char FileName[] ); // получить файл с сервера
 //
 bool   __fastcall Test_All_Operands(); // тестирует потенциальное существование операндов для всех операторов (останов при ошибке)
 //
 int    __fastcall RunPreProcessor(); // препроцессор обработки макросов
-int    __fastcall PreProcRow_For1(INT iRow, char* c, INT iCycle); // расширитель iRow строки тела макроса одномерного массива
+int    __fastcall PreProcRow_For1(int iRow, char* c, int iCycle); // расширитель iRow строки тела макроса одномерного массива
 //int    __fastcall FindAndReplaceSubString(char* Source, int Start, int Len, char* Old, char* New);
 char*  __fastcall ParseAndCalculateIndex(char* Expression); // разбор и вычисление выражения (без параметров) exp
 // int    __fastcall CalculateIndexes(char* str); // окончательное вычисление значения индекса (без параметров) строки str
@@ -257,22 +259,6 @@ INT all_maxProcs, // всего участвующих в вычислениях АИУ
 //
 #define MI_fOp1(i) ( Mem_Instruction[i].fOp1 ) // обращение к флагу готовности 1-го операнда i-той инструкции
 #define MI_fOp2(i) ( Mem_Instruction[i].fOp2 ) // ... 2-го операнда i-той инструкции
-//
-#define do_2_Ops( i, Rule ) /* вариант 2-х операндов в инструкции */ \
-if( Ready_Op1 ) { \
- MI_fOp1(i) = true; \
- snprintf(tmp,sizeof(tmp), " #%d/%d(1|2)", i,Rule); strcat(strInfoLine, tmp); } \
-if( Ready_Op2 ) { \
- MI_fOp2(i) = true; \
- snprintf(tmp,sizeof(tmp), " #%d/%d(2|2)", i,Rule); strcat(strInfoLine, tmp); } \
-if( MI_fOp1(i) && MI_fOp2(i) ) { \
- snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
-//
-#define do_1_Ops( i, Rule ) /* вариант 1-го операнда в инструкции */ \
-if( Ready_Op1 ) { \
- MI_fOp1(i) = true; \
- snprintf(tmp,sizeof(tmp), " #%d/%d(1|1)", i,Rule); strcat(strInfoLine, tmp); \
- snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
 //
 //------------------------------------------------------------------------------
 //
@@ -368,9 +354,9 @@ char FileNameINI[_512]    = "data_flow.ini", // имя файла настроек
      FileNameEditor[_512] = "notepad.exe"; // файл текстового редактора
 FILE *fptrIn, *fptrOut; // указатели на рабочие массивы
 //
-bool modeEdit  = false, // режим вызова текстового редактора
-     modeGraph = true, // режим отрисовки графика интенсивности вычислений
-     modeStopRunInfinity = true; // остановить бесконечное выполнение последней загруженной программы
+bool modeEdit  = FALSE, // режим вызова текстового редактора
+     modeGraph = TRUE, // режим отрисовки графика интенсивности вычислений
+     modeStopRunInfinity = TRUE; // остановить бесконечное выполнение последней загруженной программы
 //
 int Regim = 1; // при Regim = 1 вычисления начинаются
                // при Regim = 0 вычисления остановлены пользователем
@@ -387,15 +373,15 @@ int Code_Error = 1; // Code_Error = -1  -.- попытка деления на 0
 #define MAX_PROC 1000000 // максимальное число АИУ 10^6
 struct mp {
  bool Busy; // занятость АИУ (если 0=FALSE - свободен, иначе - занят)
- INT  i_Set; // номер инструкции (из пула инструкций)
+ int i_Set; // номер инструкции (из пула инструкций)
  char aOp1[_ID_LEN], // адрес (строка!) первого операнда
       aOp2[_ID_LEN], // адрес (строка!) второго операнда
    aResult[_ID_LEN]; // адрес (строка!) результата
  REAL Op1, Op2, Result; // значения данных по адресам aOp1,aOp2,aResult (для проверки)
 // double t_Start; // момент времени начала выполнения инструкции
- INT tick_Start; // момент (тик, такт) старта выполнения инструкции
+ ULI tick_Start; // момент (тик, такт) старта выполнения инструкции
 } M_P, *Mem_Proc=NULL;
-INT max_Proc = _128, // первоначальный захват
+ULI max_Proc = _128, // первоначальный захват
     Free_Proc; // текущее число свободных АИУ
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -409,13 +395,13 @@ struct mi {
       aPredicat[_ID_LEN]; // адрес (строка) флага предиката операции
  bool fOp1,fOp2, // признак готовности 1-го и 2-го операндов
       fPredicat, // существование флага предиката ( true/false или переменная )
-      fPredicat_TRUE,// TRUE - истинность предиктора (инструкцию можно добавлять в буфер команд)
-      fExec,       // признак того (TRUE), что эта инструкция В ДАННЫЙ МОМЕНТ выполнятся
+      fPredicat_TRUE; // TRUE - истинность предиктора (инструкцию можно добавлять в буфер команд)
+ bool fExec,       // признак того (TRUE), что эта инструкция В ДАННЫЙ МОМЕНТ выполнятся
       fExecOut,    // признак исполнения инструкции (TRUE - исполнялась один раз)
       fAddBuffer;  // признак того, что инструкция добавлена в буффер
  char Comment[_256];  // комментарий к инструкции
 } M_I, *Mem_Instruction=NULL;
-INT max_Instruction = _128,   // первоначальный захват
+ULI max_Instruction = _128,   // первоначальный захват
     Really_Set = 0,   // текущее значение
     Already_Exec = 0; // уже выполнено
 //
@@ -426,7 +412,7 @@ struct sc {
  int Row, Col; // номер строки и колонки в SC_Set
  TColor clBackground, clSymbol; // цвета фона ячейки и символов при раскрашивании
 } S_C, *Sel_Cell=NULL;
-INT Really_Select = 0; // текущее значение
+ULI Really_Select = 0; // текущее значение
 //
 /////////////////////////////////////////////////////////////////////////////
 #define MAX_DATA 1000000 // максимальный размер пула данных 10^6
@@ -434,23 +420,23 @@ INT Really_Select = 0; // текущее значение
 struct md {
  char Addr[_ID_LEN]; // адрес ячейки (строка!)
  REAL Data; // содержимое ячейки
- INT i_Set; // номер инструкции, в результате котрой было вычислено это значеник
+ ULI i_Set; // номер инструкции, в результате котрой было вычислено это значеник
 } M_D, *Mem_Data=NULL;
-INT max_Data = _128,  // первоначальный захват
+ULI max_Data = _128,  // первоначальный захват
     Really_Data = 0; // текущее значение
 //
 ////////////////////////////////////////////////////////////////////////////////
 #define MAX_BUFFER 1000000 // максимальный размер буфера ГКВ-инструкций 10^6
 // описание структуры буфера ГКВ-инструкций
 struct mb {
- INT i_Set; // номер ГКВ-инструкции из пула инструкций
+ ULI i_Set; // номер ГКВ-инструкции из пула инструкций
  float Param, // параметр для определения ПОЛЕЗНОСТИ
        Priority; // собственно ПРИОРИТЕТ (чем больше - тем раньше инструкция запускается на исполнение)
 } M_B, *Mem_Buffer=NULL;
-INT max_Buffer = _128,  // первоначальный захват
+ULI max_Buffer = _128,  // первоначальный захват
     Really_Buffer = 0, // текущая длина
     Really_Buffer_Old; // то же до последнего изменения
-bool buffer_Fill = false; // если TRUE - буфер заполнен
+bool buffer_Fill = FALSE; // если TRUE - буфер заполнен
 float Level_Buffer_Fill = 0.0; // заполненность буфера в %% [0 - 100]
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -520,14 +506,14 @@ int Count_Sets = sizeof(Set_Params) / sizeof(ip); // РЕАЛЬНОЕ число пар в массив
 // M_PI_2 = pi/2 определено в math.h
 //
 ////////////////////////////////////////////////////////////////////////////////
-INT localTick = 0,  // общее число тиков (происшедших тактов) по счётчику MasterTimer
+ULI localTick = 0,  // общее число тиков (происшедших тактов) по счётчику MasterTimer
     localTickOfEndLastExecuteSet, // тиков с конца последней выполненной инструкции
     waitAboveOfEndLastExecuteSet = 1000; // через сколько тиков закнчивать программу
 int tick_Interval = 10; // цена деления тика таймера в миллисекундах (умолчание)
 ////////////////////////////////////////////////////////////////////////////////
 const int minW_F1 = 1024, minH_F1 = 600; // минимальный размер окна главной формы (F1)
 ////////////////////////////////////////////////////////////////////////////////
-INT  FileSizeFromServer; // размер файла для выгрузки с сервера
+ULI  FileSizeFromServer; // размер файла для выгрузки с сервера
 char NameSubDirOutData[] = "Out!Data", // имя подкаталога для сброса рассчитанных данных
      PathToSubDirOutData[_256], // полный путь к подкаталогу сброса рассчитанных данных
      NameSubDirInData[]  = "In!Data", // имя подкаталога для исходных дынных данных
@@ -550,10 +536,10 @@ char attrVar[6]  = "$\0", // до 5 символов в начале переменных, говорящие возмож
 bool flagAlarmData   = true,
      flagAlarmBuffer = true,
      flagAlarmParser = true,
-//
+//     
      SpeculateExec   = false; // при true инструкция с Predicate=false выполнить, но результат не сохранять
 //
-INT dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длиной 0 тиков
+ULI dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длиной 0 тиков
     pass_Counts = 0, // пропускаем pass_Counts выполненных операторов при перемещении фокуса в SG_Set[][]
     count_Ops=0; // номер выполненного оператора по очереди (идёт с накоплением)
 //
@@ -569,11 +555,13 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
  time_t t;
  srand((unsigned) time(&t));
 //
- Master_Timer->Enabled = false; // выключили главный таймер
+ Master_Timer->Enabled = FALSE; // выключили главный таймер
 //
  strcpy(FileNameINI, ChangeFileExt(ParamStr(0), ".ini").c_str()); // путь к INI-файлу тот же,что к EXE
 //
  Read_Config( 0 ); // читаем файл конфигурации (и перераспределяем память динамических массивов)
+//
+// StatusBarMain->Visible = TRUE;
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -642,7 +630,7 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
  }
  else // не удалось прочитать
  {
-  BitBtn_Run->Enabled = false; // "выключили" кнопку ВЫПОЛНЕНИЕ
+  BitBtn_Run->Enabled = FALSE; // "выключили" кнопку ВЫПОЛНЕНИЕ
   SBM0->Text = " Выберите файл программы для выполнения..."; // вывод текста в StatusBarMain
   MessageBeep( MB_ICONASTERISK ); // предупреждение...
   Delay( 1000 ); // ждать 1000 мсек
@@ -749,7 +737,7 @@ RunExternal(char* CommandLine, byte RuleParent, byte Priority, bool RuleMessage)
            dwCreationFlag=IDLE_PRIORITY_CLASS;
   }
 //
-  out=CreateProcess(NULL,CommandLine,NULL,NULL,false,
+  out=CreateProcess(NULL,CommandLine,NULL,NULL,FALSE,
                     dwCreationFlag,NULL,NULL,&si,&pi);
 //
   if (!out) // если старт неудачен... out=FALSE
@@ -808,7 +796,7 @@ TF1::SG_Sets_Edit(TObject *Sender) // вызов редактора файла инструкций
  {
   char tmp[_256];
   snprintf( tmp,sizeof(tmp), "%s %s", FileNameEditor, FileNameSet );
-  RunExternal(tmp, 0, 2, true); // стартовать с ожиданием окончания
+  RunExternal(tmp, 0, 2, TRUE); // стартовать с ожиданием окончания
   Rewrite_Files( Sender ); // перечитать файл
  }
 //
@@ -816,7 +804,6 @@ TF1::SG_Sets_Edit(TObject *Sender) // вызов редактора файла инструкций
  MessageBeep( MB_OK ); // звуковое предупреждение...
 //
 } // конец SG_Sets_Edit --------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -830,7 +817,7 @@ void __fastcall TF1::INI_Edit(TObject *Sender)
  {
   char tmp[_256];
   snprintf(tmp,sizeof(tmp), "%s %s", FileNameEditor, FileNameINI);
-  RunExternal(tmp, 0, 2, true); // стартовать с ожиданием окончания
+  RunExternal(tmp, 0, 2, TRUE); // стартовать с ожиданием окончания
   Rewrite_Files( Sender ); // перечитать файл
  }
 //
@@ -1011,17 +998,17 @@ void __fastcall Read_Config( int Rule)
   Set_Params[i].Ticks = tINI->ReadInteger(RWC.Sect2, Set_Params[i].Set, Set_Params[i].Ticks);
 //
  strcpy(FileNameEditor, tINI->ReadString(RWC.Sect3, RWC.Sect3_Var1, "notepad.exe").c_str()); // файл текстового редактора
- modeEdit = tINI->ReadBool(RWC.Sect3, RWC.Sect3_Var2, false); // режим вызова текстового редактора
+ modeEdit = tINI->ReadBool(RWC.Sect3, RWC.Sect3_Var2, FALSE); // режим вызова текстового редактора
 //
 //------------------------------------------------------------------------------
  strcpy( attrVar, tINI->ReadString(RWC.Sect10, RWC.Sect10_Var1, "$\0").c_str() );
 // первый символ для переменных, не подчиняюшихся ПРАВИЛУ ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ
 //------------------------------------------------------------------------------
- modeGraph = tINI->ReadBool(RWC.Sect11, RWC.Sect11_Var1, true); // режим отрисовки графика интенсивности вычислений
+ modeGraph = tINI->ReadBool(RWC.Sect11, RWC.Sect11_Var1, TRUE); // режим отрисовки графика интенсивности вычислений
 //-----------------------------------------------------------------------------
  waitAboveOfEndLastExecuteSet = tINI->ReadInteger(RWC.Sect12, RWC.Sect12_Var1, 1000); // cколько тиков ждать очередной инструкции
 //
- DCE.needDrawColors     = tINI->ReadBool(RWC.Sect13,    RWC.Sect13_Var1, true);  // надо ли выделять цветом ячейки при выполнении
+ DCE.needDrawColors     = tINI->ReadBool(RWC.Sect13,    RWC.Sect13_Var1, TRUE);  // надо ли выделять цветом ячейки при выполнении
  DCE.clReadyOperand     = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var2, RGB(255,153,255)); // цвет готовности операндов
  DCE.clTruePredicat     = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var3, RGB(255,153,255)); // цвет состояния TRUE флага предиктора
  DCE.clExecSet          = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var4, RGB(255, 51,153)); // цвет выполнения  инструкции
@@ -1103,8 +1090,8 @@ Vizu_Sets()
  {
   mS->RowCount = Really_Set + 2; // настроили число строк в визуализируемом объекте
   for(int j=0; j<9; j++) // чистим строку с номером 1 (вторую сверху)
-   mS->Cells[j][1] = "\0";
-  return true;
+   mS->Cells[j][1] = "";
+  return TRUE;
  }
 //
  mS->RowCount = Really_Set + 1; // настроили число строк в визуализируемом объекте
@@ -1112,7 +1099,7 @@ Vizu_Sets()
  for(UI i=0; i<Really_Set; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Set)...
   {
    for(int j=0; j<7; j++) // по всем колонкам строки i
-    mS->Cells[j][i+1] = "\0"; // очистили !
+    mS->Cells[j][i+1] = ""; // очистили !
 //
 ////////////////////////////////////////////////////////////////////////////////
    mS->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
@@ -1131,7 +1118,7 @@ Vizu_Sets()
    switch( Get_CountOperandsByInstruction(Set) ) // ... число входных операндов инструкции Set
    {
     case 1: mS->Cells[2][i+1] = Mem_Instruction[i].aOp1; // адрес первого (и единственного) операнда
-            mS->Cells[3][i+1] = "\0";
+            mS->Cells[3][i+1] = "";
             mS->Cells[5][i+1] = Mem_Instruction[i].aPredicat; // адрес предиката
             mS->Cells[4][i+1] = Mem_Instruction[i].aResult; // адрес результата
             mS->Cells[7][i+1] = Mem_Instruction[i].Comment; // комментарий
@@ -1151,11 +1138,11 @@ Vizu_Sets()
    } // конец switch
 //
    if( is_PredicatOrSET( Set ) ) // это SET или ПРЕДИКТОР (поле флага предиктора ПУСТОЕ)
-    mS->Cells[5][i+1] = "\0"; // ... поле ПРЕДИКАТА - ПУСТОЕ..!
+    mS->Cells[5][i+1] = ""; // ... поле ПРЕДИКАТА - ПУСТОЕ..!
 //
   } // конец цикла по i=0, Really_Set
 //
-  return true;
+  return TRUE;
 //
 } // --- конец Vizu_Sets -------------------------------------------------------
 
@@ -1164,10 +1151,10 @@ Vizu_Sets()
 void __fastcall // визуализация инструкций в SG_Data из массива структур Mem_Data[]
 Vizu_Data()
 {
- char tmp[_512]="\0";
+ char tmp[_512];
 //
 // mD->Cells->BeginUpdate(); // у TStringGrid НЕТУ BeginUpdate и EndUpdate
- mD->DoubleBuffered = true; // двойная буфферизация - чтобы не мигало..!
+ mD->DoubleBuffered = TRUE; // двойная буфферизация - чтобы не мигало..!
 //
  if(!Really_Data)
  {
@@ -1179,24 +1166,23 @@ Vizu_Data()
 //
  mD->RowCount = Really_Data + 1; // настроили число строк в визуализируемом объекте
 //
- for( INT i=0; i<Really_Data; i++ ) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Data)...
+ for(UI i=0; i<Really_Data; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Data)...
   {
    mD->Cells[0][i+1] = Mem_Data[i].Addr; // значение адреса
    snprintf(tmp,sizeof(tmp), "%.*g", ACC_REAL, Mem_Data[i].Data); // значение числа по данному адресу
    mD->Cells[1][i+1] = tmp;
 // вывод значений логических предикатов ========================================
 //
- if( is_ResultIsPredicat( Mem_Data[i].Addr ) ) // это имя флага-предиката ?
-  mD->Cells[1][i+1] = Mem_Data[i].Data ? trueOutput : falseOutput;
+ if( is_ResultIsPredicat( Mem_Data[i].Addr ) ) // это имя флага предиктора?
+  mD->Cells[1][i+1] = Mem_Data[i].Data ? trueLowerCase : falseLowerCase;
 //
- } // конец if( INT i=0; ...
+ } // конец if(UI i=0; ...
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // mD->Repaint(); // принудительно перерисовали
 
 } // --- конец Vizu_Data -------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1205,7 +1191,7 @@ Vizu_Buffer() // визуализация данных в SG_Buffer из массива структур Mem_Buffer[
 {
  char tmp[_512];
 // mB->Cells->BeginUpdate(); // у TStringGrid НЕТУ BeginUpdate и EndUpdate
- mB->DoubleBuffered = true; // двойная буфферизация - чтобы не мигало..!
+ mB->DoubleBuffered = TRUE; // двойная буфферизация - чтобы не мигало..!
 
  if(!Really_Buffer)
  {
@@ -1296,7 +1282,7 @@ StopCalculations( int Rule )
  char tmp[_512];
  INT countSets = 0;
 //
- F1->Master_Timer->Enabled = false; // ещё раз на всякий случай..!
+ F1->Master_Timer->Enabled = FALSE; // ещё раз на всякий случай..!
 //
  Regim = 0; // останов счета пользователем (глобал)
 //
@@ -1313,7 +1299,7 @@ StopCalculations( int Rule )
      if( strcmp( Mem_Instruction[i].Set,"SET" ) ) // если это не SET...
       countSets++;
 //
-    snprintf(tmp,sizeof(tmp), "\n-W- Программа завершается: в течение [%d] тактов не выявлено ни одной ГКВ-инструкции (выполнено/всего инструкций: %d/%d исключая SET) -W-",
+    snprintf(tmp,sizeof(tmp), "\n-W- Программа завершается: в течение %d (задано) тактов не выявлено ни одной ГКВ-инструкции (выполнено/всего инструкций: %d/%d исключая SET) -W-",
              waitAboveOfEndLastExecuteSet, mTpr->Count, countSets );
     SBM0->Text = tmp; // вывод текста в StatusBarMain
     AddLineToProtocol( tmp );
@@ -1352,42 +1338,30 @@ StopCalculations( int Rule )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 REAL __fastcall // возвращает из Mem_Data[] число по адресу (имени) Addr
-Get_Data(char Addr[])
+Get_Data(char *Addr)
 { // если строка 'Addr / Dаta' не существует - выдается предупреждение и результат = 1.0e0
- char tmp[_512];
+// char tmp[_512];
 //
- for( INT i=0; i<Really_Data; i++ ) // ищем путём простого последовательного перебора массива Mem_Data[]
-  if( !strcmp(Mem_Data[i].Addr,Addr) )
-   return Mem_Data[i].Data;
+ for(UI i=0; i<Really_Data; i++) // ищем путём простого последовательного перебора массива Mem_Data[]
+  if(!strcmp(Mem_Data[i].Addr, Addr))
+   return (Mem_Data[i].Data);
 //
 // не нашли... информируем об этом !!! /////////////////////////////////////////
-
- t_printf( "\n--- ищем=|%s|", Addr );
- for( INT i=0; i<Really_Data; i++ ) // ищем путём простого последовательного перебора массива Mem_Data[]
-  t_printf( "--- %d из %d текущее=|%s| значение=%f ===", i,Really_Data, Mem_Data[i].Addr, Mem_Data[i].Data );
- t_printf( "\n" ); 
-
- t_printf( "\n-E- %s() не нашёл в Mem_Data[] значения по адресу %s. Принято 1.0e0 -E-\n",
-           __FUNC__,Addr );;
-// sprintf( tmp, "%s() не нашёл в Mem_Data[] значения по адресу %s. Принято 1.0e0. Дальнейшие вычисления скорее всего неверные..!",
-//          __FUNC__,Addr );
-// MessageBox( 0, tmp, "Серьёзная ошибка...", MB_OK ); // всплывающее окно Windows
- MessageBeep( MB_ICONERROR ); // привлекаем внимание к событию!..
+ t_printf( "-W- %s() не нашёл в Mem_Data[] значения по адресу %s. Принято 1.0e0 -W-",
+            __FUNC__,Addr);
 //
   return 1.0 ;
 } // ---------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall // возвращает текст инструкции из Mem_Sets[i]
-Line_Set( INT i_Set, int Rule )
+Line_Set(int i_Set, int Rule)
 { // при Rule = 0 содержимое aResult не выдается (выдается "?")
   // при Rule = 1 содержимое aResult возвращается
   // при Rule = -1 возвращается только строка инструкции
- char Set[_SET_LEN]="\0",
-      tmp1[_512]="\0",
-      tmp[_512]="\0";
+ char Set[_SET_LEN], tmp1[_512];
+ char tmp[_512];
 //
  strcpy(Set, Mem_Instruction[i_Set].Set); // мнемоника инструкции... далее такъ проще работать !
 //
@@ -1493,26 +1467,25 @@ Line_Set( INT i_Set, int Rule )
 //
 } // ------ конец Line_Set -----------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // добавляет в Mem_Data[] число Data по адресу (имени) Addr
-Add_toData( INT i_Set, char* aResult, REAL Data )
+Add_toData(int i_Set, char* aResult, REAL Data)
 {
 // i_Set - номер инструкции, в результате котрой было вычислено это значениe
 // aResult - имя ячейки (переменной), Data - значение переменной
 // если строка 'Addr / ***' существует - переписывается поле Data, выдается
 // предупреждение и пул данных визуализируется; если не существует - добавим
 // данные Data и визуализируем
- char tmp[_512]="\0",
-      tmp1[_1024]="\0";
+ char tmp[_512], tmp1[_1024];
 //
 // не нарушен ли ПРИНЦИП ЕДИНОКРаТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором Addr ?)
 //
- for( INT i=0; i<Really_Data; i++ ) // ищем путем тупого последовательного перебора
+ for(ULI i=0; i<Really_Data; i++) // ищем путем тупого последовательного перебора
 //
   if( !strcmp( Mem_Data[i].Addr, aResult ) ) // данные с адресом (именем) aResult в массиве Mem_Data[].Attr УЖЕ ЕСТЬ !!!
   {
+//
    if( !memcmp( aResult, attrVar, strlen(attrVar) ) ) // если первые символы aResult есть attVar - можно переписывать данные...
    {
     Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
@@ -1526,7 +1499,7 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
     return;
    }  // конец if( Data == Mem_Data[i].Data )
 //
-   F1->Master_Timer->Enabled = false; // выключили таймер
+   F1->Master_Timer->Enabled = FALSE; // выключили таймер
 //
    strcpy(tmp, "Результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, однако там уже находятся данные {%.*g}. ");
    strcat(tmp, "Налицо явное нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ, вследствие чего КОНЕЧНЫЙ результат выполнения программы может быть непредсказуем !");
@@ -1543,18 +1516,24 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
                t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*g}. Данные перезапИсаны... -W-",
                           __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
                Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
-               F1->Master_Timer->Enabled = true; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
+//
+               F1->Master_Timer->Enabled = TRUE; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
+//
                return;
 //
     case mrCancel: // отказаться от пЕреписи и сохранить предыдУщие значения
                t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*g}. Данные НЕ перезапИсаны... -W-",
                           __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
-               F1->Master_Timer->Enabled = true; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
+//
+               F1->Master_Timer->Enabled = TRUE; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
+//
                return;
 //
     case mrAbort: // закончить выполнение программы...
                F1->Stop_Calculations(NULL);
-               F1->Master_Timer->Enabled = false; // выключили таймер...
+//
+               F1->Master_Timer->Enabled = FALSE; // выключили таймер...
+//
                return;
 //
    } // конец выбора по switch (случай нарушЕния концепции ЕДИНОКРАТНОГО ПРИВАИВАНИЯ)
@@ -1579,9 +1558,8 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
    ShowMessage( "Память данных исчерпана, при дальнейшей работе возможна потеря информации..." );
    MessageBeep( MB_ICONASTERISK ); // предупреждение...
 //
-   flagAlarmData = false;
+   flagAlarmData = FALSE;
   } // после первого раза сообшения не выдаётся...
-//  
 //  StopCalculations( 2 ); // выполнение программы невозможно
 //
    return;
@@ -1604,14 +1582,13 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
  Really_Data ++ ;
 } // ----- конец Add_toData ----------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall  // перемешивает инструции в Mem_Sets[] и в ОКНЕ_ИНСТРУКЦИЙ
 TF1::Mixed_Sets(TObject *Sender)
 {
- INT i1,i2; // номера перемешиваемых инструкций в Mem_Sets[]
- time_t t; // начальное значение для датчика случайных чисел
+ ULI i1,i2; // номера перемешиваемых инструкций в Mem_Sets[]
+ time_t t;
 //
  Really_Data = 0; // очистили ОКНО_ДАННЫХ
  Vizu_Data();
@@ -1620,7 +1597,7 @@ TF1::Mixed_Sets(TObject *Sender)
  Vizu_Buffer();  // визуализировали данные в буфере
 //
 ////////////////////////////////////////////////////////////////////////////////
- BitBtn_Run->Enabled = false; // включили" кнопку Выполнение
+ BitBtn_Run->Enabled = FALSE; // включили" кнопку Выполнение
 
  srand((unsigned) time(&t)); // инициализации датчика случайных чисел текущим временем
 
@@ -1651,28 +1628,27 @@ TF1::Mixed_Sets(TObject *Sender)
  SBM0->Text = " Инструкции перемешаны случайным образом"; // вывод текста в StatusBarMain
 //
 ////////////////////////////////////////////////////////////////////////////////
- BitBtn_Run->Enabled = true; // включили кнопку Выполнение
+ BitBtn_Run->Enabled = TRUE; // включили кнопку Выполнение
 } //----------------------------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // очищаем ВСЕ ФЛАГИ в Mem_Sets[]
 Install_All_Flags()
 {
- for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям ... не все ОБНУЛЯЕМ !
+ for(UI i=0; i<Really_Set; i++) // по всем инструкциям ... не все ОБНУЛЯЕМ !
  {
-  MI_fOp1(i) = false;
-  MI_fOp2(i) = false;
-  Mem_Instruction[i].fPredicat      = false;
-  Mem_Instruction[i].fPredicat_TRUE = false;
+  MI_fOp1(i) = FALSE;
+  MI_fOp2(i) = FALSE;
 //
-  Mem_Instruction[i].fExec      = false;
-  Mem_Instruction[i].fExecOut   = false;
-  Mem_Instruction[i].fAddBuffer = false;
+  Mem_Instruction[i].fPredicat      = FALSE;
+  Mem_Instruction[i].fPredicat_TRUE = FALSE;
+//
+  Mem_Instruction[i].fExec      = FALSE;
+  Mem_Instruction[i].fExecOut   = FALSE;
+  Mem_Instruction[i].fAddBuffer = FALSE;
  }
 } // -----  Install_All_Flags --------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1704,17 +1680,16 @@ void __fastcall TF1::Load_Sets(TObject *Sender)
    Clear_AllTableInstructions(); // очистим цвета всех ячеек таблицы инструкций
 //
    SBM0->Text = " Начните работу с нажатия кнопки ВЫПОЛНЕНИЕ..."; // вывод текста в StatusBarMain
-   BitBtn_Run->Enabled = true; // включили кнопку ВЫПОЛНИТЬ
+   BitBtn_Run->Enabled = TRUE; // включили кнопку ВЫПОЛНИТЬ
 //
 //   REAL index = Calc_ConnectedIndex( 1 ); // подсчет ИНДЕКСОВ СВЯЗНОСТИ c сохранением в файл
   }
 } //------конец Load_Sets-------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall // возвращается подстрока строки Str от символа n1 до n2 (начиная с 1 !!! )
-GetSubString( char *Str, int n1, int n2 )
+GetSubString(char *Str, int n1, int n2)
 {
  char tmp[_1024] = "\0"; // рабочая строка
  int j = -1;
@@ -1885,10 +1860,10 @@ Calc_Stat_Proc()
 char* __fastcall // визуализация флагов инструкции Mem_Sets[] номер i_Set
 Vizu_Flags( INT i_Set )
 {
- char Set[_SET_LEN]="\0",
+ char Set[_SET_LEN],
       Delimeter[] = "|", // символ разделителя битовых флагов
       Indiff[]    = "x", // символ 'безразлично'
-      tmp[_512]="\0";
+      tmp[_512];
 //
  strcpy(Set, Mem_Instruction[i_Set].Set); // запомнили мнемонику инструкции (так удобнее)
 //
@@ -1936,14 +1911,13 @@ Vizu_Flags( INT i_Set )
 //
 } // ----- конец Vizu_Flags ----------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // информация об арифметической ошибке
 Display_Error(char *str)
 {
 // MessageDlg(str, mtError, TMsgDlgButtons() << mbOK, 0);
- F1->Master_Timer->Enabled = false; // остановили главный таймер
+ F1->Master_Timer->Enabled = FALSE; // остановили главный таймер
 //
  do_Run // "включили" все кнопки Выполнение
 //
@@ -1969,7 +1943,6 @@ Vizu_Flow_Exec() // визуализировать процент выполнения программы
 //
 } // конец Vizu_Flow_Exec ------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // начали вычисления (нажатие кнопки СЧЕТ)
@@ -1992,12 +1965,12 @@ TF1::Run_Calculations(TObject *Sender)
 //
  randomize(); // инициализация функции rand() при выполнении инструкции RND
 //
- Master_Timer->Enabled = true; // включили главный таймер
+ Master_Timer->Enabled = TRUE; // включили главный таймер
  localTick, // начало выполнения программы (глобал)
  localTickOfEndLastExecuteSet = 0; // момент последнего тика выполнения последней инструкции (глобал)
 //
 // для единокраной выдачи сообщений о переполнении Mem_Data[] и Mem_Buffer и проблемах с парсером (глобальные)
- flagAlarmData = flagAlarmBuffer = flagAlarmParser = true;
+ flagAlarmData = flagAlarmBuffer = flagAlarmParser = TRUE;
 //
  Label_Data->Font->Color   = clBlack;
  Label_Buffer->Font->Color = clBlack;
@@ -2053,7 +2026,7 @@ TF1::Run_Calculations(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // начали счет (в заданном Mode режиме)
-Start_DataFlow_Process( int Mode )
+Start_DataFlow_Process(int Mode)
 {
 // Mode = 0 соответствует нажатию кнопки ВЫПОЛНИТЬ
 // Mode = 1 -,-,-,-,- "Перемешать инструкции и выполнить"
@@ -2063,7 +2036,7 @@ Start_DataFlow_Process( int Mode )
  Regim = 1;  // начать выполнение программы
 //
  for(UI i=0; i<max_Proc; i++) // все АИУ...
-  Mem_Proc[i].Busy = false; // "СВОБОДНЫ"..!!!
+  Mem_Proc[i].Busy = FALSE; // "СВОБОДНЫ"
 //
  Free_Proc = max_Proc; // пока все АИУ свободны
 //
@@ -2115,7 +2088,6 @@ Start_DataFlow_Process( int Mode )
 ////////////////////////////////////////////////////////////////////////////////
 } // ----- конец Start_DataFlow_Process (int Mode) -----------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // цикл выборки и исполнения инструкций
@@ -2140,20 +2112,17 @@ Primary_Init_Data()
 //
 } // конец Primary_Init_Data ---------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall ExecuteInstructions_Except_SET( INT i_Set ) // выполнение инструкции номер i_Set
+void __fastcall ExecuteInstructions_Except_SET(int i_Set) // выполнение инструкции номер i_Set
 { // кроме инструкции SET !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  REAL Op1, Op2, Result, Predicate;
- char Set[_SET_LEN]="\0",
-      aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicate[_ID_LEN]="\0",
-      tmp[_1024]="\0";
- INT  i_Proc; // номер свободного АИУ
+ char aOp1[_ID_LEN], aOp2[_ID_LEN], aResult[_ID_LEN], aPredicate[_ID_LEN];
+ ULI  i_Proc; // номер свободного АИУ
  __int64 Divident, Devider; // Quotient, Remainder; // числитель/знаменатель//частное/остаток (целые 64 бит)
+ char Set[_SET_LEN],
+      tmp[_1024];
+// bool ExecSet = TRUE; // при FALSE инсрукция не выполняется по условию предикации
 //
  if( !Regim ) // не выполнять - закончить счет ---------------------------------
   return;
@@ -2178,13 +2147,13 @@ void __fastcall ExecuteInstructions_Except_SET( INT i_Set ) // выполнение инстру
  find_free_proc: // на свободном АИУ i_Proc выполняем инструкцию i_Set =========
 //
 ////////////////////////////////////////////////////////////////////////////////
- Mem_Proc[i_Proc].Busy = true; // 'захватили' АИУ ..............................
+ Mem_Proc[i_Proc].Busy = TRUE; // 'захватили' АИУ ..............................
 //
 ////////////////////////////////////////////////////////////////////////////////
  Free_Proc -- ; // число свободных АИУ уменьшили на единицу
 ////////////////////////////////////////////////////////////////////////////////
 //
- Mem_Instruction[i_Set].fExec  = true; // установили флаг 'выполнение' для данной инструкции
+ Mem_Instruction[i_Set].fExec  = TRUE; // установили флаг 'выполнение' для данной инструкции
  mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали ФЛАГИ данной инструкции
 //
 // обрабатываем параметры команды для выполнения на этоm АИУ ///////////////////
@@ -2426,7 +2395,7 @@ void __fastcall ExecuteInstructions_Except_SET( INT i_Set ) // выполнение инстру
  if(!strcmp(Set, "POW")) // это инструкция POW
  {
   int int_L,int_R,int_Op2; // целые для (возможного) округления Op2
-  bool f_Op2 = false; // при TRUE величина Op2 очень близка к целому и принимается i_Op2
+  bool f_Op2 = FALSE; // при TRUE величина Op2 очень близка к целому и принимается i_Op2
 //
 // насколько Op2 близко к целому ? .............................................
   int_L = Floor( Op2 ); // округление до целого 'вниз'
@@ -2435,13 +2404,13 @@ void __fastcall ExecuteInstructions_Except_SET( INT i_Set ) // выполнение инстру
   if( fabs ( (REAL)int_L - Op2 ) < EPS )
   {
    int_Op2 = int_L; // это целое Op2
-   f_Op2 = true;
+   f_Op2 = TRUE;
   }
   else
   if( fabs ( (REAL)int_R - Op2 ) < EPS )
   {
    int_Op2 = int_R; // это целое Op2
-   f_Op2 = true;
+   f_Op2 - TRUE;
   }
 // итак, при f_Op2=TRUE можно считать Op2 целым и вместо него использовать iOp2
 // при f_Op2=FALSE величину Op2 следует считать вещественной ...................
@@ -2738,7 +2707,7 @@ void __fastcall ExecuteInstructions_Except_SET( INT i_Set ) // выполнение инстру
    Mem_Proc[i_Proc].Op2    = Op2; // запомнили ВТОРОЙ операнд
    Mem_Proc[i_Proc].Result = Result; // запомнили результат операции
 //
-   t_printf( "-I- %s(): инструкция #%d [%s] была выполнена на АИУ #%d -I-",
+   t_printf( "-I- %s(): инструкция #%d [%s] была выполнена на АИУ номер %d -I-",
                      __FUNC__, i_Set, Line_Set(i_Set, -1), i_Proc);
 //
   if( pass_Counts>0 && !(count_Ops % pass_Counts) ) // каждые pass_Counts раз
@@ -2748,31 +2717,62 @@ void __fastcall ExecuteInstructions_Except_SET( INT i_Set ) // выполнение инстру
 //
 } // конец ExecuteInstructions_Except_SET --------------------------------------
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall
+Test_ReadyForExec_and_AddToBuffer(int i_Set) // тестирует инструкцию i_Set на
+{ // соответствие условию ГКВ (Готовность К Выполнению) и при успехе добавляет
+  // ее в буфер Mem_Buffer[] и визуалиазирует содержимое буфера SG_Buffer
+//
+ if( is_SET( Mem_Instruction[i_Set].Set ) ) // если это SET, то ничего делать не надо (здесь SET не обрабатывается)...
+  return;
+//
+ switch( Get_CountOperandsByInstruction(Mem_Instruction[i_Set].Set) ) // по числу операндов
+  {
+   case 1: if( Mem_Instruction[i_Set].fOp1 &&   // первый операнд ГОТОВ "и"
+//
+               Mem_Instruction[i_Set].fPredicat && // готовность предиката
+//
+              !Mem_Instruction[i_Set].fExecOut) // ...инструкция еще не исполнялась
+               Add_toBuffer(i_Set); // добавим эту инструкцию в буфер Mem_Buffer[]
+//
+             break;
+//
+   case 2: if( Mem_Instruction[i_Set].fOp1 &&   // первый операнд ГОТОВ "и"
+               Mem_Instruction[i_Set].fOp2 &&  // ...второй операнд ГОТОВ "и"
+//
+               Mem_Instruction[i_Set].fPredicat && // готовность предиката
+//
+              !Mem_Instruction[i_Set].fExecOut) // ...инструкция еще не исполнялась
+               Add_toBuffer(i_Set);  // добавим эту инструкцию в буфер Mem_Buffer[]
+//
+             break;
+//
+   default: break;;
+  }
+//
+} // конец Test_ReadyForExec_and_AddToBuffer -----------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void   __fastcall
-Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] строку номер i_Set с ГКВ-инструкцией
+Add_toBuffer(int i_Set) // добавляет в буфер команд Mem_Buffer[] строку номер i_Set с ГКВ-инструкцией
 // добавляется не сама строка, а ее номер из Mem_Instruction[] в поле Mem_Buffer[].i_Set
 // в Mem_Buffer[]->(float)Param заносится ПАРАМЕТР "ПОЛЕЗНОСТИ" (для последующего ранжирования)
 // если команда уже добавленв буффер (установлен флаг Mem_Instruction[].fAddBuffer) - не добавляется
 // после добавления флаг Mem_Instruction[].fAddBuffer устанавливается
-// Rule определяет точку вызова функции
 {
-
-// t_printf( "\n*** #%d/%d %s ***\n", i_Set,Rule, Mem_Instruction[i_Set].Set);
-
- char tmp[_512]="\0";
- static bool flagColor = true; // флаг предупреждения о переполнении Mem_Buffer[]
+ char tmp[_512];
+ static bool flagColor = TRUE; // флаг предупреждения о переполнении Mem_Buffer[]
 //
  if(Really_Buffer >= max_Buffer) // буфер полон
  {
   if( flagAlarmBuffer ) // один раз выведем сообщение
   {
-   t_printf( "->\n-E- %s(): инструкция #%d/%d [%s] не добавлена в буфер, ибо он полон (%s) -E-\n->",
-              __FUNC__, i_Set,Rule, Line_Set(i_Set, -1), Get_Time_asLine() );
+   t_printf( "->\n-E- %s(): инструкция #%d [%s] не добавлена в буфер, ибо он полон (%s) -E-\n->",
+                     __FUNC__, i_Set, Line_Set(i_Set, -1), Get_Time_asLine() );
 //
-   flagAlarmBuffer = false;
+   flagAlarmBuffer = FALSE;
   }
 //
   if( flagColor ) // мигание цветом надписи Label_Buffer
@@ -2788,7 +2788,7 @@ Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] стр
  } // конец if(Really_Buffer >= 0.99*Max_Buffer)
 ////////////////////////////////////////////////////////////////////////////////
 //
- if(Mem_Instruction[i_Set].fAddBuffer) // инструкция уже была добавлена в буфер
+ if(Mem_Instruction[i_Set].fAddBuffer) // инструкция уже была добавлена в буфер ========
   return;
 //
  Mem_Buffer[Really_Buffer].i_Set = i_Set; // ссылка на номер инструкции
@@ -2796,10 +2796,10 @@ Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] стр
  Mem_Buffer[Really_Buffer].Priority = Calc_Priority(Mem_Buffer[Really_Buffer].Param); // значение ПРИОРИТЕТА
 //
 ////////////////////////////////////////////////////////////////////////////////
- t_printf( "-I- %s(): инструкция #%d/%d [%s] добавлена в буфер (%s) -I-",
-            __FUNC__, i_Set,Rule, Line_Set(i_Set, -1), Get_Time_asLine());
+ t_printf( "-I- %s(): инструкция #%d [%s] добавлена в буфер (%s) -I-",
+            __FUNC__, i_Set, Line_Set(i_Set, -1), Get_Time_asLine());
 ////////////////////////////////////////////////////////////////////////////////
- Mem_Instruction[i_Set].fAddBuffer = true; // флаг добавления инструкции в буфер =======
+ Mem_Instruction[i_Set].fAddBuffer = TRUE; // флаг добавления инструкции в буфер =======
  mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали ФЛАГИ данной инструкции =
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2818,20 +2818,19 @@ Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] стр
  if(Really_Buffer == max_Buffer) // буфер полный
  {
   t_printf( "-W- %s(): буфер полон, больше инструкций добавлять нельзя (%s) -W-",
-             __FUNC__, Get_Time_asLine());
+                    __FUNC__, Get_Time_asLine());
 //
-  buffer_Fill = true; // буфер полон
+  buffer_Fill = TRUE; // буфер полон
 //
   return;
  }
 //
 } // ----- конец Add_toBuffer -------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 float __fastcall
-Calc_Priority( float Param ) // по значению Param (ПОЛЕЗНОСТЬ) определяется
+Calc_Priority(float Param) // по значению Param (ПОЛЕЗНОСТЬ) определяется
 // ПРИОРИТЕТ данной инструкции при ее запуске на свободном АИУ
 {
 //
@@ -2850,7 +2849,7 @@ Calc_Priority( float Param ) // по значению Param (ПОЛЕЗНОСТЬ) определяется
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 float __fastcall
-Calc_Param( INT i_Set ) // для инструкции i_Set определяется ее параметр ПОЛЕЗНОСТИ
+Calc_Param(int i_Set) // для инструкции i_Set определяется ее параметр ПОЛЕЗНОСТИ
 {
 // char Set[_SET_LEN];
  float Param = 1.0; // умолчание
@@ -3003,14 +3002,15 @@ Calc_Level_Buffer_Fill() // вычисляет наполненность буфера в %% в глобале Level_
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 bool __fastcall
-Test_aResult_Eq_aOperand( INT i_Set ) // не совпадает ли в инструкции i_Set
+Test_aResult_Eq_aOperand(int i_Set) // не совпадает ли в инструкции i_Set
 { // адрес aResult с адресами входных операндов (попытка модификации -
   // нарушение ПРИНЦИПА ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ) ?
- char tmp[_512]="\0";
+ char tmp[_512];
+////////////////////////////////////////////////////////////////////////////////
 //
 // if( Mem_Instruction[i_Set].aResult[0] == attrVar[0] ) // если первый символ aResult суть attrVal,
  if( !memcmp( Mem_Instruction[i_Set].aResult,attrVar,strlen(attrVar) ) ) // сравнение по strlen(attrVar) символам
-  return false; // на aResult не распространяется правило ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ
+  return FALSE; // на aResult не распространяется правило ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ
 //
 ////////////////////////////////////////////////////////////////////////////////
  switch( Get_CountOperandsByInstruction(Mem_Instruction[i_Set].Set) ) // число входных операндов инструкции Set
@@ -3019,10 +3019,10 @@ Test_aResult_Eq_aOperand( INT i_Set ) // не совпадает ли в инструкции i_Set
            {
             t_printf( "-W- %s(): в инструкции #%d [%s] адрес результата совпадает с адресом входного операнда. Нарушен ПРИНЦИП ОДНОКРАТНОГО ПРИСВАИВАНИЯ... -W-",
                              __FUNC__, i_Set, Line_Set(i_Set, -1));
-            return true; // ДА - есть совпадение !!!
+            return TRUE; // ДА - есть совпадение !!!
            }
           else
-           return false;
+           return FALSE;
           break;
 //
   case 2: if( !strcmp( Mem_Instruction[i_Set].aResult, Mem_Instruction[i_Set].aOp1 ) || // или...
@@ -3030,10 +3030,10 @@ Test_aResult_Eq_aOperand( INT i_Set ) // не совпадает ли в инструкции i_Set
            {
             t_printf( "-W- %s(): в инструкции #%d [%s] адрес результата совпадает с адресом одного из входных операндов. Нарушен ПРИНЦИП ОДНОКРАТНОГО ПРИСВАИВАНИЯ... -W-",
                              __FUNC__, i_Set, Line_Set(i_Set, -1));
-            return true; // ДА - есть совпадение !!!
+            return TRUE; // ДА - есть совпадение !!!
            }
           else
-           return false;
+           return FALSE;
           break;
 //
  default: break;
@@ -3042,20 +3042,18 @@ Test_aResult_Eq_aOperand( INT i_Set ) // не совпадает ли в инструкции i_Set
 //
 } // --- конец Test_aResult_Equal_aOperand -------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall
 Get_Time_asLine() // вернуть вр емя (в тактах начиная с 0) в строке
 {
  static // чтобы данные не "забивались" другими на стэке
- char tmp[_512];
+        char tmp[_512];
 //
  snprintf(tmp,sizeof(tmp), "текущий момент: %d тактов", localTick);
  return tmp;
 //
 } // конец Get_Time_asLine -----------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3064,14 +3062,13 @@ Get_Free_Proc() // возвращает число свободных АИУ
 {
  int Free_Proc = 0; // число свободных АИУ
 //
- for( INT i=0; i<max_Proc; i++ ) // по списку АИУ
+ for(UI i=0; i<max_Proc; i++) // по списку АИУ
   if( !Mem_Proc[i].Busy ) // если АИУ номер i свободно...
    Free_Proc ++ ;
 //
  return Free_Proc; // число свободных АИУ
 //
 } // конец Get_Free_Proc -------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3086,30 +3083,29 @@ AttemptExecMaxInstructions_fromBuffer()
 //
  int Possible_Exec_Set = min(Really_Buffer, Free_Proc); // ограничения...
 //
- for( INT i=1; i<=Possible_Exec_Set; i++ )
+ for(int i=1; i<=Possible_Exec_Set; i++)
   {
-   INT i_Set = Select_Set_fromBuffer(); // выбрать инструкцию с максимальным приоритетом из буфера
+   int i_Set = Select_Set_fromBuffer(); // выбрать инструкцию с максимальным приоритетом из буфера
 //   if(i_Set != BUFFER_EMPTY) // если буфер не пуст...
    ExecuteInstructions_Except_SET(i_Set); // выполнить инструкцию i_Set ( кроме SET )
   }
 //
 } // конец AttemptExecMaxInstructions_fromBuffer -------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 float __fastcall
-Calc_01_Param_Instruction( INT i_Set ) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 01-му методу
+Calc_01_Param_Instruction(int i_Set) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 01-му методу
 { // ПОЛЕЗНОСТЬ равна числу иных инструкций, для которых результат данной является
 // ХОТЯ БЫ ОДНИМ из входных операндов (неважно, из скольких всего имеющихся)
 // при этом ФЛАГИ ГОТОВНОСТИ входных операндов не анализируются !
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
  float Param = 0; // значение полезности
 //
 // strcpy(Set, Mem_Instruction[i_Set].Set); // мнемонику i_Set запомнили в Set...
  strcpy(aResult, Mem_Instruction[i_Set].aResult); // адрес результата выполнения i_Set
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям...
+ for(UI i=0; i<Really_Set; i++) // по всем инструкциям...
   {
    if(i == i_Set) // саму с собой инструкции не сравниваем ---------------------
     continue;
@@ -3132,21 +3128,20 @@ Calc_01_Param_Instruction( INT i_Set ) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set 
 //
 } // конец Calc_01_Param_Instruction -------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 float __fastcall
-Calc_02_Param_Instruction(INT i_Set) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 02-му методу
+Calc_02_Param_Instruction(int i_Set) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 02-му методу
 { // ПОЛЕЗНОСТЬ равна числу входных операндов иных инструкций, для которых результат
 // данной является входным операндом (неважно из скольких всего имеющихся)
 // при этом ФЛАГИ ГОТОВНОСТИ входных операндов не анализируются !
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
  float Param = 0; // значение полезности
 
 // strcpy(Set, Mem_Instruction[i_Set].Set); // мнемонику i_Set запомнили в Set...
  strcpy(aResult, Mem_Instruction[i_Set].aResult); // адрес результата выполнения i_Set
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям...
+ for(UI i=0; i<Really_Set; i++) // по всем инструкциям...
   {
    if(i == i_Set) // саму с собой инструкции не сравниваем ---------------------
     continue;
@@ -3172,22 +3167,21 @@ Calc_02_Param_Instruction(INT i_Set) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по
 //
 } // конец Calc_02_Param_Instruction ---------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 float __fastcall
-Calc_03_Param_Instruction( INT i_Set ) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 03-му методу
+Calc_03_Param_Instruction(int i_Set) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по 03-му методу
 { // максимальный "вес" тестируемой инструкции =1.0 соответствует случаю, когда
 // результат выполнения данной приводит тестируемую в состояние ГОТОВНОСТЬ К ВЫПОЛНЕНИЮ
 // если у тестируемой инструкции N входных операндов, из которых M уже ГОТОВЫ и
 // результат выполнения данной инсрукции совпадает по адресу с К из (N-M) НЕГОТОВЫХ,
 // то ПОЛЕЗНОСТЬ равна K/(N-M) --- при K=(N-M) получаем вес ЕДИНИЧНЫЙ тестируемой инструкции
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
  float Param = 0; // значение полезности
 //
  strcpy(aResult, Mem_Instruction[i_Set].aResult); // адрес результата выполнения i_Set
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям...
+ for(UI i=0; i<Really_Set; i++) // по всем инструкциям...
   {
    if(i == i_Set) // саму с собой инструкции не сравниваем ---------------------
     continue;
@@ -3226,7 +3220,6 @@ Calc_03_Param_Instruction( INT i_Set ) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set 
 //
 } // конец Calc_02_Param_Instruction ---------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall
@@ -3246,7 +3239,7 @@ TF1::Most_Wonderful(TObject *Sender)
 {
 // удивительное свойство DATA-FLOW вычислителей - результат вычислений не
 // зависит от последовательности расположения операторов !!!
- char tmp[_1024]="\0";
+ char tmp[_1024];
 //
  strcpy(tmp, "... Самое удивительное в том, что для DATA-FLOW машины\n");
  strcat(tmp, "результат вычислений НЕ ЗАВИСИТ ОТ ПОСЛЕДОВАТЕЛЬНОСТИ\n");
@@ -3269,7 +3262,6 @@ TF1::Most_Wonderful(TObject *Sender)
 //
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // вызывается из "Работа->Перемешать инструкции+расчет" главного меня
@@ -3278,15 +3270,14 @@ TF1::Mixed_Start(TObject *Sender)
  Start_DataFlow_Process ( 1 ); // перемешать инструкции и начать расчёт
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall
 TF1::On_Master_Timer(TObject *Sender)
 { // вызывается каждые Interval миллисекунд таймером Master_Timer
 //
- char tmp[_512]="\0";
- INT i_Proc, i_Set, dt_ticks;
+ char tmp[_512];
+ ULI i_Proc, i_Set, dt_ticks;
 //
 ////////////////////////////////////////////////////////////////////////////////
  localTick ++ ; // увеличили число тиков (глобальное) на 1
@@ -3320,7 +3311,7 @@ TF1::On_Master_Timer(TObject *Sender)
  if( localTick - localTickOfEndLastExecuteSet >=
      waitAboveOfEndLastExecuteSet ) // ничего не выполняется более wait... тиков
  {
-  Master_Timer->Enabled = false; // выключили главный таймер (больше вызываться эта функция не будет!!!)
+  Master_Timer->Enabled = FALSE; // выключили главный таймер (больше вызываться эта функция не будет!!!)
 //  MessageBox(0, "Конец выполнения программы", "Информация", MB_OK);
   StopCalculations( 1 ); // выполнение остановлено из-за простОя
  }
@@ -3372,7 +3363,6 @@ TF1::SG_Sets_DrawCell(TObject *Sender, int ACol, int ARow,
 //
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::DrawNotExecuteSets(TObject *Sender)
@@ -3382,9 +3372,9 @@ void __fastcall TF1::DrawNotExecuteSets(TObject *Sender)
 //
  Really_Select = 0; // счётчик заполненных в Sel_Cell ячеек (глобал)
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем строкам Mem_Instruction[]
+ for(ULI i=0; i<Really_Set; i++) // по всем строкам Mem_Instruction[]
  {
-  if( !Mem_Instruction[i].fExecOut ) // если инструкция НЕ ВЫПОЛНИЛАСЬ ни разу...
+  if(!Mem_Instruction[i].fExecOut) // если инструкция НЕ ВЫПОЛНИЛАСЬ ни разу...
   {
    Sel_Cell[Really_Select].Col = 6;
    Sel_Cell[Really_Select].Row = i + 1;
@@ -3394,10 +3384,10 @@ void __fastcall TF1::DrawNotExecuteSets(TObject *Sender)
    Really_Select ++ ;
   }
  } // конец по всем строкам Mem_Instruction[i] -----------------------------------------
-//
+
  mS->Repaint();
 //
- char tmp[_512]="\0";
+ char tmp[_512];
  snprintf(tmp,sizeof(tmp), " Выделено %d позиции/й...", Really_Select);
  SBM0->Text = tmp; // вывод текста в StatusBarMain
 //
@@ -3409,18 +3399,18 @@ void __fastcall TF1::DrawNotExecuteSets(TObject *Sender)
 void __fastcall TF1::DrawNotUsedResults(TObject *Sender)
 { // визуализизируются инструкции, результат выполнения которых
 // НЕ ИСПОЛЬЗУЕТСЯ никакими другими инструкциями в качестве входных операндов
- char aResult[_ID_LEN]="\0"; // мнемоника инструкции и имя результата
- INT n_Op;
+ char aResult[_ID_LEN]; // мнемоника инструкции и имя результата
+ int n_Op;
 //
  Clear_AllTableInstructions(); // очистим цвета всех ячеек таблицы инструкций
 //
  Really_Select = 0; // счётчик заполненных в Sel_Cell[] ячеек (глобал)
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем строкам Mem_Instruction[]
+ for(ULI i=0; i<Really_Set; i++) // по всем строкам Mem_Instruction[]
  {
   strcpy(aResult, Mem_Instruction[i].aResult); // запомнили имя РЕЗУЛЬТАТА выполнения инструкции
-//
-  for( INT j=0; j<Really_Set; j++ ) // ... опять же по всем строкам Mem_Instruction[] для поиска по операндам
+
+  for(ULI j=0; j<Really_Set; j++) // ... опять же по всем строкам Mem_Instruction[] для поиска по операндам
   {
    if( is_SET( Mem_Instruction[j].Set ) ) // инструкцию SET не рассматриваем !!!
     continue;
@@ -3446,7 +3436,9 @@ void __fastcall TF1::DrawNotUsedResults(TObject *Sender)
    Sel_Cell[Really_Select].Col = 4;
    Sel_Cell[Really_Select].Row = i + 1;
    Sel_Cell[Really_Select].clBackground = DCT.clNonUsedResult;
-   Sel_Cell[Really_Select++].clSymbol   = clBlack;
+   Sel_Cell[Really_Select].clSymbol     = clBlack;
+//
+   Really_Select ++ ;
 //
 end_i: // в конец цикла по i
 //
@@ -3454,7 +3446,7 @@ end_i: // в конец цикла по i
 //
  mS->Repaint();
 //
- char tmp[_512]="\0";
+ char tmp[_512];
  snprintf(tmp,sizeof(tmp), " Выделено %d позиции/й...", Really_Select);
  SBM0->Text = tmp; // вывод текста в StatusBarMain
 //
@@ -3464,50 +3456,48 @@ end_i: // в конец цикла по i
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::DrawNotDetermineOperands(TObject *Sender)
 { // визуализируются операнды, НЕ ОПРЕДЕЛЕННЫЕ результатами вычислений
- char aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0"; // мнемоника инструкции и имя результата
+ char aOp1[_ID_LEN], aOp2[_ID_LEN], aResult[_ID_LEN]; // мнемоника инструкции и имя результата
  bool flag_1,   flag_2,
       flag_1_1, flag_1_2, flag_2_2;
- INT n_Op;
+ int n_Op;
 //
  Clear_AllTableInstructions(); // очистим цвета всех ячеек таблицы инструкций
 //
  Really_Select = 0; // счётчик заполненных в Sel_Cell ячеек (глобал)
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем строкам Mem_Instruction[]
+ for(ULI i=0; i<Really_Set; i++) // по всем строкам Mem_Instruction[]
  {
   if( is_SET( Mem_Instruction[i].Set ) ) // инструкция SET не рассматривается...
    continue;
-//
-  flag_1 = flag_2 = false; // флаги наличия инструкций с 1-м или 2-мя операндами
-//
+
+  flag_1 = flag_2 = FALSE; // флаги наличия инструкций с 1-м или 2-мя операндами
+
   n_Op = Get_CountOperandsByInstruction(Mem_Instruction[i].Set); // число операндов инструкции i
-//
+
   if(n_Op == 1) // есть инструкции с 1-м операндом!
-   flag_1 = true;
-//
+   flag_1 = TRUE;
+
   if(n_Op == 2) // есть инструкции с 2-мя операндом!
-   flag_2 = true;
-//
+   flag_2 = TRUE;
+
   strcpy(aOp1, Mem_Instruction[i].aOp1); // запомнили имена ОПЕРАНДОВ инструкции номер i
   strcpy(aOp2, Mem_Instruction[i].aOp2);
-//
-  flag_1_1 = flag_1_2 = flag_2_2 = false; // предустанавливаем флаги
-//
-  for( INT j=0; j<Really_Set; j++ ) // ... опять же по всем строкам Mem_Instruction[] для поиска по РЕЗУЛЬТАТАМ
+
+  flag_1_1 = flag_1_2 = flag_2_2 = FALSE; // предустанавливаем флаги
+
+  for(ULI j=0; j<Really_Set; j++) // ... опять же по всем строкам Mem_Instruction[] для поиска по РЕЗУЛЬТАТАМ
   {
    strcpy(aResult, Mem_Instruction[j].aResult); // запомнили имя РЕЗУЛЬТАТА выполнения инструкции
-//
+
    if(n_Op == 1 && !strcmp(aOp1, aResult)) // совпадение с 1-м операндом из одного
-    flag_1_1 = true;
-//
+    flag_1_1 = TRUE;
+
    if(n_Op == 2 && !strcmp(aOp1, aResult)) // совпадение с 1-м операндом из двух
-    flag_1_2 = true;
-//
+    flag_1_2 = TRUE;
+
    if(n_Op == 2 && !strcmp(aOp2, aResult)) // совпадение со 2-м операндом из двух
-    flag_2_2 = true;
-//
+    flag_2_2 = TRUE;
+
   } // конец ВНУТРЕННЕГО цикла по Mem_Instruction[j]
 //
 // если НЕТ СОВПАДЕНИЯ, добавляем координаты этой ячейки в Sel_Draw[] для отрисовки
@@ -3518,27 +3508,30 @@ void __fastcall TF1::DrawNotDetermineOperands(TObject *Sender)
     Sel_Cell[Really_Select].Col = 2; // индицируем столбец с aOp1
     Sel_Cell[Really_Select].Row = i + 1;
     Sel_Cell[Really_Select].clBackground = DCT.clNonDefOperands;
-    Sel_Cell[Really_Select++].clSymbol   = clBlack;
-   }
+    Sel_Cell[Really_Select].clSymbol     = clBlack;
 //
+    Really_Select ++ ;
+   }
+
    if(flag_2 && !flag_2_2) // есть инструкции с 2-мя операндами "И" второй операнд (из двух)
    {
     Sel_Cell[Really_Select].Col = 3; // индицируем столбец с aOp2
     Sel_Cell[Really_Select].Row = i + 1;
     Sel_Cell[Really_Select].clBackground = DCT.clNonDefOperands;
-    Sel_Cell[Really_Select++].clSymbol   = clBlack;
+    Sel_Cell[Really_Select].clSymbol     = clBlack;
+//
+    Really_Select ++ ;
    }
 //
- } // конец ВНЕШНЕГО цикла по Mem_Instruction[i]
+ } // конец ВНЕШНЕГО чикла по Mem_Instruction[i]
 //
  mS->Repaint();
 //
- char tmp[_512]="\0";
+ char tmp[_512];
  snprintf(tmp,sizeof(tmp), " Выделено %d позиции/й...", Really_Select);
  SBM0->Text = tmp; // вывод текста в StatusBarMain
 //
 } //----------------------------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3551,8 +3544,10 @@ void __fastcall Draw_AllTableInstructions()
 //
  Really_Select = 0; // счётчик заполненных в Sel_Cell[] ячеек (глобал)
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем строкам Mem_Instruction[]
+ for(ULI i=0; i<Really_Set; i++) // по всем строкам Mem_Instruction[]
  {
+//  fprintf( fptr, "i=%5d fOp1=%d fOp2=%d\n", i,Mem_Instruction[i].fOp1,Mem_Instruction[i].fOp2 );
+//  fflush( fptr );
   if( MI_fOp1(i) ) // если 1-й операнд ГОТОВ...
   {
    Sel_Cell[Really_Select].Col = 2; // столбец ОПЕРАНД-1
@@ -3561,8 +3556,8 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
 //
-  if( MI_fOp2(i) && // если 2-й операнд ГОТОВ...
-      Get_CountOperandsByInstruction( Mem_Instruction[i].Set ) == 2 ) // если два операнда у инструкции
+  if( Get_CountOperandsByInstruction( Mem_Instruction[i].Set ) == 2 && // если два операнда у инструкции
+      MI_fOp2(i) )  // если 2-й операнд ГОТОВ...
   {
    Sel_Cell[Really_Select].Col = 3; // столбец ОПЕРАНД-2
    Sel_Cell[Really_Select].Row = i + 1;
@@ -3570,7 +3565,7 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
 //
-  if( Mem_Instruction[i].fExecOut )  // инструкции, которые выполнились 1 раз (готов результат)
+  if( Mem_Instruction[i].fExecOut )  // инструкции, которые выполнились 1 раз
   {
    Sel_Cell[Really_Select].Col = 4; // столбец РЕЗУЛЬТАТ
    Sel_Cell[Really_Select].Row = i + 1;
@@ -3578,8 +3573,8 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
 //
-  if( !is_PredicatOrSET( Mem_Instruction[i].Set ) && // это инструкция - НЕ ПРЕДИКАТ
-       Mem_Instruction[i].fPredicat_TRUE ) // флаг предиката TRUE
+  if( !is_PredicatOrSET( Mem_Instruction[i].Set ) && // это инструкция - НЕ ПРЕДИКТОР
+      Mem_Instruction[i].fPredicat_TRUE ) // флаг предиката TRUE
   {
    Sel_Cell[Really_Select].Col = 5; // столбец ПРЕДИКАТ
    Sel_Cell[Really_Select].Row = i + 1;
@@ -3587,7 +3582,7 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
 //
- } // конец цикла по массиву Sel_Cell[] for( INT...
+ } // конец цикла по массиву Sel_Cell[] for(ULI...
 ////////////////////////////////////////////////////////////////////////////////
   mS->Repaint(); // важно! По этому вызову таблица ПЕРЕРИСОВЫВАЕТСЯ (с соответствующими цветАми)
 ////////////////////////////////////////////////////////////////////////////////
@@ -3623,11 +3618,11 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 REAL __fastcall
-Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
+Calc_ConnectedIndex(int Rule) // при Rule # 0 данные выдаются в файл протоколa
 { // вычисляется ИНДЕКС СВяЗНОСТИ (усредненное кол-во операторов, зависящих по операндам)
 // от результата выполнения предшествующего в ИНФОРМАЦИОННОМ ГРАФЕ алгоритма
 // число ребер, связанных с вершиной - СТЕПЕНЬ ВЕРШИНЫ
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN]; // aOp1[_ID_LEN],aOp2[_ID_LEN], // мнемоника инструкции и имя результата
  int n_Op, // число входных операндов у инструкции
      n_EqResOp, i_EqResOp,  // число инструкций, зависящих (по схеме "aResult->aOpN") от данной
      n_Repeat,  i_Repeat; // сколько всего таких по заданному n_EqResOp
@@ -3635,14 +3630,14 @@ Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
      Sum_Repeat = 0, // общее число n_Repeat
      Sum_Repeat_1 = 0, // общее число n_Repeat при n_ResOp >= 2
      n_RepeatEq_1 = 0; // число повторов связей "1->1"
- char tmp[_512]="\0"; // рабочий массив
+ char tmp[_512]; // рабочий массив
 //
  TStringList *CI = new TStringList(); // создать набор строк CI для вычисления индекса связности
 
- CI->Sorted = false; // не сортировать список
+ CI->Sorted = FALSE; // не сортировать список
  CI->Duplicates = dupAccept; // одинаковые строки разрешены
-//
- for( INT i=0; i<Really_Set; i++ ) // по всем строкам Mem_Instruction[i]
+
+ for(UI i=0; i<Really_Set; i++) // по всем строкам Mem_Instruction[i]
  {
   if( is_SET( Mem_Instruction[i].Set ) ) // инструкция SET не рассматривается...
    continue;
@@ -3650,15 +3645,15 @@ Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
   n_EqResOp = 0; // число операторов, зависимых от РЕЗУЛЬАТА выполнения данного (i-того)
 //
   strcpy(aResult, Mem_Instruction[i].aResult); // запомнили адрес aResult для инструкции i
-//
-  for( INT j=0; j<Really_Set; j++ ) // ... опять же по всем строкам Mem_Instruction[] для поиска по ОПЕРАНДАМ
+
+  for(UI j=0; j<Really_Set; j++) // ... опять же по всем строкам Mem_Instruction[] для поиска по ОПЕРАНДАМ
   {
-//
+
    if( is_SET( Mem_Instruction[j].Set ) ) // инструкцию SET не рассматриваем !!!
     continue;
-//
+
    n_Op = Get_CountOperandsByInstruction(Mem_Instruction[j].Set); // число операндов у инструкции  j
-//
+
    if(n_Op == 1) // один операнд...
    {
     if(!strcmp(aResult, Mem_Instruction[j].aOp1))
@@ -3672,31 +3667,33 @@ Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
     if(!strcmp(aResult, Mem_Instruction[j].aOp2))
      n_EqResOp ++ ;
    }
-//
+
   } // конец ВНУТРЕННЕГО цикла по Mem_Instruction[j] ///////////////////////////////////
-//
+
 // итак, к этому моменту n_EqResOp определено (может быть = 0) !!!!!
-//
+
   if(!n_EqResOp) // если нет зависимости по aResult - то это ВЫХОДНЫЕ данные...
    continue; // заканчиваем цикл по i ... такая информация вообще не интересует !!!
-//
+
 // проверяем, имеется ли в CI строка с таким же n_EqResOp ...
-  bool i_flag = false; // признак того, что имеется строка с i_EqResOp = n_EqResOp
-//
-  for( INT k=0; k<CI->Count; k++ ) // по всем строкам CI (возможно даже, что CI->Count = 0)
+  bool i_flag = FALSE; // признак того, что имеется строка с i_EqResOp = n_EqResOp
+
+  for(int k=0; k<CI->Count; k++) // по всем строкам CI (возможно даже, что CI->Count = 0)
   {
    sscanf(CI->Strings[k].c_str(), "%10d%10d", &i_EqResOp, &i_Repeat); // прочитали строку CI
-//
+//   i_EqResOp = atoi(Get_SubString(CI->Strings[k].c_str(),  1,10));
+//   i_Repeat  = atoi(Get_SubString(CI->Strings[k].c_str(), 11,20));
+
    if(i_EqResOp == n_EqResOp) // нашлось значение i_EqResOp, равное n_EqResOp
    {
     i_Repeat ++ ;
     snprintf(tmp,sizeof(tmp), "%10d%10d%30c", n_EqResOp, i_Repeat, 32); // + 30 пробелов!
     CI->Delete(k); // удалили "старую" строку с индексом k
     CI->Insert(k, tmp); // вставили "новую" строку с индексом k
-    i_flag = true; // ... да, был случай i_EqResOp == n_EqResOp ...
+    i_flag = TRUE; // ... да, был случай i_EqResOp == n_EqResOp ...
    }
   } // конец цикла по k
-//
+
 // а если в CI НЕТ СТРОКИ с n_EqResOp ? Тогда добавим такую строку при n_Repeat = 1
   if(!i_flag) // строки с n_EqResOp не нашлось - добавим её !
   {
@@ -3704,76 +3701,79 @@ Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
    snprintf(tmp,sizeof(tmp), "%10d%10d%30c", n_EqResOp, 1, 32); // i_Repeat=1 // + 30 пробелов!
    CI->Add(tmp); // добавили строку в CI
   }
-//
+
  } // конец ВНЕШНЕГО цикла по Mem_Instruction[i] ///////////////////////////////
-//
+
 // начало вычислений статистики ------------------------------------------------
 // вычисляем общее число случаев = СУММА(n_Repeat) кроме строк с n_EqResOp=0
-//
-  for( INT k=0; k<CI->Count; k++ ) // по всем строкам CI, кроме строк с n_EqResOp=0
+
+  for(int k=0; k<CI->Count; k++) // по всем строкам CI, кроме строк с n_EqResOp=0
   {
 //    Sum_EqResOp  += atoi(Get_SubString(CI->Strings[k].c_str(), 1,10));
    Sum_Repeat += atoi(GetSubString(CI->Strings[k].c_str(), 11,20)); // общая сумма
-//
+
    if(atoi(GetSubString(CI->Strings[k].c_str(), 1,10)) >= 2)
     Sum_Repeat_1 += atoi(GetSubString(CI->Strings[k].c_str(), 11,20)); // сумма n_ResOp >= 2
   }
-//
+
 // определяем данные для построения гистограммы --------------------------------
-  for( INT k=0; k<CI->Count; k++ ) // по всем строкам CI
+  for(int k=0; k<CI->Count; k++) // по всем строкам CI
   {
    sscanf(CI->Strings[k].c_str(), "%10d%10d", &i_EqResOp, &i_Repeat); // прочитали строку CI
+//   i_EqResOp = atoi(Get_SubString(CI->Strings[k].c_str(),  1,10));
+//   i_Repeat  = atoi(Get_SubString(CI->Strings[k].c_str(), 11,20));
    snprintf(tmp,sizeof(tmp), "%10d%10d%10.3f%10.3f%%", i_EqResOp, i_Repeat, // изменили строку
                  1.0*i_Repeat/Sum_Repeat, 1.0e2*i_Repeat/Sum_Repeat);
    CI->Delete(k); // удалили строку с индексом k
    CI->Insert(k, tmp); // вставили строку с индексом k
+//   strncpy(CI->Strings[k].c_str(), tmp, 30); // заменили строку
   }
-//
+
 // средний ИНДЕКС СВЯЗНОСТИ информационного графа программы (исключая выходные данные)
-//
-  for( INT k=0; k<CI->Count; k++ ) // по всем строкам CI
+
+  for(int k=0; k<CI->Count; k++) // по всем строкам CI
   {
    if(atoi(GetSubString(CI->Strings[k].c_str(), 1,10)) == 1) // строка с n_ResOp = 1
     n_RepeatEq_1 = atoi(GetSubString(CI->Strings[k].c_str(), 11,20));
   }
-//
+
   REAL index;
   if (n_RepeatEq_1)
    {
-    index = (REAL) Sum_Repeat_1 / n_RepeatEq_1;
+    index = 1.0 * Sum_Repeat_1 / n_RepeatEq_1;
     snprintf(tmp,sizeof(tmp), "Показатель альтернативности = %.3f", index);
     CI->Add(tmp);
    }
   else
    index = ERR_ALTERNAT; // признак бесконечности
-//
+
 ////////////////////////////////////////////////////////////////////////////////
-//
-  CI->Sorted = true; // отсортируем (по первому полю - n_EqResOp) в порядке возрастания
-//
+
+  CI->Sorted = TRUE; // отсортируем (по первому полю - n_EqResOp) в порядке возрастания
+
 // тeперь первая строка (индекс = 0) соответствует n_ResOp = 1 etc etc etc
-//
+
   if(Rule) // сохранить в файл
   {
    char FileNameConnectIndex[_512]; // путь к файлу индексов связности
    strcpy(FileNameConnectIndex, ChangeFileExt(FileNameSet, ".coi").c_str());  // путь к COI-файлу
    CI->SaveToFile(FileNameConnectIndex);
   }
-//
-  delete CI; // уничтожаем набор строк CI
-//
-  return index;
-//
-} // ----- конец подпрограммы --------------------------------------------------
 
+  delete CI; // уничтожаем набор строк CI
+
+  return index;
+
+} // конец подпрограммы
+//---------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 REAL __fastcall
-StrToReal( char *str, INT i_Set )
+StrToReal(char *str, int i_Set)
 { // конвертирует строку в вещественное число с проверкой корректности конвертации
  REAL out;
- char tmp[_512]="\0";
+ char tmp[_512];
 //
  try
  {
@@ -3800,7 +3800,6 @@ void __fastcall TF1::INC0_Connected(TObject *Sender)
  Delay( 500 );
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::INC0_Disconnected(TObject *Sender)
@@ -3808,7 +3807,6 @@ void __fastcall TF1::INC0_Disconnected(TObject *Sender)
  SBM0->Text = " Соединение с сервером разорвано";
  Delay( 500 );
 } //----------------------------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3842,7 +3840,6 @@ void __fastcall TF1::INC0_OnStatus(TObject *axSender, const TIdStatus axStatus, 
 //
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::INC0_OnWork(TObject *Sender, TWorkMode AWorkMode, const int AWorkCount)
@@ -3850,7 +3847,6 @@ void __fastcall TF1::INC0_OnWork(TObject *Sender, TWorkMode AWorkMode, const int
  SBM0->Text = Format(" %.0f%% (из %d байт) данных получено с сервера", OPENARRAY(TVarRec, (100.0*AWorkCount/FileSizeFromServer, int(FileSizeFromServer)) ) );
  Delay( 500 );
 } //----------------------------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3861,7 +3857,6 @@ void __fastcall TF1::INC0_OnWorkBegin(TObject *Sender, TWorkMode AWorkMode, cons
  Delay( 500 );
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::INC0_OnWorkEnd(TObject *Sender, TWorkMode AWorkMode)
@@ -3870,7 +3865,6 @@ void __fastcall TF1::INC0_OnWorkEnd(TObject *Sender, TWorkMode AWorkMode)
  SBM0->Text = Format(" %d байт получено с сервера", OPENARRAY(TVarRec, (int(FileSizeFromServer)) ) );
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::OnClickGetRar(TObject *Sender)
@@ -3878,34 +3872,32 @@ void __fastcall TF1::OnClickGetRar(TObject *Sender)
  GetFileFromServer( "install_df.exe" );
 } // ---------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall GetFileFromServer( char FileName[] )
 { // получить файл с HTTP-сервера ( FileNameInServer - полное имя файла на сервере,
- char FileNameOnServer[_512]="\0", FileNameOnClient[_512]="\0"; // полные имена файла на сервере и клиенте
-//
+ char FileNameOnServer[_512], FileNameOnClient[_512]; // полные имена файла на сервере и клиенте
+
  TMemoryStream *UnLoadStream = new TMemoryStream;  // создаём поток для сохранения вЫгруженного из Сети файла
-//
+
 // --- полный путь к каталогу исходных данных (включая слэш в конце)
  snprintf( PathToSubDirInData,sizeof(PathToSubDirInData), "%s%s\\", ExtractFilePath ( Application->ExeName ), NameSubDirInData);
  if( !DirectoryExists( PathToSubDirInData ) ) // если не существует этого каталога...
   if( !CreateDir( PathToSubDirInData ) ) // если не удалось создать...
    strcpy( PathToSubDirInData, '\0' ); // обнуляем путь к подкаталогу PathToSubDirOutData
-//
+
  snprintf( FileNameOnClient,sizeof(FileNameOnClient), "%s%s", PathToSubDirInData, FileName ); // куда сохранять на клиенте (+++)
  snprintf( FileNameOnServer,sizeof(FileNameOnServer), "%s/dataflow/content/%s", MySite, FileName ); // полное имя файла на сервере (+++)
-//
+
 // ShowMessageFmt( "Client: |%s|\n\nServer: |%s|", OPENARRAY(TVarRec, (FileNameOnClient,FileNameOnServer) ) );
-//
+
  F1->INC0->Get( FileNameOnServer, UnLoadStream ); // метод Get выгружает файл посредством потока UnLoadStream
  UnLoadStream->SaveToFile( FileNameOnClient ); // сохраняем данные в файл на клиенте
-//
+
  delete UnLoadStream; // поток более не нужен...
-//
+
  F1->INC0->Disconnect(); // разрываем соединениe с сервером
 } //----------------------------------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3920,17 +3912,15 @@ bool __fastcall Test_All_Operands()
 { // тестирует все инструкции на потенциальную определённость операндов
 // путём поиска соответствия имен результатоы именем операндов
 // при нажатии ПРОДОЛЖИТЬ ВЫПОЛНЕНИЕ возвращается 1, при отмене выполнения - 7
- char Set[_SET_LEN]="\0", // мнемоника инструкции
-      aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0", // операнд 1, операнд 2, результат
-      str[_512]="\0",
+ char Set[_SET_LEN], // мнемоника инструкции
+      aOp1[_ID_LEN], aOp2[_ID_LEN], aResult[_ID_LEN], // операнд 1, операнд 2, результат
+      str[_512],
       fmt1[] = "-E- Test_All_Operands(): у инструкции #%d [%s %s, %s] операнд [%s] принципиально неразрешим -E-", // строка формата (1 операнд)
       fmt2[] = "-E- Test_All_Operands(): у инструкции #%d [%s %s, %s, %s] операнд #%d [%s] принципиально неразрешим -E-"; // строка формата (2 операнда)
  int nInputOperands; // число входных операндов инструкции
- bool flagOp1,flagOp2, flagAll=true; // флаги разрешимости операндов
+ bool flagOp1,flagOp2, flagAll=TRUE; // флаги разрешимости операндов
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям в буфере
+ for(UI i=0; i<Really_Set; i++) // по всем инструкциям в буфере
  {
   strcpy( Set,Mem_Instruction[i].Set ); // мнемоника инсрукции i
 //
@@ -3941,30 +3931,31 @@ bool __fastcall Test_All_Operands()
   strcpy( aOp2,Mem_Instruction[i].aOp2 ); // операнд 2 инструкции i запомним в aOp2
   nInputOperands = Get_CountOperandsByInstruction( Set ); // реальное число операндов инструкции i
 //
-  flagOp1 = flagOp2 = false; // первоначально считаем, что разрешимости нет...
+  flagOp1 = flagOp2 = FALSE; // первоначально считаем, что разрешимости нет...
 //
-  for( INT j=0; j<Really_Set; j++ ) // по всем инструкциям в буфере
+  for(UI j=0; j<Really_Set; j++) // по всем инструкциям в буфере
   {
-   if( j==i && !is_SET( Set ) ) // саму с собой не сравниваем... но с SET надо сравнивать!
+   if( (j == i) && !is_SET( Set ) ) // саму с собой не сравниваем... но с SET надо сравнивать!
     continue; // пропускаем цикл по j
-//
+
    strcpy( aResult,Mem_Instruction[j].aResult ); // результат инструкции j запомним в aResult
 //
    switch( nInputOperands ) // число входных операндов инструкции Set
    {
     case 1: if( !strcmp( aOp1,aResult )) // если aOp1 = aResult -> Ok операнд 1
-             flagOp1 = true; // операнд 1 разрешён
+             flagOp1 = TRUE; // операнд 1 разрешён
      break;
 //
     case 2: if( !strcmp( aOp1,aResult )) // если aOp1 = aResult -> Ok операнд 1
-             flagOp1 = true; // операнд 1 разрешён
+             flagOp1 = TRUE; // операнд 1 разрешён
 //
             if( !strcmp( aOp2,aResult )) // если aOp2 = aResult -> Ok операнд 1
-             flagOp2 = true;  // операнд 2 разрешён
+             flagOp2 = TRUE;  // операнд 2 разрешён
      break;
 //
     default:
-    break;
+//
+     break;
 //
    } // конец switch( nInputOperands )
 //==============================================================================
@@ -3976,20 +3967,20 @@ bool __fastcall Test_All_Operands()
    {
     case 1: if( !flagOp1 )
             {
-             flagAll = false; // была хоть одна неразрешимость..!
+             flagAll = FALSE; // была хоть одна неразрешимость..!
              t_printf( fmt1, i, Set,Mem_Instruction[i].aOp1, Mem_Instruction[i].aResult, Mem_Instruction[i].aOp1 );
             }
             break;
 //
     case 2: if( !flagOp1 )
             {
-             flagAll = false; // была хоть одна неразрешимость..!
+             flagAll = FALSE; // была хоть одна неразрешимость..!
              t_printf( fmt2, i, Set,Mem_Instruction[i].aOp1, Mem_Instruction[i].aOp2,Mem_Instruction[i].aResult, 1,Mem_Instruction[i].aOp1 );
             }
 //
             if( !flagOp2 )
             {
-             flagAll = false; // была хоть одна неразрешимость..!
+             flagAll = FALSE; // была хоть одна неразрешимость..!
              t_printf( fmt2, i, Set,Mem_Instruction[i].aOp1,Mem_Instruction[i].aOp2,Mem_Instruction[i].aResult, 2,Mem_Instruction[i].aOp2 );
             }
             break;
@@ -4003,9 +3994,9 @@ bool __fastcall Test_All_Operands()
 //==============================================================================
 //
  if( flagAll ) // не было проблем...
-  return true;  // все хорошо -> выполняем дальше!
+  return TRUE;  // все хорошо -> выполняем дальше!
 //
-  F1->Master_Timer->Enabled = false; // остановили главный таймер
+  F1->Master_Timer->Enabled = FALSE; // остановили главный таймер
 //
   snprintf( str,sizeof(str), "%s(): %s", __FUNC__,
 "В программе встречаются операции, принципиально не могущие выполниться \
@@ -4016,22 +4007,21 @@ bool __fastcall Test_All_Operands()
 //
   if( MessageBox(0, str, "Остановить / продолжить?",
                           MB_YESNO | MB_ICONQUESTION | MB_APPLMODAL ) == IDYES )
-   return false; // конец выполнения
+   return FALSE; // конец выполнения
   else
   {
-   F1->Master_Timer->Enabled = true; // активировали главный таймер
-   return true; // все хорошо... выполняем дальше!
+   F1->Master_Timer->Enabled = TRUE; // активировали главный таймер
+   return TRUE; // все хорошо... выполняем дальше!
   }
 //
 } // ---- Test_All_Operands ----------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int __fastcall RunPreProcessor()
 { // препроцессор для конвертации макросов в операторы
- char str[_512]="\0", // строка для считывания и расшифровки инструкций
-      tmp[_512]="\0", // рабочая строка
+ char str[_512], // строка для считывания и расшифровки инструкций
+      tmp[_512], // рабочая строка
       sIndex[2]="?\0", // символ индекса одномерного массива
       chr;
 //      Set[_SET_LEN], // мнемоника инструкции
@@ -4045,6 +4035,7 @@ int __fastcall RunPreProcessor()
  if( !(fptrIn  = fopen( FileNameSet,    "r") ) || // исходный файл инструкций открыть не удалось... ИЛИ
      !(fptrOut = fopen( FileNameSetPrP, "w") ) ) // файл инструкций после препроцессора открыть не удалось...
   return -1;
+
 //
  if( !mPM )
   mPM = new TStringList(); // создали PM (набор строк для тела исходного макро)
@@ -4116,11 +4107,16 @@ cont_withim_macros_body: // начинаем цикл по строкам тела макроса --------------
 //
 enf_of_fptrIn: // конец входного файла fptrIn ----------------------------------
 //
+//  snprintf( tmp,sizeof(tmp), "// start preprocessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
+//  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
   fprintf( fptrOut, "%c%c start pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n",
                     startComments[0],startComments[0], sIndex,minI,maxI,stepI );
 //
   for( int iRow=0; iRow<mPM->Count; iRow++ ) // по всем строкам в PM
   {
+//   fputs( "// ", fptrOut ); // строки до обработки препроцессором выдаются как комментируемые
+//   fputs( mPM->Strings[iRow].c_str(), fptrOut );  // строка до расширенияя препроцессором
+//   fputs( " / source line (before PreP)\n", fptrOut ); // fputs сама строку не переводит!
    fprintf( fptrOut, "%c%c %s %c source line (before PreP)\n", startComments[0],startComments[0],
                      mPM->Strings[iRow].c_str(), startComments[0] );
 //
@@ -4130,6 +4126,8 @@ enf_of_fptrIn: // конец входного файла fptrIn ----------------------------------
   } // конец цикла while( 1 ) ==================================================
 //
 // ---- выводим преобразованные данные -----------------------------------------
+//  snprintf( tmp,sizeof(tmp), "// end pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n", sIndex,minI,maxI,stepI );
+//  fputs( tmp, fptrOut );  // пишем в fptrOut (файл инструкций после обработки препроцессором)
   fprintf( fptrOut, "%c%c end pre-prosessor (PrP) the 1D-cycle \"for[%s]=%d,%d,%d\"\n",
                     startComments[0],startComments[0], sIndex,minI,maxI,stepI );
 //
@@ -4141,17 +4139,16 @@ enf_of_fptrIn: // конец входного файла fptrIn ----------------------------------
 //
  fclose( fptrIn  ); // закрываем все открытые файлы
  fclose( fptrOut );
-//
- return 0; // всё Ok
-//
-} // ===========================================================================
 
+ return 0; // всё Ok
+
+} // ===========================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall ParseAndCalculateIndex(char* Expression)
 { // парсеринг и вычисление выражения (без параметров) Expression
- char str[_128]="\0";
+ char str[_128];
 //
  try
  {
@@ -4168,7 +4165,7 @@ char* __fastcall ParseAndCalculateIndex(char* Expression)
    snprintf( str,sizeof(str), "Препроцессор: проблема разборки выражения\n\n%s\n\nошибка %s в позиции %d", Expression, error.error, error.pos );
    MessageBox(0, str, "Ошибка !", MB_OK);
 //
-   flagAlarmParser = false;
+   flagAlarmParser = FALSE;
   } // и больше не выдавать..!
 //
   startPos[0] = startComments[0]; // после ошибки все строки комментируются ";"
@@ -4176,7 +4173,6 @@ char* __fastcall ParseAndCalculateIndex(char* Expression)
  } // конец catch( )
 //
 } // --- конец ParseAndCalculate -----------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -4190,12 +4186,12 @@ void __fastcall TF1::Show_Graph(TObject *Sender)
   return;
  }
 //
- char str[_512]="\0";
+ char str[_512];
 //
  F2->Chart_IC->Title->Text->Clear(); // очистка TSting перед новым заполнением
  F2->Chart_IC->Title->Text->Add( "Зависимость показывает число одновременно выполняющихся" );
  F2->Chart_IC->Title->Text->Add( "операторов в функции времени (в тактах) выполнения программы" );
- F2->Chart_IC->Title->Text->Add( "\0" );
+ F2->Chart_IC->Title->Text->Add( "" );
 //
  F2->Chart_IC->Foot->Text->Clear(); // очистка TSting перед новым заполнением
  snprintf( str,sizeof(str), "параллельное вычисление: %d тактов, ускорение = %.*g", parallel_Ticks, ACC_REAL, 1.0 * serial_Ticks / parallel_Ticks );
@@ -4249,19 +4245,17 @@ void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
 //
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Out_Data_SBM1()
 { // выводит данные в центральную часть StatusBar (все данные - ГЛОБАЛЫ) -------
- char tmp[_512]="\0";
+ char tmp[_512];
 //
  snprintf(tmp,sizeof(tmp), " АИУ/инстр./данн./буф./такт (страт.) = %d/%d/%d/%d/%d (%d|%d/%d)",
               max_Proc, max_Instruction, max_Data, max_Buffer, F1->Master_Timer->Interval,
               how_Calc_Param, how_Calc_Prior, pass_Counts);
  SBM1->Text=tmp;
 } // ------ конец Out_Data_SBM1 ------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -4298,22 +4292,18 @@ char* __fastcall strReplace( char* dest, int num, const char* source, const char
 //
 } //  --------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-int __fastcall PreProcRow_For1( INT iRow, char* sIndex, INT iCycle )
+int __fastcall PreProcRow_For1(int iRow, char* sIndex, int iCycle)
 { // препроцессор для конвертации одной строки тела макроса одномерного массива
 // здесь iRow - номер строки исходного тела макроса (из RM),
 // sIndex - строка индекса одномерного массива, iCycle - номер цикла
- char str[_512]="\0",
-      tmp[_256]="\0",
-      dest[_256]="\0",
-      w[_512]="\0", *p,
+ char str[_512], tmp[_256], dest[_256], w[_512], *p,
       *pStartSB, *pEndSB, // указатели на '[' и ']' (Start Square Brecket - End Square Brecket)
       work[_512]="\0", // работаем с внешней рабочей строкой (в ней будем НАКАПЛИВАТЬ) преобразованные части обрабатываемой строки
-      buff[_512]="\0", // рабочий буффер для work
+      buff[_512], // рабочий буффер для work
       ch[2] = "?\0";
- INT  Start=0, i, // начиная с какого символа в str ищем [хххх]
+ int  Start=0, i, // начиная с какого символа в str ищем [хххх]
       lenOld=strlen(sIndex);
 //
  strcpy( str, mPM->Strings[iRow].c_str() ); // эту строку тела макроса будем конвертировать
@@ -4339,17 +4329,21 @@ int __fastcall PreProcRow_For1( INT iRow, char* sIndex, INT iCycle )
 //
 // вычислили выражение БЕЗ ПАРАМЕТРОВ в строке w -------------------------------
   strcpy( tmp, ParseAndCalculateIndex( dest ) );
+
 // добавляем в work часть str от Start до p_Start (включая '[') ----------------
   strncat( work, &str[ Start ], pStartSB-str-Start + 1 ); // прибавим 1, чтобы поместился '\0'
+
 // часть str от Start до первого символа слева от '[' прибавляем в work --------
   strcat( work, tmp );
+
 // добавим ']', ибо его в w не заносили ----------------------------------------
   strcat( work, "]\0" );
+
 // новый цикл ( i ) поиска '[...]' начинаем c символа номер Start в строке str
   Start = pEndSB - str + 1 ;
 //
 ////////////////////////////////////////////////////////////////////////////////
- } // конец for( i=1; ; i++ ) = цикл по числу вхождений '[...]'
+ } // конец for( int i=1; ; i++ ) = цикл по числу вхождений '[...]'
 //
  strcpy( str, work ); // заменим исходную строку для возврата
 //
@@ -4384,7 +4378,9 @@ int __fastcall PreProcRow_For1( INT iRow, char* sIndex, INT iCycle )
   strcpy( str, buff ); // восстановим str после применения strtok
 //
   p = strtok( str, "," ); // ищем начало вхождение результата инструкции SET
-//
+//  p = strtok( NULL, "/; " ); // ищем конец вхождения инструкции SET (без комментариев)
+//  strcpy( w, startComments_1 ); // в w "/"
+//  strcat( w, startComments_2 ); // в w "/;"
   snprintf( w, sizeof(w), "%s%s", startComments,startComments ); // в w теперь ";;"
   p = strtok( NULL,  w ); // ищем конец вхождения инструкции SET (без комментариев)
 //
@@ -4395,6 +4391,8 @@ int __fastcall PreProcRow_For1( INT iRow, char* sIndex, INT iCycle )
 //
  } // конец обработки инструкции SET -------------------------------------------
 //
+// fputs( startPos, fptrOut ); // при некорректности minI,maxI,stepI строки комментируются
+// fputs( str, fptrOut ); // сохраняем расширенную строку макроса ( fputs строку не переводит! )
  fprintf( fptrOut, "%s%s %s line after PrP\n", startPos, str, startComments );
 // fputs( " ; line after PrP\n", fptrOut );
 //
@@ -4402,33 +4400,31 @@ int __fastcall PreProcRow_For1( INT iRow, char* sIndex, INT iCycle )
 //
 } // --------- конец PreProcRow_For1 -------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-bool __fastcall is_ResultIsPredicat( char* str )
+bool __fastcall is_ResultIsPredicat(char* str)
 { // возвращает TRUE, если str суть результат выполнения ПРЕДИКАРНОГО оператора
 //
- for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям в программе // (просмотр с конца к началу)
+ for(UI i=0; i<Really_Set; i++) // по всем инструкциям в программе // (просмотр с конца к началу)
  {
   if( is_Predicat( Mem_Instruction[i].Set ) &&  // этот оператор - ПРЕДИКАТ ?
      !strcmp( Mem_Instruction[i].aResult,str ) ) // имя str совпадает с именем результата
-   return true;
+   return TRUE;
 //
  } // конец for(UI i...
 //
-  return false;
+  return FALSE;
 //
 } // ----- конец is_Predicat --------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int __fastcall
 Get_CountOperandsByInstruction(char *Set)
 { // определяет число входных операндов в инструкции с мнемоникой Set
- char tmp[_256]="\0";
+ char tmp[_256];
 //
- for( INT i=0; i<Count_Sets; i++ ) // по списку инструкций ...
+ for(int i=0; i<Count_Sets; i++) // по списку инструкций ...
   if( !strcmp( Set_Params[i].Set, Set ) ) // это инструкция с мнемоникой Set
    return Set_Params[i].nInputOperands ;
 //
@@ -4440,17 +4436,17 @@ Get_CountOperandsByInstruction(char *Set)
 //
 } // ---------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int __fastcall // определяет по Set_Params[] время выполнения инструкции с мнемоникой Set в тиках
 Get_TicksByInstruction(char *Set)
 { // если мнемоники не найдено, возвращается 100 (тиков) .......................
- char tmp[_1024]="\0";
+ char tmp[_1024];
 //
- for( INT i=0; i<Count_Sets; i++ ) // ищем путем простого последовательного перебора
+ for(int i=0; i<Count_Sets; i++) // ищем путем простого последовательного перебора
  {
   if( !strcmp( Set_Params[i].Set, Set ) )
+// return Set_Params[i].Time
    return Set_Params[i].Ticks > 0 ? Set_Params[i].Ticks : 0 ; // return 0 при Set_Params[i].Ticks <= 0
  }
 //
@@ -4463,11 +4459,12 @@ Get_TicksByInstruction(char *Set)
   return ( 100 ); // ... default ...
 } // ---------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 bool __fastcall is_Predicat(char* Set)
 {  // возвращает  TRUE, если Set - мнемоника оператора-предиката
+// if ( Set[0] != 'P' )
+//  return FALSE;
  if ( !strcmp( Set, "PGE" ) || // оператор PGE
       !strcmp( Set, "PLE" ) || // ...
       !strcmp( Set, "PEQ" ) ||
@@ -4485,12 +4482,11 @@ bool __fastcall is_Predicat(char* Set)
       !strcmp( Set, "PRM" ) || // обратная импликация двух предикатов
       !strcmp( Set, "PXR" ) )  // строгая дизъюнкция (исключающее ИЛИ) двух предикатов
 //      !strcmp( Set, SET ) ) // это "SET"
-  return true;
+  return TRUE;
  else
-  return false;
+  return FALSE;
 //
 } // ------ конец is_Predicat -------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -4501,7 +4497,6 @@ void __fastcall Clear_AllTableInstructions()
  mS->Repaint(); // очистим предыдущее выделение...
 //
 } // ------ конец Clear_AllTableInstructions -----------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -4604,7 +4599,7 @@ void __fastcall TF1::OnKeyUp_F1(TObject *Sender, WORD &Key,
 //
  else
  if( Shift.Contains(ssCtrl) && ( Key == 'A' || Key == 'a' ) )
-  modeStopRunInfinity = true ; // остановить бесконечное выполнение последней загруженно йпрограммы
+  modeStopRunInfinity = TRUE ; // остановить бесконечное выполнение последней загруженно йпрограммы
 //
  Key = NULL; // очистили код нажатой кнопки
 //
@@ -4639,7 +4634,7 @@ void __fastcall TF1::Save_Data(TObject *Sender)
  Save_Protocol_Data(); // сохраняем протокол рассчитанных данных (*.dat)
 //
  SBM0->Text = " Протоколы данных сохранён !.."; // вывод текста в StatusBarMain
- Delay(100); // ...чтобы увидеть!..
+ Delay(300); // ...чтобы увидеть!..
 //
 } //----------------------------------------------------------------------------
 
@@ -4649,10 +4644,8 @@ void __fastcall TF1::Save_Data(TObject *Sender)
 int __fastcall Work_TimeSets_Protocol_IC()
 { // вычисляется и возвращается max число ОДНОВРЕМЕННО работающих АИУ (процессоров)
 // и заполняется серия данных для постройки графика интенсивности вычислений
- char tmp[_512]="\0",
-      tmp1[_512]="\0",
-      tmp2[_512]="\0",
-      w[_512]="\0";
+ char tmp[_512],  tmp1[_512],
+      tmp2[_512], w[_512];
  INT tick_End, // конец времени последней выполненной инструкции (в тактах)
      tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени
@@ -4664,8 +4657,8 @@ int __fastcall Work_TimeSets_Protocol_IC()
 ////////////////////////////////////////////////////////////////////////////////
  F2->Series1->Clear(); // очистим серию данных для графика интенсивности вычислений
 ////////////////////////////////////////////////////////////////////////////////
- if( !mTpr || // если этот TStringList-список не существует... "ИЛИ"
-     !mTpr->Count ) // если число строк = 0 ...
+ if(! mTpr || // если этот TStringList-список не существует... "ИЛИ"
+    ! mTpr->Count) // если число строк = 0 ...
   goto ended;
 //
  strcpy(tmp,  mTpr->Strings[mTpr->Count-1].c_str()); // последняя строка таблицы в Tpr
@@ -4689,7 +4682,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
 //
 // начало тела вычислений для каждой из mTpr->Count инструкций ...............
 ////////////////////////////////////////////////////////////////////////////////
-  for( INT i=0; i<mTpr->Count; i++ ) // по таблице выполненных инструкций в Tpr
+  for( ULI i=0; i<mTpr->Count; i++ ) // по таблице выполненных инструкций в Tpr
   {
    APM // дать поработать Windows -----------------------------------------------
 //
@@ -4726,12 +4719,11 @@ ended: /////////////////////////////////////////////////////////////////////////
 //
 } // ------- конец процедуры Work_TimeSets_Protocol ----------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_Master()
 { // сохранение ГЛАВНОГО_ПРОТОКОЛА выполнения задания (*.pro)
- char FileNameProtocol[_512]="\0"; // файл протокола '*.pro'
+ char FileNameProtocol[_512]; // файл протокола '*.pro'
 //
 ////////////////////////////////////////////////////////////////////////////////
 // сохраняем ГЛАВНЫЙ_ПРОТОКОЛ (*.pro) //////////////////////////////////////////
@@ -4747,15 +4739,14 @@ void __fastcall Save_Protocol_Master()
 //
 } // ----- конец функции Save_Protocol -----------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_AIU()
 { // сохранение протокола использования АИУ (*.tpr)
- char FileNameTimeProc[_512]="\0"; // файл протокола использования АИУ '*.tpr'
+ char FileNameTimeProc[_512]; // файл протокола использования АИУ '*.tpr'
 //
- if( !mTpr || // если этот TStringList-список не существует...
-     !mTpr->Count ) // если нет строк...
+ if( ! mTpr || // если этот TStringList-список не существует...
+     ! mTpr->Count ) // если нет строк...
   return;
 //
  SBM0->Text = " Сохраняется протокол использования АИУ (TPR-файл)..."; // вывод текста в StatusBarMain
@@ -4767,13 +4758,12 @@ void __fastcall Save_Protocol_AIU()
 //
 } // ----- конец функции Save_Protocol_AIU -------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_Data()
 { // сохранение файла рассчитанных данных (*.dat)
- char FileNameData[_512]="\0", // файл рассчитанных данных '*.dat'
-      tmp[_512]="\0";
+ char FileNameData[_512], // файл рассчитанных данных '*.dat'
+      tmp[_512];
 //
  FILE *fptr;
 ////////////////////////////////////////////////////////////////////////////////
@@ -4789,12 +4779,12 @@ void __fastcall Save_Protocol_Data()
  SBM0->Text = " Сохраняется протокол данных расчета (DAT-файл).."; // вывод текста в StatusBarMain
  Delay(100); // чтобы успеть увидеть...
 //
- for( INT i=0; i<Really_Data; i++ ) // по всем Mem_Data[i]
+ for( ULI i=0; i<Really_Data; i++ ) // по всем Mem_Data[i]
  {
   snprintf( tmp,sizeof(tmp), "#%d [%s]", Mem_Data[i].i_Set, Line_Set(Mem_Data[i].i_Set, -1) ); // в результате какой команды определилось данное значение..?
 //
   if( is_ResultIsPredicat( Mem_Data[i].Addr ) ) // это результат выполнения инструкции-ПРЕДИКАТА...
-   fprintf( fptr, "%20s%20s     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data ? trueOutput : falseOutput, tmp );
+   fprintf( fptr, "%20s%20s     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data ? trueLowerCase : falseLowerCase, tmp );
   else
    fprintf( fptr, "%20s%20.7g     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data, tmp );
 //
@@ -4809,9 +4799,9 @@ void __fastcall Save_Protocol_Data()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_ExecInstructions()
 { // сохранение протокола выполнения инструкций по времени (*.tst)
- char FileNameTimeSets[_512]="\0", // файл протокола выполнений инструкций АИУ '*.tst'
-      tmp2[_512]="\0",
-      tmp3[_2048]="\0"; // при ГКВ=99 длина ~1200 символов
+ char FileNameTimeSets[_512], // файл протокола выполнений инструкций АИУ '*.tst'
+//      tmp[_512],  tmp1[_512],
+      tmp2[_512], tmp3[_2048]; // при ГКВ=99 длина ~1200 символов
  INT tick_End, // конец времени последней выполненной инструкции (в тактах)
      tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени времени
@@ -4823,8 +4813,8 @@ void __fastcall Save_Protocol_ExecInstructions()
 ////////////////////////////////////////////////////////////////////////////////
 // сохраняем ПРОТОКОЛ_ВЫПОЛНЕНИЯ_ИНСТРУКЦИЙ (*.tst) ////////////////////////////
 //
- if( !mTpr || // если этот TStringList-список не существует... "ИЛИ"
-     !mTpr->Count ) // если число строк = 0 ...
+ if( ! mTpr || // если этот TStringList-список не существует... "ИЛИ"
+     ! mTpr->Count ) // если число строк = 0 ...
   return;
 //
   strcpy( FileNameTimeSets, ChangeFileExt(FileNameSet, ".tst").c_str() ); // путь к TST-файлу
@@ -4836,17 +4826,17 @@ void __fastcall Save_Protocol_ExecInstructions()
 //
   tick_End = _atoi64(GetSubString(mTpr->Strings[mTpr->Count-1].c_str(), 21,30)); // конец всех вычислений ( в тактах )
 //
-  for( INT i_tick=0; i_tick<=tick_End; i_tick++ ) // по всем тактам программы
+  for( ULI i_tick=0; i_tick<=tick_End; i_tick++ ) // по всем тактам программы
   {
    if( i_tick % tick_ScanForGraph ) // ВЫДАВАТЬ каждые tick_ScanForGraph тактов
     continue;
 //
    n_i = 0; // число выполняемых инструкций в момент времени времени t_i
-   strcpy(tmp3, "\0"); // очистили tmp3
+   strcpy(tmp3, ""); // очистили tmp3
 //
 // начало тела вычислений для каждой из Tpr (0-n_Tpr) инструкций .........
 ////////////////////////////////////////////////////////////////////////////////
-   for( INT i=0; i<mTpr->Count; i++ ) // по строкам выполненных инструкций в Tpr
+   for( ULI i=0; i<mTpr->Count; i++ ) // по строкам выполненных инструкций в Tpr
    {
     n_proc = _atoi64(GetSubString(mTpr->Strings[i].c_str(),  1,10)); // номер АИУ, на котором инструкция выполнялась
     n_set =  _atoi64(GetSubString(mTpr->Strings[i].c_str(), 41,50));  // номер выполненной инструкции
@@ -4869,21 +4859,18 @@ void __fastcall Save_Protocol_ExecInstructions()
 ////////////////////////////////////////////////////////////////////////////////
   fprintf(fptr, "%10ld%10d     %s\n", i_tick, n_i, tmp3);
 //
-  } // конец for( INT i_tick=0; i_tick<=tick_End; i_tick++ ) // по всем тактам программы
+  } // конец for( ULI i_tick=0; i_tick<=tick_End; i_tick++ ) // по всем тактам программы
 //
  fclose( fptr ); // закрыли файл
 //
 } // ----- конец функции Save_ExecInsrucrions ----------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_ConnectedGraph()
 { // сохранение протокола свЯзности графа (*.coi)
- char tmp[_512]="\0",
-      tmp1[_512]="\0",
-      tmp2[_512]="\0",
-      tmp3[_2048]="\0"; // при ГКВ=99 длина ~1200 символов
+ char tmp[_512],  tmp1[_512],
+      tmp2[_512], tmp3[_2048]; // при ГКВ=99 длина ~1200 символов
  ULI tick_End, // конец времени последней выполненной инструкции (в тактах)
      tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени времени
@@ -4899,7 +4886,6 @@ void __fastcall Save_Protocol_ConnectedGraph()
  Calc_ConnectedIndex( 1 ); // подсчет ИНДЕКСОВ СВяЗНОСТИ c сохранением в файл
 //
 } // ----- конец функции Save_Protocol_ConnectedGraph --------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -4921,12 +4907,12 @@ bool __fastcall AddLineToProtocol(char *str)
 //  if( (c=='\n') || (c=='\0') ) // управляющий символ или конец строки
   {
    F1->M1->Lines->Add( buf ); // вывод строки buf в M1
-   strcpy( buf, "\0" ); // очистили строку для дальнейшей работы
+   strcpy( buf, "" ); // очистили строку для дальнейшей работы
   }
 //
  } // конец по символам строки str
 //
- return true ; // для Lua всегда надо что-то возвратить (void не допускается!)
+ return TRUE ; // для Lua всегда надо что-то возвратить (void не допускается!)
 //
 } // --- конец c_AddLineToProtocol ----------------------------------------------
 
@@ -4936,15 +4922,15 @@ bool __fastcall AddLineToProtocol(char *str)
 void __fastcall TF1::SG_Data_Info(TObject *Sender, TMouseButton Button,
                                   TShiftState Shift, int X, int Y)
 { // щелчок левой кнопкой мыши на SG_Data - вывод в MessageBox -----------------
- char str[_512]="\0";
+ char str[_512];
 //
  if( !strlen( Mem_Data[SG_Data->Row-1].Addr ) ) // строка пустая !..
   return;
 //
  if( is_ResultIsPredicat( Mem_Data[SG_Data->Row-1].Addr ) ) // это результат выполнения инструкции-ПРЕДИКАТА...
-  snprintf( str,sizeof(str), "     %s = %s", Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data ? trueOutput : falseOutput );
+  snprintf( str,sizeof(str), "     %s = %s", Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data ? trueLowerCase : falseLowerCase );
  else
-  snprintf( str,sizeof(str), "     %s = %.10g", Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data );
+  snprintf( str,sizeof(str), "     %s = %.10e", Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data );
 //
  MessageBox(0, str," Значение переменной в памяти данных", MB_OK | MB_ICONINFORMATION | MB_TOPMOST | MB_TASKMODAL ); // МОДаЛЬНОЕ окно ..!
 //
@@ -4969,12 +4955,11 @@ void __fastcall TF1::M1_CopyAll(TObject *Sender)
  M1->SelLength = 0; // снять выделение
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::M1_CopyToNotepad(TObject *Sender)
 { // копировать M1 в Notepad
- char FileName[_256]="\0";
+ char FileName[_256];
  strcpy( FileName, ChangeFileExt( FileNameSet, ".txt" ).c_str()); // имя проекта + "txt"
  M1->Lines->SaveToFile( FileName ); // выдать все строки из M1 в файл FileName
  ShellExecute( Handle, "open", FileName, NULL, NULL, SW_RESTORE ); // открыть файл FileName
@@ -4984,7 +4969,6 @@ void __fastcall TF1::M1_CopyToNotepad(TObject *Sender)
  DeleteFile( FileName ); // уничтожить (временный) файл
 } //----------------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::Save_IGA_Click(TObject *Sender)
@@ -4992,17 +4976,14 @@ void __fastcall TF1::Save_IGA_Click(TObject *Sender)
  Save_IGA(); // сохранение GV-файла
 } //----- конец TF1::Save_IGA_Click --------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_IGA()
 { // сохранить программу в виде списка дуг (формат *.GV)
  INT i,j, nArg, fromOp, iEdge = 0; // номер дуги в ИГА
  TStringList *sIGA = new TStringList(); // массив строк для запоминания ИГА
- char FileName[_256]="\0",
-      tmp[_2048]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0";
+ char FileName[_256], tmp[_2048],
+      aResult[_ID_LEN], aPredicat[_ID_LEN];
  bool flagNot, flagPredicat;
 //
 // сохраняем ИНФОРМАЦИОННЫЙ_ГРАФ_ПРОГРАММЫ (*.gv) //////////////////////////////
@@ -5020,19 +5001,19 @@ void __fastcall Save_IGA()
           AnsiUpperCase(ExtractFileName(FileNameSet) ) );
  sIGA->Add( tmp ); // добавить строку комментария
 //
- snprintf(tmp,sizeof(tmp), "digraph %s {", AnsiUpperCase(ChangeFileExt(ExtractFileName(FileNameSet),"\0")) );
+ snprintf(tmp,sizeof(tmp), "digraph %s {", AnsiUpperCase(ChangeFileExt(ExtractFileName(FileNameSet),"")) );
 // ChangeFileExt(ExtractFileName(FileName),'')
  sIGA->Add( tmp ); // добавить cтроку начала описания графа
 //
 // === ищем ДУГИ (информационные зависимости) в алгоритме ----------------------
 // опервтор ОТКУДА - это i-й оператор (поле aResult) ---------------------------
 // оператор КУДА - это j-й оператор (поле aOp1 или aOp2) -----------------------
- for( i=0; i<Really_Set; i++ ) // по всем инcтрукциям (операторам) - это ОТКУДА
+ for(i=0; i<Really_Set; i++) // по всем инcтрукциям (операторам) - это ОТКУДА
  {
   strcpy( aResult, Mem_Instruction[i].aResult ); // запомнили...
 //
 // внутренний цикл (инструкцию [i] сравниваем с инструкцией [j] ----------------
-  for( j=0; j<Really_Set; j++ ) // по всем инcтрукциям (операторам) - это КУДА
+  for(j=0; j<Really_Set; j++) // по всем инcтрукциям (операторам) - это КУДА
   {
    if( is_SET( Mem_Instruction[j].Set ) || // c КУДА (SET) не сравниваем (ибо у SET нету ОТКУДА)
        i == j ) // самого с собой не сравниваем (ибо ИЗВРаТ сие есмь)...
@@ -5041,10 +5022,10 @@ void __fastcall Save_IGA()
    strcpy( aPredicat, Mem_Instruction[j].aPredicat ); // запомнили...
 //--- проверяем, начинается ли имя флага предиктора с '!' или '~'
    flagNot = ( aPredicat[0] == symbolNot_1 || aPredicat[0] == symbolNot_2 )
-               ? true : false; // TRUE, если в поле aPredicat первый символ '!' или '~'
+               ? TRUE : FALSE; // TRUE, если в поле aPredicat первый символ '!' или '~'
 //--- это флаг ПРЕДИКТОРА (не true и не false) ? -------------------------------
    flagPredicat = ( strcmp( aPredicat, trueLowerCase ) && strcmp( aPredicat, falseLowerCase )
-                   ? true : false );
+                   ? TRUE : FALSE );
 //
 // очищаем от лидирующих '!' или '~'
    if( flagPredicat ) // не true/false
@@ -5082,7 +5063,6 @@ void __fastcall Save_IGA()
 //
 } //----- конец Save_IGA -------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::ExtendedSave_IGA_Click(TObject *Sender)
@@ -5091,13 +5071,12 @@ void __fastcall TF1::ExtendedSave_IGA_Click(TObject *Sender)
  Extended_Save_IGA(); // сохранение GV-файла
 } //-----  конец TF1::ExtebdedSave_IGA_Click -----------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Extended_Save_IGA()
 { // сохранить данные о времени выполнения операторов (формат *.MVR)
  INT i; // номер оператора
- char FileName[_256]="\0";
+ char FileName[_256];
  FILE *fptr;
 //
 // сохраняем ДАННЫЕ_О_ВРЕМЕНИ_ВЫПОЛНЕНИЯ_ОПЕРАТОРОВ (*.mvr) //////////////////////////////
@@ -5115,7 +5094,7 @@ void __fastcall Extended_Save_IGA()
  fprintf( fptr, "; This file was automatically created thru program DATA_FLOW.EXE\n; from the original data file %s\n;\n",
           AnsiUpperCase(ExtractFileName(FileNameSet) ) );
 //
- for( i=0; i<Really_Set; i++ ) // по всем инcтрукциям (операторам)
+ for(i=0; i<Really_Set; i++) // по всем инcтрукциям (операторам)
   fprintf(fptr, "=%d/%d: -Ticks %d ; [%s,%s,%s,%s,%s,%s]\n",
                  i+StartNumb,i+StartNumb,Get_TicksByInstruction(Mem_Instruction[i].Set),
                  Mem_Instruction[i].Set,
@@ -5139,13 +5118,13 @@ void __fastcall TF1::Show_AIU(TObject *Sender)
   return;
  }
 //
- char str[_512]="\0";
+ char str[_512];
 //
  F3->Chart_AIU->Title->Text->Clear(); // очистка TSting перед новым заполнением
  F3->Chart_AIU->Title->Text->Add( "Показывается нагруженность отдельных АИУ выполнением" );
  F3->Chart_AIU->Title->Text->Add( "операторов в функции времени (в тактах) выполнения программы" );
  F3->Chart_AIU->Title->Text->Add( "(цифры по центру горизонтальных линий - номера операторов)" );
- F3->Chart_AIU->Title->Text->Add( "\0" );
+ F3->Chart_AIU->Title->Text->Add( "" );
 //
  F3->Chart_AIU->Foot->Text->Clear(); // очистка TSting перед новым заполнением
 //
@@ -5174,21 +5153,20 @@ void __fastcall TF1::Show_AIU(TObject *Sender)
 //
 } //------ конец Show_AIU ------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int __fastcall Work_TimeSets_Protocol_AIU()
 { // вычисляется и возвращается max число ОДНОВРЕМЕННО работающих АИУ (процессоров)
 // и заполняется серия данных для постройки графика интенсивности вычислений
- INT i_Op, n_Op, ii_Op, nn_Op,
+ ULI i_Op, n_Op, ii_Op, nn_Op,
      i_Proc, start, end, i_Set, ii_Set;
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
 //
 ////////////////////////////////////////////////////////////////////////////////
  F3->Series1->Clear(); // очистим серию данных для графика нагруженности АИУ
 ////////////////////////////////////////////////////////////////////////////////
- if( !mTpr || // если этот TStringList-список не существует... "ИЛИ"
-     !mTpr->Count ) // если число строк = 0 ...
+ if( ! mTpr || // если этот TStringList-список не существует... "ИЛИ"
+     ! mTpr->Count) // если число строк = 0 ...
 //  goto ended;
  return 1;
 //
@@ -5238,12 +5216,11 @@ ended: /////////////////////////////////////////////////////////////////////////
 //
 } // ------- конец Work_TimeSets_Protocol_AIU ----------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall PutDateTimeToString(INT flag)
 { // выдача текущих даты и времени в строку с форматированием
- char str[_512]="\0";
+ char str[_512];
 //
  if( flag == 0 ) // некорректное имя файла ( символ ':' недопустИм )
   strNcpy( str, TDateTime::CurrentDateTime().FormatString("dd.mm.yyyy'/'hh:nn:ss:zzz").c_str() );
@@ -5253,13 +5230,11 @@ char* __fastcall PutDateTimeToString(INT flag)
  return str ;
 } // конец PutDateTimeToString -------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_All_Protocols_To_Out_Dir()
 { // сохранение всех протоколов данного расчёта и перенос подкаталог Out!Data
- char tmp[_512]="\0",
-      cnst[_512]="\0";
+ char tmp[_512], cnst[_512];
 //
  do_Stop // "выключили" все кнопки Выполнение
 //
@@ -5306,9 +5281,9 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
 bool __fastcall Read_Instructions()
 { // читаем инструкции из файла FileNameSets в массив структур Mem->Set[]
  FILE *fptr; // указатель на структуру ФАЙЛ
- char str[_1024]="\0", // строка для считывания и расшифровки инструкций
-      tmp[_512]="\0", // рабочая строка
-      Set[_SET_LEN]="\0", // мнемоника инструкции
+ char str[_1024], // строка для считывания и расшифровки инструкций
+      tmp[_512], // рабочая строка
+      Set[_SET_LEN], // мнемоника инструкции
       *p, *p1,*p2;
  bool flagPredicate; // TRUE если в операторе допустимо поле предиката
 //
@@ -5316,7 +5291,7 @@ bool __fastcall Read_Instructions()
 //
  if(!(fptr = fopen(FileNameSetPrP, "r"))) // файл ПОСЛЕ ПРЕПРОЦЕССОРА открыть не удалось...
  {
-  return false;
+  return FALSE ;
  }
 //
  snprintf( tmp,sizeof(tmp), " Загружен файл %s [*%s]", ExtractFileName(FileNameSet), ExtPrP ); // вывод в строку статуса
@@ -5324,7 +5299,7 @@ bool __fastcall Read_Instructions()
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- for( INT i=0; i<max_Instruction; i++ ) // по строкам инструкций
+ for(UI i=0; i<max_Instruction; i++) // по строкам инструкций
   {
    if(fgets(str, sizeof(str), fptr) == NULL) // читаем строку из fptr
     break; // если строки кончились, функция fgets возвращает NULL
@@ -5333,7 +5308,7 @@ bool __fastcall Read_Instructions()
     str[strlen(str)-1] = ' ';   // ... то заменим на пробел !
 //
 // ----- все Tab в строке str заменяем на пробелы ------------------------------
-   for( INT i=0; i<strlen(str); i++ ) // по всем символам строки...
+   for( int i=0; i<strlen(str); i++ ) // по всем символам строки...
     if( str[i] == VK_TAB ) // если i-тый символ есть Tab (9/0x9)...
      str[i] = VK_SPACE; // то заменяем его на пробел (32/0x20) !
 //
@@ -5379,7 +5354,7 @@ bool __fastcall Read_Instructions()
 //            strcpy(Mem_Instruction[i].aOp1, p);
             p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
             DelSpacesTabsAround(Mem_Instruction[i].aOp1);
-            strcpy(Mem_Instruction[i].aOp2, "\0"); // очистка ОБЯЗАТЕЛЬНА !!!
+            strcpy(Mem_Instruction[i].aOp2, ""); // очистка ОБЯЗАТЕЛЬНА !!!
 
             p = strtok(NULL, ", "); // адрес результата aResult ................
 //            strcpy(Mem_Instruction[i].aResult, p);
@@ -5407,16 +5382,16 @@ bool __fastcall Read_Instructions()
             if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase) ) strcpy(Mem_Instruction[i].aPredicat, falseLowerCase);
             }
 //
-             Mem_Instruction[i].fExecOut   = false;
-             Mem_Instruction[i].fAddBuffer = false;
+             Mem_Instruction[i].fExecOut   = FALSE;
+             Mem_Instruction[i].fAddBuffer = FALSE;
 //
              break;
-//
+
     case 2: p = strtok(NULL, ", "); // адрес первого операнда aOp1...............
 //            strcpy(Mem_Instruction[i].aOp1, p);
             p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
             DelSpacesTabsAround(Mem_Instruction[i].aOp1);
-//
+
             p = strtok(NULL, ", "); // адрес второго операнда aOp2...............
 //            strcpy(Mem_Instruction[i].aOp2, p);
             p ? strcpy(Mem_Instruction[i].aOp2, p) : strcpy(Mem_Instruction[i].aOp2, notDefined);
@@ -5450,12 +5425,12 @@ bool __fastcall Read_Instructions()
              if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase ) ) strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
             }
 //
-             Mem_Instruction[i].fExecOut   = false;
-             Mem_Instruction[i].fAddBuffer = false;
+             Mem_Instruction[i].fExecOut   = FALSE;
+             Mem_Instruction[i].fAddBuffer = FALSE;
 //
              break;
 //
-   default: return true;
+   default: return TRUE;
 
    } // конец switch...
 //
@@ -5472,7 +5447,7 @@ bool __fastcall Read_Instructions()
 //
  Vizu_Sets(); // визуализировать пул инструкций
 //
- return true ;
+ return TRUE ;
 //
 } // конец Read_Instructions ---------------------------------------------------
 
@@ -5558,7 +5533,7 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
   mS->ColWidths[7] = sizeof(M_I.Comment);
 //
 // секции нижней информационной панели -----------------------------------------
- SBM->SimplePanel = false; // не забыть (несколько подпанелей) !!!
+ SBM->SimplePanel = FALSE; // не забыть (несколько подпанелей) !!!
  SBM0->Width = 3 * F1->ClientWidth / 8;
  SBM1->Width = SBM0->Width;
 // SBM2->Width = F1->ClientWidth / 4;
@@ -5571,10 +5546,11 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
 void __fastcall Run_Infinity()
 { // повтор загруженно йпрограммы бесконечное число раз (до Alt+A)
 //
- modeStopRunInfinity = false ; // выполнятьбесконечное число раз
+ modeStopRunInfinity = FALSE ; // выполнятьбесконечное число раз
 //
  while( 1 ) // сделать бесконечное число раз
  {
+//
   if( modeStopRunInfinity ) // установлен флагоконсания бесконечного выполнения
   {
    StopCalculations( 0 ); // выполнение остановлено пользователем
@@ -5599,10 +5575,10 @@ void __fastcall Run_Infinity()
 void __fastcall TF1::Result_toOperands(TObject *Sender)
 { // показывает цветом все входные операнды, зависимые от
 // результата выполнения данной (выделенной в SG; столбец 4) инструкции
- char Set[_SET_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0",
-      str[_2048]="\0", tmp[_1024]="\0"; // без очистки str были пробемы
+ char Set[_SET_LEN],
+      aResult[_ID_LEN],
+      aPredicat[_ID_LEN],
+      str[_2048], tmp[_2048];
  bool c1, c2; // флаги тестирования операндов
 //
  Clear_AllTableInstructions(); // очистим цвета всех ячеек таблицы инструкций
@@ -5617,7 +5593,7 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
  for( INT i=0; i<Really_Set; i++ ) // по всем строкам Mem_Instruction[i]
  {
 //
-  c1 = c2 = false; // подготовка к анализу...
+  c1 = c2 = FALSE; // подготовка к анализу...
 //
   strcpy(Set, Mem_Instruction[i].Set); // взяли мнемонику i-той инструкции
 //
@@ -5651,7 +5627,7 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
             Sel_Cell[Really_Select].clBackground = DCT.clOperandOperation;
             Sel_Cell[Really_Select++].clSymbol   = clBlack;
 //
-            c1 = true;
+            c1 = TRUE;
            }
 //
            if( !strcmp(aResult, Mem_Instruction[i].aOp2) ) // есть совпадение aResult с aOp2 (два операнда) ?
@@ -5661,7 +5637,7 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
             Sel_Cell[Really_Select].clBackground = DCT.clOperandOperation;
             Sel_Cell[Really_Select++].clSymbol   = clBlack;
 //
-            c2 = true;
+            c2 = TRUE;
            }
 //
            break;
@@ -5730,13 +5706,13 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
 { // показывает цветом все результаты выполнения инструкций, от
 // которых зависит данный входной операнд
 //
- char Set[_SET_LEN]="\0",
-      aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0",
-      tmp[_512]="\0";
- INT Col, Row, n_Op,
+ char Set[_SET_LEN],
+      aOp1[_ID_LEN],
+      aOp2[_ID_LEN],
+      aResult[_ID_LEN],
+      aPredicat[_ID_LEN],
+      tmp[_512];
+ int Col, Row, n_Op,
      i_save, i_save_no = -1234567;
 //
  i_save = i_save_no; // предварительное присваивание
@@ -5777,7 +5753,7 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
             Sel_Cell[Really_Select].clBackground = DCT.clOperandOperation;
             Sel_Cell[Really_Select++].clSymbol   = clBlack;
 //
-            i_save = i;
+           i_save = i;
            }
 //
    break;
@@ -5887,211 +5863,25 @@ void __fastcall TF1::SG_MouseUp(TObject *Sender, TMouseButton Button,
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall
-Finalize_Only_SET( INT i_Set )
-{ // выполнение инструкции SET номер i_Set !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// предполагается, что это мгновенно (время учитывать не надо)..................
-// инструкция SET выполняется НЕ ПРОЦЕССОРОМ, а ВХОДНЫМ коммуникатором !!!
- char Set[_SET_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0", // поле предиката
-      strInfoLine[_4096]="\0", tmp[_512]="\0";
- bool s_isPredicat, // TRUE, если ВЫПОЛНИВШИЙСЯ оператор есть ПРЕДИКАТ
-      isPredicat, // TRUE, если ЗАВИСИМЫЙ оператор ПРЕДИКАТ
-      flagNot, // TRUE, если в ЗАВИСИМОМ операторе первый символ имени флага предиката "!" или "~"
-      flagPredicat, // TRUE, если в имени ЗАВИСИМОГО оператора есть переменная (XXX или !XXX)
-      flagPredicat_TRUE, // TRUE, если в ЗАВИСИМОМ операторе флаг предиката TRUE (с учётом isNot)
-      Ready_Op1,Ready_Op2 ; // совпадение имён операндов в ЗАВИСИМОМ операторе с именем результата в ВЫПОЛНИВШЕМСЯ
- int Rule; //управляющая переменная в переключателу switch()
-//
- if( !Regim ) // не выполнять - закончить счет ---------------------------------
-  return;
-//
- REAL Result = StrToReal( Mem_Instruction[i_Set].aOp1, i_Set ); // запомнили значение 1-го операнда инструкции SET номер i_Set
- strcpy( aResult, Mem_Instruction[i_Set].aResult ); // строка-адрес результата выполненного оператора
-//
- Mem_Instruction[i_Set].fOp1 = true; // у SET всегда 1-й готов!...
-//
- s_isPredicat = false; // is_Predicat( Mem_Instruction[i_Set].Set ); // у SET всегда FALSE
-//
-////////////////////////////////////////////////////////////////////////////////
- Add_toData( i_Set, aResult, Result ); // добавим в Mem_Data[] и для визуализации
-////////////////////////////////////////////////////////////////////////////////
-//
-// установим флаг единократного выполнения SET .................................
-//
- Mem_Instruction[i_Set].fExecOut = true; // установили флаг единичного выполнения
- mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали это в таблице SG_Sets
-//
- t_printf( "-I- %s(){1}: инструкция #%d [%s] выполнена (%s) -I-",
-            __FUNC__, i_Set, Line_Set(i_Set, 1), Get_Time_asLine());
-//
-////////////////////////////////////////////////////////////////////////////////
-// установим флаг ГОТОВ у ВСЕХ операндов, совпадающих по имени с адресом aResult в пуле инструкций Mem_Sets[i_set]
-//
- strcpy(strInfoLine, "\0"); // очистим strInfoLine
-//
-////////////////////////////////////////////////////////////////////////////////
- for( INT i=0; i<Really_Set; i++ ) // по всему пулу инструкций в Mem_Instruction[]
- {
-  strcpy( Set, Mem_Instruction[i].Set ); // ... так удобнее для дальнейшей работы !
-//
-  if( is_SET( Set ) ) // это инструкция SET - не обрабатываем ! ---------------
-   continue;
-//
-  strcpy( aPredicat, Mem_Instruction[i].aPredicat ); // будем работать с aPredicat, не изменяя Mem_Instruction[i].aPredicat
-//
-  isPredicat = is_Predicat( Set ); // TRUE, если ЗАВИСИМЫЙ оператор - ПРЕДИКАТ
-//
-//--- проверяем, начинается ли имя флага ПРЕДИКАТА с '!' или '~' ...............
-  if ( !isPredicat ) // это инструкция - НЕ ПРЕДИКАТ...
-   flagNot = ( aPredicat[0] == symbolNot_1 || aPredicat[0] == symbolNot_2 )
-             ? true : false; // TRUE, если в поле aPredicat первый символ '!' или '~' (отрицание)
-//
-//--- проверяем, совпадает ли имя возврашённой переменной с именем -------------
-//--- переменной в поле предиката ЗАВИСИМОЙ инструкции -------------------------
-  flagPredicat = false;  // начальная установка
-  if( !isPredicat &&  // ЗАВИСИМАЯ инструкция - НЕ ПРЕДИКАТ
-       strcmp( aPredicat, trueLowerCase  ) && // "и" это НЕ статический true
-       strcmp( aPredicat, falseLowerCase ) )  // "и" это НЕ статический false
-   if( (  flagNot && !strcmp( &aPredicat[1], aResult ) ) || // имя флага предиката НАЧИНАЕТСЯ с '!' или '~' (отрицание значения ФЛАГА-ПРЕДИКАТА)
-       ( !flagNot && !strcmp(  aPredicat,    aResult ) ) ) // имя флага предиката НЕ НАЧИНАЕТСЯ с '!' или '~' (нет отрицания значения ФЛАГА-ПРЕДИКАТА)
-    flagPredicat = true;
-//
-//--- теперь определяем значение Result на true или false и окончательно -------
-//--- (с учётом статических true/false) устанавливаем flagPredicatTrue ---------
-//
-  flagPredicat_TRUE = false; // начальная установка
-  if( flagPredicat ) // переменная-предиктор определена, но значение ещё неизвестно
-   if( ( flagNot && !Result ) || // имя начинается с '!' или '~' и Result==FALSE
-      ( !flagNot &&  Result ) ) // имя Не начинается с '!' или '~' и Result==TRUE
-    flagPredicat_TRUE = true;
-//
-//--- отдельно обрабатываем статический true или false -------------------------
-  if( !strcmp( aPredicat, trueLowerCase ) ) // если true...
-   flagPredicat_TRUE = true;
-  if( !strcmp( aPredicat, falseLowerCase ) ) // если false...
-   flagPredicat_TRUE = false;
-//
-  Ready_Op1 = MI_aOp1( i ) ; // флаг готовности операнда 2
-  Ready_Op2 = MI_aOp2( i ) ; // флаг готовности операнда 2
-//
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-  switch( Rule = 10 * Get_CountOperandsByInstruction( Set ) + isPredicat )
-  {
-////////////////////////////////////////////////////////////////////////////////
-   case 10: // один операнд; зависимый оператор - НЕ ПРЕДИКАТ + (возможно) flag-предикат
-//
-   do_1_Ops( i, Rule ) // обработка 1-го операнда (из 1-го в инструкции)
-//
-//----- если это НЕ ПРЕДИКАТНАЯ инструкция, надо ещё проверить истинность поля ПРЕДИКАТА
-   if( !flagPredicat &&
-        flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
-   if( !Mem_Instruction[i].fPredicat_TRUE ) // если не был установлен TRUE...
-    Mem_Instruction[i].fPredicat_TRUE = true; // установили флаг ПРЕДИКТОР_ИСТИНЕН
-//
-   if( MI_fOp1(i) && // первый операнд ГОТОВ...
-       flagPredicat_TRUE ) // ... и флаг предиката есть TRUE
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
-//
-   break; // конец Rule==10
-//
-////////////////////////////////////////////////////////////////////////////////
-   case 11:  // два операнда; зависимый оператор - ПРЕДИКАТ
-//
-   do_1_Ops( i, Rule ) // обработка 1-го операнда (из 1-го в инструкции)
-//
-// завИсимый оператор суть ПРЕДИКАТНЫй и для него не надо проверять ФЛАГ ПРЕДИКАТАфлаг предиката
-   if( MI_fOp1(i) ) // флаг готовности у 1-го операнда
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
-//
-   break; // конец Rule==11
-//
-////////////////////////////////////////////////////////////////////////////////
-   case 20: // два операнда; хависимый оператор - НЕ ПРЕДИКАТ + (возможно) flag-предикат
-////////////////////////////////////////////////////////////////////////////////
-//
-   do_2_Ops( i, Rule ) // обработка 2-х операндов (из 2-х в инструкции)
-//
-//----- если эта инструкция-НЕ ПРЕДИКАТ, надо проверить флаг (и его значение) поля предиктора
-   if( !flagPredicat && // это инструкция НЕ ПРЕДИКАТ
-        flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
-   if( !Mem_Instruction[i].fPredicat_TRUE ) // если не был установлен TRUE...
-    Mem_Instruction[i].fPredicat_TRUE = true; // установили флаг ПРЕДИКТОР_ИСТИНЕН
-//
-   if( MI_fOp1(i) && MI_fOp2(i) && // флагт готовности у 1-го и 2-го операндов
-       flagPredicat_TRUE ) // НЕ ПРЕДИКАТНЫЙ оператор выполняется только при значении ФЛАГА ПРЕДИКАТА = true
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
-//
-   break; // конец Rule==20
-//
-////////////////////////////////////////////////////////////////////////////////
-   case 21: // два операнда; зависимый оператор -  ПРЕДИКАТ
-//
-   do_2_Ops( i, Rule ) // обработка 2-х операндов (из 2-х в инструкции)
-//
-// завИсимый оператор суть ПРЕДИКАТНЫй и для него не надо проверять ФЛАГ ПРЕДИКАТА
-   if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
-//
-   break; // конец Rule==21
-//
-////////////////////////////////////////////////////////////////////////////////
-   default: break; // других Rule не бывает ------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-//
-  } // конец switch по Rule для i-того оператора -------------------------------
-//
-////////////////////////////////////////////////////////////////////////////////
-//
-   mS->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
-//
-  } // конец for( INT i=0; i<Really_Set; i++ ) ---------------------------------
-//  
-////////////////////////////////////////////////////////////////////////////////
-//
-  Draw_AllTableInstructions(); // выделение ячеек цветом (будет вызываться при выполнении каждого SET'a )
-//
-  if( strlen(strInfoLine) ) // если в strInfoLine что-то заносилось...
-   t_printf( "-I- %s(){2}: по выполнению инструкции #%d установлены флаги готовности операндов у инструкций: %s -I-",
-              __FUNC__, i_Set, strInfoLine);
-//
-////////////////////////////////////////////////////////////////////////////////
- Already_Exec ++ ; // число уже исполненных инструкций
-//
- AttemptExecMaxInstructions_fromBuffer(); // пытаемся выполнить как можно больше ГКВ-инструкций из буфера
-// для фактического выполнения инструкций из AttemptExecMaxInstructions_fromBuffer()
-// вызывается ExecuteInstructions_Except_SET( i_Set )
-//
- Vizu_Flow_Exec(); // визуализация процента исполненных инструкций
-//
-} // ----- конец Finalize_Only_SET ---------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 void __fastcall // вызывается для завершения выполнения инструкции на АИУ i_Proc
 Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 { // устанавливаются флаги готовности у входных операндов иных инструкций, зависящих
 // по входным операндам от результата выполнения данной на АИУ номер i_Proc
- char Set[_SET_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0", // поле предиката
-      strInfoLine[_4096]="\0", tmp[_256]="\0";
+ char Set[_SET_LEN],
+      aResult[_ID_LEN],
+      aPredicat[_ID_LEN], // поле предиката
+      str[_4096], tmp[_256];
  bool s_isPredicat, // TRUE, если ВЫПОЛНИВШИЙСЯ оператор есть ПРЕДИКАТ
       isPredicat, // TRUE, если ЗАВИСИМЫЙ оператор ПРЕДИКАТ
       flagNot, // TRUE, если в ЗАВИСИМОМ операторе первый символ имени флага предиката "!" или "~"
       flagPredicat, // TRUE, если в имени ЗАВИСИМОГО оператора есть переменная (XXX или !XXX)
       flagPredicat_TRUE, // TRUE, если в ЗАВИСИМОМ операторе флаг предиката TRUE (с учётом isNot)
       Ready_Op1,Ready_Op2 ; // совпадение имён операндов в ЗАВИСИМОМ операторе с именем результата в ВЫПОЛНИВШЕМСЯ
-  int Rule; //управляющая переменная в переключателу switch()
 //
  if( !Regim ) // не выполнять - закончить счет ---------------------------------
   return;
 //
- INT i_Set = Mem_Proc[i_Proc].i_Set; // на этом АИУ выполнялась инструкция номер i_Set
+ int i_Set = Mem_Proc[i_Proc].i_Set; // на этом АИУ выполнялась инструкция номер i_Set
 //
  REAL Result = Mem_Proc[i_Proc].Result; // значение результата выполненной операции
 //
@@ -6101,22 +5891,22 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 ////////////////////////////////////////////////////////////////////////////////
  Add_toData( i_Set, Mem_Proc[i_Proc].aResult, Result ); // добавить результат выполнившейся инструкции
 ////////////////////////////////////////////////////////////////////////////////
- t_printf( "-I- %s(){1}: АИУ #%d выполнило инструкцию #%d [%s] [%d/%d/%d тактов] -I-",
-            __FUNC__, i_Proc, i_Set, Line_Set(i_Set, 1),
-            Mem_Proc[i_Proc].tick_Start, localTick, localTick - Mem_Proc[i_Proc].tick_Start);
+ t_printf( "-I- %s(){1}: АИУ номер %d выполнило инструкцию #%d [%s] [%d/%d/%d тактов] -I-",
+                  __FUNC__, i_Proc, i_Set, Line_Set(i_Set, 1),
+                  Mem_Proc[i_Proc].tick_Start, localTick, localTick - Mem_Proc[i_Proc].tick_Start);
 //
  Vizu_Data(); // визуализировать...
 //
 ////////////////////////////////////////////////////////////////////////////////
 // добавили запись в набор строк Tpr для анализа загруженности АИУ...........
- snprintf(strInfoLine,sizeof(strInfoLine), "%10d%10d%10d%10d%10d [%s]",
+ snprintf(str,sizeof(str), "%10d%10d%10d%10d%10d [%s]",
           i_Proc, Mem_Proc[i_Proc].tick_Start, localTick, localTick - Mem_Proc[i_Proc].tick_Start,
           i_Set, Line_Set(i_Set, 1));
- mTpr->Add(strInfoLine); // добавили строку в список Tpr
+ mTpr->Add(str); // добавили строку
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- strcpy(strInfoLine, "\0"); // очистим strInfoLine
+ strcpy(str, ""); // очистим str
 //
 //==============================================================================
  for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям из Mem_Instruction[]
@@ -6135,35 +5925,41 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-//--- проверяем, начинается ли имя переменной предиката с '!' или '~'
-  if ( !isPredicat ) // это инструкция - НЕ предикат
-   flagNot = ( aPredicat[0]==symbolNot_1 || aPredicat[0]==symbolNot_2 )
-               ? true : false; // TRUE, если в поле aPredicat первый символ '!' или '~'
+//--- проверяем, начинается ли имя переменной предиктора с '!' или '~'
+  if ( !isPredicat ) // это инструкция - НЕ предиктор
+   flagNot = ( aPredicat[0] == symbolNot_1 || aPredicat[0] == symbolNot_2 )
+               ? TRUE : FALSE; // TRUE, если в поле aPredicat первый символ '!' или '~'
 //
 //--- проверяем, совпадает ли имя возврашённой переменной с именем -------------
-//--- переменной в поле предиката i-той инструкции -----------------------------
-  flagPredicat = false;  // начальная установка
-  if( !isPredicat &&  // ЗАВИСИМАЯ инструкция - НЕ ПРЕДИКАТ
-       strcmp( aPredicat, trueLowerCase  ) && // "и" это НЕ статический true
-       strcmp( aPredicat, falseLowerCase ) )  // "и" это НЕ статический false
-   if( (  flagNot && !strcmp( &aPredicat[1], aResult ) ) || // имя флага предиката НАЧИНАЕТСЯ с '!' или '~' (отрицание значения ФЛАГА-ПРЕДИКАТА)
-       ( !flagNot && !strcmp(  aPredicat,    aResult ) ) ) // имя флага предиката НЕ НАЧИНАЕТСЯ с '!' или '~' (нет отрицания значения ФЛАГА-ПРЕДИКАТА)
-    flagPredicat = true;
+//--- переменной в поле предиктора i-той инструкции ----------------------------
+  flagPredicat = FALSE;  // начальная установка
+  if( !isPredicat &&  // это инструкция - НЕ предиктор
+      strcmp( aPredicat, trueLowerCase  ) && // И это НЕ статический true
+      strcmp( aPredicat, falseLowerCase ) )  // И это НЕ статический false
+  {
+   if( flagNot ) // имя начинается с '!' или '~'
+    if( !strcmp( &aPredicat[1],aResult ) )  // начиная со второго символа...
+     flagPredicat = TRUE;
+//
+   if( !flagNot ) // имя Не начинается с '!' или '~'
+    if( !strcmp( aPredicat,aResult ) )
+     flagPredicat = TRUE;
+  }
 //
 //--- теперь определяем значение Result на true или false и окончательно -------
-//--- (с учётом статических true/false) устанавливаем flagPredicat_TRUE --------
+//--- (с учётом статических true/false) устанавливаем flagPredicatTrue ---------
 //
-  flagPredicat_TRUE = false; // начальная установка
-  if( flagPredicat ) // переменная-предикат определена, но значение ещё неизвестно
+  flagPredicat_TRUE = FALSE; // начальная установка
+  if( flagPredicat ) // переменная-предиктор определена, но значение ещё неизвестно
    if( ( flagNot  && !Result ) || // имя начинается с '!' или '~' и Result==FALSE
-       ( !flagNot &&  Result ) ) // имя НЕ начинается с '!' или '~' и Result==TRUE
-    flagPredicat_TRUE = true;
+       ( !flagNot &&  Result ) ) // имя Не начинается с '!' или '~' и Result==TRUE
+    flagPredicat_TRUE = TRUE;
 //
 //--- отдельно обрабатываем статический true или false -------------------------
   if( !strcmp( aPredicat, trueLowerCase ) ) // если true...
-   flagPredicat_TRUE = true;
-  if( !strcmp( aPredicat, falseLowerCase ) ) // если false...
-   flagPredicat_TRUE = false;
+   flagPredicat_TRUE = TRUE;
+  if( !strcmp( aPredicat,falseLowerCase ) ) // если false...
+   flagPredicat_TRUE = FALSE;
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -6176,133 +5972,219 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
   Ready_Op2 = MI_aOp2( i ) ; // флаг готовности операнда 2
 //
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //
-  switch( Rule = 100 * Get_CountOperandsByInstruction( Set ) + 10 * s_isPredicat + isPredicat )
+  switch( Get_CountOperandsByInstruction( Set ) ) // !!! число входных операндов инструкции Set
   {
 ////////////////////////////////////////////////////////////////////////////////
-   case 100: // один операнд; выполнившийся оператор - НЕ ПРЕДИКАИ; зависимый оператор - НЕ ПРЕДИКАТ + (возможно) flag-предикат
-//
-   do_1_Ops( i, Rule ) // обработка 1-го операнда (из 1-го в инструкции)
-//
+   case 1: // ----- один операнд + (возможно) предикат ------------------------
+////////////////////////////////////////////////////////////////////////////////
+// ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (1 операнд) ...
+   if( !s_isPredicat && !isPredicat ) // #100 **********************************
+   {
+    if( Ready_Op1 ) // 1-й операнд ГОТОВ
+    {
+     MI_fOp1(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-100- 1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+     snprintf(tmp,sizeof(tmp), " %d(-100- *|1)", i); strcat(str, tmp); // флаг ГОТОВ у инструкции
+    }
 //----- если это НЕ ПРЕДИКАТНАЯ инструкция, надо ещё проверить истинность поля ПРЕДИКАТА
-   if( !flagPredicat &&
-        flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
-    Mem_Instruction[i].fPredicat_TRUE = true; // установили ФЛАГ-ПРЕДИКАТ истинен
+    if( !flagPredicat &&
+         flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
+    {
+     Mem_Instruction[i].fPredicat_TRUE = TRUE; // установили флаг ПРЕДИКАЕ_ИСТИНЕН
+     snprintf(tmp,sizeof(tmp), " %d(-100- PredTRUE|1)", i); strcat(str, tmp); // флаг TRUE у предиката
+    }
 //
-   if( MI_fOp1(i) && // флаг готовности у 1-го операнда
-//       Mem_Instruction[i].fPredicat_TRUE ) // ... и флаг предиката есть TRUE
-       flagPredicat_TRUE ) // ... и флаг предиката есть TRUE
-    Add_toBuffer( i , Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+    if( MI_fOp1(i) && // флаг готовности у 1-го операнда
+        Mem_Instruction[i].fPredicat_TRUE ) // ... и флаг предиката есть TRUE
+     Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
 //
-   break; // конец Rule==100
-//
-////////////////////////////////////////////////////////////////////////////////
-   case 110: // один операнд; выполнившийся оператор - ПРЕДИКАT; зависимый оператор - НЕ ПРЕДИКАТ + (возможно) flag-предикат
-//
-   do_1_Ops( i, Rule ) // обработка 1-го операнда (из 1-го в инструкции)
-//
-   if( flagPredicat_TRUE )
-    Mem_Instruction[i].fPredicat_TRUE = true; // установим флаг-предикат
-//
-   if( MI_fOp1(i) && // флаг готовности 1-го операнда
-       Mem_Instruction[i].fPredicat_TRUE ) // ... и ФЛАГ-ПРЕДИКАТ есть TRUE
-    Add_toBuffer( i , Rule ); // добавить ГКВ-команду в буфер команд для исполнения
-//
-   break; // конец Rule==110
+   } // конец if( !s_isPredicat && !isPredicat )
 //
 ////////////////////////////////////////////////////////////////////////////////
-   case 111: // один операнд; выполнившийся оператор - ПРЕДИКАТ; зависимый оператор - ПРЕДИКАТ
+// ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (1 операнд) ...
+   if( s_isPredicat && !isPredicat ) // #110 ***********************************
+   {
+    if( flagPredicat_TRUE )
+     Mem_Instruction[i].fPredicat_TRUE = TRUE; // установим  флаг предиката
 //
-   do_1_Ops( i, Rule ) // обработка 1-го операнда (из 1-го в инструкции)
+    if( MI_fOp1(i) && // флаг готовности 1-го операнда
+        Mem_Instruction[i].fPredicat_TRUE ) // ... и флаг-предикат есть TRUE
+    {
+     snprintf(tmp,sizeof(tmp), " %d(-110- PredTRUE|1)", i); strcat(str, tmp); // флаг TRUE у предиката
+     Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+    }
+//
+   } // конец if( s_isPredicat && !isPredicat )
+//
+////////////////////////////////////////////////////////////////////////////////
+// ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (1 операнд) ...
+   if( s_isPredicat && isPredicat ) // #111 ************************************
+   {
+    if( Ready_Op1 ) // 1-й операнд ГОТОВ
+    {
+     MI_fOp1(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-111- Pred 1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+     snprintf(tmp,sizeof(tmp), " %d(-111- Pred *|1)", i); strcat(str, tmp); // флаг ГОТОВ у инструкции
+    }
 //
    if( MI_fOp1(i) ) // флаг готовности у 1-го операнда
-    Add_toBuffer( i , Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+    Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
 //
-   break; // конец Rule==111
-//
-////////////////////////////////////////////////////////////////////////////////
-   case 200: // два операнда; выполнившийся оператор - НЕ ПРЕДИКАТ; зависимый оператор - НЕ ПРЕДИКАТ + (возможно) flag-предикат
-//
-   do_2_Ops( i, Rule ) // обработка 2-х операндов (из 2-х в инструкции)
-//
-//----- если эта инструкция НЕ ПРЕДИКАТ, надо проверить флаг (и его значение) поля предиката
-   if( !flagPredicat && // это инструкция НЕ ПРЕДИКАТ
-        flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
-    Mem_Instruction[i].fPredicat_TRUE = true; // установили флаг ПРЕДИКAТ_ИСТИНЕН
-//
-   if( MI_fOp1(i) && MI_fOp2(i) && // флаги готовности у 1-го и 2-го операндов
-       Mem_Instruction[i].fPredicat_TRUE ) // ... и флаг предиката есть TRUE
-    Add_toBuffer( i , Rule ); // добавить ГКВ-команду в буфер команд для исполнения
-//
-   break; // конец Rule==200
+   }  // конец if( s_isPredicat && isPredicat )
 //
 ////////////////////////////////////////////////////////////////////////////////
-   case 201: // два операнда; выполнившийся оператор - НЕ ПРЕДИКАТ; зависимый оператор - ПРЕДИКАТ
+   break; // конец обработки оператора с одним операндом + возможно, предиктор
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+   case 2: // ----- два операнда + (возможно) предикат ------------------------
+////////////////////////////////////////////////////////////////////////////////
+// ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (2 операнда) ...
+   if( !s_isPredicat && !isPredicat ) // #200 **********************************
+   {
+    if( Ready_Op1 ) // 1-й операнд ГОТОВ
+    {
+     MI_fOp1(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-200- 1|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    }
 //
-   do_2_Ops( i, Rule ) // обработка 2-х операндов (из 2-х в инструкции)
+    if( Ready_Op2 ) // 2-й операнд ГОТОВ
+    {
+     MI_fOp2(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-200- 2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    }
 //
-   if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
-    Add_toBuffer( i , Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+    if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
+    { snprintf(tmp,sizeof(tmp), " %d(-200- *|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
 //
-   break; // конец Rule==201
+//----- если эта инструкция-НЕ ПРЕДИКАТ, надо проверить флаг (и его значение) поля предиката
+    if( !flagPredicat && // это инструкция НЕ ПРЕДИКАТ
+         flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
+    {
+     Mem_Instruction[i].fPredicat_TRUE = TRUE; // установили флаг ПРЕДИКAТ_ИСТИНЕН
+     snprintf(tmp,sizeof(tmp), " %d(-200- PredTRUE|2)", i); strcat(str, tmp); // флаг TRUE предиката
+    }
+//
+    if( MI_fOp1(i) && MI_fOp2(i) && // флаги готовности у 1-го и 2-го операндов
+        Mem_Instruction[i].fPredicat_TRUE ) // ... и флаг предиката есть TRUE
+     Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+//
+   } // конец if( !s_isPredicat && !isPredicat )
 //
 ////////////////////////////////////////////////////////////////////////////////
-   case 210: // два операнда; выполнившийся оператор - ПРЕДИКАТ; зависимый оператор - НЕ ПРЕДИКАТ + возможно, флаг-предикат
+// ----- ВЫПОЛНИВШИЙСЯ оператор - НЕ ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (2 операнда) ...
+   if( !s_isPredicat && isPredicat ) // #201 ***********************************
+   {
+    if( Ready_Op1 ) // 1-й операнд ГОТОВ
+    {
+     MI_fOp1(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-201- 1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    }
 //
-   do_2_Ops( i, Rule ) // обработка 2-х операндов (из 2-х в инструкции)
+    if( Ready_Op2 ) // 2-й операнд ГОТОВ
+    {
+     MI_fOp2(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-201- 2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+    }
 //
-   if( flagPredicat_TRUE )
-    Mem_Instruction[i].fPredicat_TRUE = true; // установим  флаг предиката
+    if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
+    { snprintf(tmp,sizeof(tmp), " %d(-201- *|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
 //
-   if( MI_fOp1(i) && MI_fOp2(i) &&  // по флагам готовности 1-й и 2-й операнды ГОТОВЫ
-       Mem_Instruction[i].fPredicat_TRUE ) // ... и флаг предиката есть TRUE
-    Add_toBuffer( i , Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+    if( MI_fOp1(i) && MI_fOp1(i) ) // флаги готовности у 1-го и 2-го операндов
+     Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
 //
-   break; // конец Rule==210
+   } // конец if( !s_isPredicat && isPredicat )
+//
+////////////////////////////////////////////////////////////////////////////////
+// ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - НЕ ПРЕДИКАТ (2 операнда) ...
+   if( s_isPredicat && !isPredicat ) // #210 ***********************************
+   {
+    if( Ready_Op1 ) // 1-й операнд ГОТОВ
+    {
+     MI_fOp1(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-210- 1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    }
+//
+    if( Ready_Op2 ) // 2-й операнд ГОТОВ
+    {
+     MI_fOp2(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-210- 2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+    }
+//
+    if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
+    { snprintf(tmp,sizeof(tmp), " %d(-210- *|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
+//
+    if( flagPredicat_TRUE )
+     Mem_Instruction[i].fPredicat_TRUE = TRUE; // установим  флаг предиката
+//
+    if( MI_fOp1(i) && MI_fOp2(i) &&  // по флагам готовности 1-й и 2-й операнды ГОТОВЫ
+        Mem_Instruction[i].fPredicat_TRUE ) // ... и флаг предиката есть TRUE
+    {
+     snprintf(tmp,sizeof(tmp), " %d(-210- PredTRUE|2)", i); strcat(str, tmp); // флаг TRUE у предиката
+     Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+    }
+//
+   } // конец if( s_isPredicat && !isPredicat )
 //
 ////////////////////////////////////////////////////////////////////////////////
 // ----- ВЫПОЛНИВШИЙСЯ оператор - ПРЕДИКАТ && ЗАВИСИМЫЙ оператор - ПРЕДИКАТ (2 операнда) ...
-   case 211: // два операнда; выполнившийся оператор - ПРЕДИКАТ; зависимый оператор - ПРЕДИКАТ
+   if( s_isPredicat && isPredicat ) // #211 ************************************
+   {
+    if( Ready_Op1 ) // 1-й операнд ГОТОВ
+    {
+     MI_fOp1(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-211- Pred 1|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    }
 //
-   do_2_Ops( i, Rule ) // обработка 2-х операндов
+    if( Ready_Op2 ) // 2-й операнд ГОТОВ
+    {
+     MI_fOp2(i) = TRUE;
+     snprintf(tmp,sizeof(tmp), " %d(-211- Pred 2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+    }
 //
-   if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+    if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
+    {
+     snprintf(tmp,sizeof(tmp), " %d(-211- Pred *|2)", i); strcat(str, tmp); // готов весь оператор !..
+     Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+    }
 //
-   break; // конец Rule==211
+   }  // конец if( s_isPredicat && isPredicat )
 //
 ////////////////////////////////////////////////////////////////////////////////
-   default: break; // других Rule не бывает ------------------------------------
+   break; // конец обработки оператора с двумя операндами + возможно, предикат
 ////////////////////////////////////////////////////////////////////////////////
+   default: break; // кроме 1 или 2 операнда у оператора ничего не бывает
 //
-  } // конец switch по Rule для i-того оператора -------------------------------
+   } // конец switch по числу операндов у i-того оператора ---------------------
 //
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 //
    mS->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ инструкций
 //
-  } // конец for( INT i=0; i<Really_Set; i++ ) ---------------------------------
-//
+  } // конец for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям из Mem_Instruction[]
 ////////////////////////////////////////////////////////////////////////////////
 //
- if(strlen(strInfoLine)) // если в strInfoLine что-то записывалось...
+ Draw_AllTableInstructions(); // выделение ячеек цветом
+//
+ if(strlen(str)) // если в str что-то записывалось...
   t_printf( "-I- %s(){2}: по выполнению инструкции #%d/%d установлены флаги готовности операндов у инструкций: %s -I-",
-             __FUNC__, i_Set, i_Proc, strInfoLine);
+             __FUNC__, i_Set, i_Proc, str);
 //
 ////////////////////////////////////////////////////////////////////////////////
 // устанавливаем флаг однократного выполнения инструкции .......................
- Mem_Instruction[i_Set].fExecOut = true; // установили флаг ИНСТРУКЦИЯ_ИСПОЛЬЗОВАНА
+ Mem_Instruction[i_Set].fExecOut = TRUE; // установили флаг ИНСТРУКЦИЯ_ИСПОЛЬЗОВАНА
 // снимаем флаг ИНСТРУКЦИЯ_ВЫПОЛНЯЕТСЯ
- Mem_Instruction[i_Set].fExec    = false; // сняли флаг ИНСТРУКЦИЯ_ВЫПОЛНЯЕТСЯ
-//
- Draw_AllTableInstructions(); // выделение ячеек цветом (после .fExecOut ...)
-//
+ Mem_Instruction[i_Set].fExec    = FALSE; // сняли флаг ИНСТРУКЦИЯ_ВЫПОЛНЯЕТСЯ
 ////////////////////////////////////////////////////////////////////////////////
 //
- Mem_Proc[i_Proc].Busy = false; // АИУ номер i_Proc теперь СВОБОДНО !!! --------
+ Mem_Proc[i_Proc].Busy = FALSE; // АИУ номер i_Proc теперь СВОБОДНО !!!
 //
- t_printf( "-I- %s(){3}: АИУ #%d освобождено (%s) после выполнения инструкции #%d -I-",
-           __FUNC__, i_Proc, Get_Time_asLine(), i_Set);
+ t_printf( "-I- %s(){3}: АИУ номер %d освобождено (%s) после выполнения инструкции #%d -I-",
+                  __FUNC__, i_Proc, Get_Time_asLine(), i_Set);
 //
  Free_Proc ++ ; // число свободных АИУ увеличили на 1 ==========================
 //
@@ -6323,7 +6205,258 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 } // --- конец Finalize_Except_SET ---------------------------------------------
 
 
-
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall
+Finalize_Only_SET( INT i_Set )
+{ // выполнение инструкции SET номер i_Set !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// предполагается, что это мгновенно (время учитывать не надо)..................
+// инструкция SET выполняется НЕ ПРОЦЕССОРОМ, а ВХОДНЫМ коммуникатором !!!
+ char Set[_SET_LEN],
+      aResult[_ID_LEN],
+      aPredicat[_ID_LEN], // поле предиката
+      str[_4096], tmp[_512];
+ bool s_isPredicat, // TRUE, если ВЫПОЛНИВШИЙСЯ оператор есть ПРЕДИКАТ
+      isPredicat, // TRUE, если ЗАВИСИМЫЙ оператор ПРЕДИКАТ
+      flagNot, // TRUE, если в ЗАВИСИМОМ операторе первый символ имени флага предиката "!" или "~"
+      flagPredicat, // TRUE, если в имени ЗАВИСИМОГО оператора есть переменная (XXX или !XXX)
+      flagPredicat_TRUE, // TRUE, если в ЗАВИСИМОМ операторе флаг предиката TRUE (с учётом isNot)
+      Ready_Op1,Ready_Op2 ; // совпадение имён операндов в ЗАВИСИМОМ операторе с именем результата в ВЫПОЛНИВШЕМСЯ
+int Rule; //управляющая переменная в переключателу switch()
+//
+ if( !Regim ) // не выполнять - закончить счет ---------------------------------
+  return;
+//
+ REAL Result = StrToReal( Mem_Instruction[i_Set].aOp1, i_Set ); // запомнили значение 1-го операнда инструкции SET номер i_Set
+ strcpy( aResult, Mem_Instruction[i_Set].aResult ); // строка-адрес результата выполненного оператора
+//
+ Mem_Instruction[i_Set].fOp1 = TRUE; // у SET всегда готов!...
+//
+ s_isPredicat = FALSE; // is_Predicat( Mem_Instruction[i_Set].Set ); // у SET всегда FALSE
+//
+////////////////////////////////////////////////////////////////////////////////
+ Add_toData( i_Set, aResult, Result ); // добавим в Mem_Data[] и для визуализации
+////////////////////////////////////////////////////////////////////////////////
+//
+// установим флаг единократного выполнения SET .................................
+//
+ Mem_Instruction[i_Set].fExecOut = TRUE; // установили флаг единичного выполнения
+ mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали это в таблице SG_Sets
+//
+ t_printf( "-I- %s(){1}: инструкция #%d [%s] выполнена (%s) -I-",
+                  __FUNC__, i_Set, Line_Set(i_Set, 1), Get_Time_asLine());
+//
+////////////////////////////////////////////////////////////////////////////////
+// установим флаг ГОТОВ у ВСЕХ операндов, совпадающих по имени с адресом aResult в пуле инструкций Mem_Sets[i_set]
+//
+ strcpy(str, ""); // очистим str
+//
+////////////////////////////////////////////////////////////////////////////////
+ for( INT i=0; i<Really_Set; i++ ) // по всему пулу инструкций в Mem_Instruction[]
+ {
+  strcpy( Set, Mem_Instruction[i].Set ); // ... так удобнее для дальнейшей работы !
+//
+  if( is_SET( Set ) ) // это инструкция SET - не обрабатываем ! ---------------
+   continue;
+//
+  strcpy( aPredicat, Mem_Instruction[i].aPredicat ); // будем работать с aPredicat, не изменяя Mem_Instruction[i].aPredicat
+//
+  isPredicat = is_Predicat( Set ); // TRUE, если ЗАВИСИМЫЙ оператор - ПРЕДИКАТ
+//
+//--- проверяем, начинается ли имя флага ПРЕДИКАТА с '!' или '~' ...............
+  if ( !isPredicat ) // это инструкция - НЕ ПРЕДИКАТ...
+   flagNot = ( aPredicat[0] == symbolNot_1 || aPredicat[0] == symbolNot_2 )
+             ? TRUE : FALSE; // TRUE, если в поле aPredicat первый символ '!' или '~'
+//
+//--- проверяем, совпадает ли имя возврашённой переменной с именем -------------
+//--- переменной в поле предиката ЗАВИСИМОЙ инструкции -------------------------
+  flagPredicat = FALSE;  // начальная установка
+  if( !isPredicat &&  // ЗАВИСИМАЯ инструкция - НЕ ПРЕДИКАТ
+       strcmp( aPredicat, trueLowerCase  ) && // И это НЕ статический true
+       strcmp( aPredicat, falseLowerCase ) )  // И это НЕ статический false
+  {
+   if( flagNot ) // имя флага предиката НАЧИНАЕТСЯ с '!' или '~'
+    if( !strcmp( &aPredicat[1],aResult ) ) // начиная со второго символа...
+     flagPredicat = TRUE;
+//
+   if( !flagNot ) // имя флага предиката  НЕ НАЧИНАЕТСЯ с '!' или '~'
+    if( !strcmp( aPredicat,aResult ) )
+     flagPredicat = TRUE;
+  }
+//
+//--- теперь определяем значение Result на true или false и окончательно -------
+//--- (с учётом статических true/false) устанавливаем flagPredicatTrue ---------
+//
+  flagPredicat_TRUE = FALSE; // начальная установка
+  if( flagPredicat ) // переменная-предиктор определена, но значение ещё неизвестно
+   if( ( flagNot && !Result ) || // имя начинается с '!' или '~' и Result==FALSE
+      ( !flagNot &&  Result ) ) // имя Не начинается с '!' или '~' и Result==TRUE
+    flagPredicat_TRUE = TRUE;
+//
+//--- отдельно обрабатываем статический true или false -------------------------
+  if( !strcmp( aPredicat, trueLowerCase ) ) // если true...
+   flagPredicat_TRUE = TRUE;
+  if( !strcmp( aPredicat, falseLowerCase ) ) // если false...
+   flagPredicat_TRUE = FALSE;
+//
+  Ready_Op1 = MI_aOp1( i ) ; // флаг готовности операнда 2
+  Ready_Op2 = MI_aOp2( i ) ; // флаг готовности операнда 2
+//
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+  switch( Rule=10*Get_CountOperandsByInstruction( Set ) + isPredicat )
+  {
+////////////////////////////////////////////////////////////////////////////////
+   case 10: // один операнд; ависимый оператор - НЕ ПРЕДИКАТ + (возможно) flag-предикат
+//
+   if( Ready_Op1 ) // 1-й операнд ГОТОВ
+   {
+    MI_fOp1(i) = TRUE;
+    snprintf(tmp,sizeof(tmp), " %d(-10- 1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    snprintf(tmp,sizeof(tmp), " %d(-10- *|1)", i); strcat(str, tmp); // флаг ГОТОВ у инструкции
+   }
+//
+//----- если это НЕ ПРЕДИКАТНАЯ инструкция, надо ещё проверить истинность поля ПРЕДИКАТА
+   if( !flagPredicat &&
+        flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
+   {
+//  Mem_Instruction[i].fPredicat = TRUE; // установили флаг ПРЕДИКТОР_ГОТОВ
+    if( !Mem_Instruction[i].fPredicat_TRUE ) // если не был установлен TRUE...
+    {
+     Mem_Instruction[i].fPredicat_TRUE = true; // установили флаг ПРЕДИКТОР_ИСТИНЕН
+//     snprintf(tmp,sizeof(tmp), " %d(PredTRUE|1)", i); strcat(str, tmp); // флаг TRUE предиктора
+    }
+//
+   }
+//
+   if( MI_fOp1(i) && // первый операнд ГОТОВ...
+       flagPredicat_TRUE ) // ... и флаг предиката есть TRUE
+    Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+//
+   break; // конец Rule==10
+//
+////////////////////////////////////////////////////////////////////////////////
+   case 11:  // два операнда; зависимый оператор - ПРЕДИКАТ + (возможно) flag-предикат
+//
+   if( Ready_Op1 ) // 1-й операнд ГОТОВ
+   {
+    MI_fOp1(i) = TRUE;
+    snprintf(tmp,sizeof(tmp), " %d(-11- Pred 1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    snprintf(tmp,sizeof(tmp), " %d(-11- Pred *|1)", i); strcat(str, tmp); // флаг ГОТОВ у инструкции
+   }
+//
+//----- если это НЕ ПРЕДИКАТНАЯ инструкция, надо ещё проверить истинность поля ПРЕДИКАТА
+   if( !flagPredicat &&
+        flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
+   {
+//  Mem_Instruction[i].fPredicat = TRUE; // установили флаг ПРЕДИКТОР_ГОТОВ
+    if( !Mem_Instruction[i].fPredicat_TRUE ) // если не был установлен TRUE...
+    {
+     Mem_Instruction[i].fPredicat_TRUE = true; // установили флаг ПРЕДИКТОР_ИСТИНЕН
+//     snprintf(tmp,sizeof(tmp), " %d(PredTRUE|1)", i); strcat(str, tmp); // флаг TRUE предиктора
+    }
+//
+   }
+//
+   if( MI_fOp1(i) && // первый операнд ГОТОВ...
+       flagPredicat_TRUE ) // ... и флаг предиката есть TRUE
+    Add_toBuffer( i ); // добавить ГКВ-команду в буфер команд для исполнения
+//
+   break; // конец Rule==11
+//
+////////////////////////////////////////////////////////////////////////////////
+   case 20: // два операнда; хависимый оператор - НЕ ПРЕДИКАТ + (возможно) flag-предикат
+////////////////////////////////////////////////////////////////////////////////
+//
+   if( Ready_Op1 ) // 1-й операнд ГОТОВ
+   {
+    MI_fOp1(i) = TRUE;
+    snprintf(tmp,sizeof(tmp), " %d(-20- 1|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+   }
+//
+   if( Ready_Op2 ) // 2-й операнд ГОТОВ
+   {
+    MI_fOp2(i) = TRUE;
+    snprintf(tmp,sizeof(tmp), " %d(-20- 2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+//
+    if( MI_fOp1(i) && MI_fOp2(i) ) // флаги готовности у 1-го и 2-го операндов
+    { snprintf(tmp,sizeof(tmp), " %d(-20- *|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
+//
+   }
+//
+//----- если эта инструкция-НЕ ПРЕДИКАТ, надо проверить флаг (и его значение) поля предиктора
+   if( !flagPredicat && // это инструкция НЕ ПРЕДИКАТ
+        flagPredicat_TRUE ) // значение флага ПРЕДИКАТА
+   {
+//   Mem_Instruction[i].fPredicat = TRUE; // установили флаг ПРЕДИКТОР_ГОТОВ
+    if( !Mem_Instruction[i].fPredicat_TRUE ) // если не был установлен TRUE...
+    { // если был установлен TRUE - не надо ЗАНОВО ПЕРЕУСТАНАВЛИВАТЬ ..!
+     Mem_Instruction[i].fPredicat_TRUE = true; // установили флаг ПРЕДИКТОР_ИСТИНЕН
+//       snprintf(tmp,sizeof(tmp), " %d(PredTRUE|1)", i); strcat(str, tmp); // флаг TRUE предиктора
+    }
+//
+   }
+//
+   if( MI_fOp1(i) && MI_fOp2(i) && // флагт готовности у 1-го и 2-го операндов
+       flagPredicat_TRUE ) // ... и флаг предиката есть TRUE
+    Add_toBuffer(i); // добавить ГКВ-команду в буфер команд для исполнения
+//
+   break; // конец Rule==20
+//
+////////////////////////////////////////////////////////////////////////////////
+   case 21: // два операнда; зависимый оператор -  ПРЕДИКАТ + (возможно) flag-предикат
+//
+   if( Ready_Op1 ) // 1-й операнд ГОТОВ
+   {
+    MI_fOp1(i) = TRUE;
+    snprintf(tmp,sizeof(tmp), " %d(-21- Pred 1|2)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+   }
+//
+   if( Ready_Op1 ) // 2-й операнд ГОТОВ
+   {
+    MI_fOp2(i) = TRUE;
+    snprintf(tmp,sizeof(tmp), " %d(-21- Pred 2|2)", i); strcat(str, tmp); // флаг ГОТОВ у 2-го операнда
+//
+    if( MI_fOp1(i) && MI_fOp2(i) ) // по флагам готовности 1-й и 2-й операнды готовы
+    { snprintf(tmp,sizeof(tmp), " %d(-21- Pred *|2)", i); strcat(str, tmp); } // флаг ГОТОВ у инструкции
+//
+   }
+//
+   if( MI_fOp1(i) && MI_fOp2(i) && // флаги готовности у 1-го и 2-го операндов
+       flagPredicat_TRUE ) // ... и флаг предиката есть TRUE
+    Add_toBuffer(i); // добавить ГКВ-команду в буфер команд для исполнения
+//
+   break; // конец Rule==21
+//
+   default: break; // конец по Rule
+////////////////////////////////////////////////////////////////////////////////
+//
+   } // конец switch по Rule у i-того оператора --------------------------------
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+   mS->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ФЛАГИ данной инструкции
+//
+  } // конец цикла по списку инструкций в Mem_Instruction[i] ...................
+////////////////////////////////////////////////////////////////////////////////
+//
+ Draw_AllTableInstructions(); // выделение ячеек цветом (будет вызываться при выполнении каждого SET'a )
+//
+  if( strlen(str) ) // если в str что-то заносилось...
+   t_printf( "-I- %s(){2}: по выполнению инструкции #%d установлены флаги готовности операндов у инструкций: %s -I-",
+                    __FUNC__, i_Set, str);
+//
+////////////////////////////////////////////////////////////////////////////////
+ Already_Exec ++ ; // число уже исполненных инструкций
+//
+ AttemptExecMaxInstructions_fromBuffer(); // пытаемся выполнить как можно больше ГКВ-инструкций из буфера
+// для фактического выполнения инструкций из AttemptExecMaxInstructions_fromBuffer()
+// вызывается ExecuteInstructions_Except_SET( i_Set )
+//
+ Vizu_Flow_Exec(); // визуализация процента исполненных инструкций
+//
+} // ----- конец Finalize_Only_SET ---------------------------------------------
 
 
 

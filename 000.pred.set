@@ -1,0 +1,34 @@
+; Поиск максимума в массиве с использование предикатов (выделены жирным)
+; используется алгоритм последовательного сравнения чисел в массиве
+;
+; файл MAX-1_MASS-8.PRED.SET
+;
+SET 112, m01 ; первый элемент массива
+SET 113, m02
+SET 129, m03
+SET 17, m04
+SET 13, m05
+SET 11, m06
+SET 9, m07
+SET 3, m08 ; последний элемент массива
+;
+PGE m02, m01,       Pred_1 ; 
+;PNT m01, Pred_1
+CPY m02, max_01-02,  Pred_1 ;
+CPY m01, max_01-02, !Pred_1 ; 
+;
+
+ADD m01,m02, aaa,  Pred_1
+SUB m01,m02, bbb, !Pred_1
+
+;PGE m03, max_01-02, IS_03_ge_max_01-02 ; IS_03_ge_max_01-02true if m03>=max_01-02
+;CPY m03, max_01-03, IS_03_ge_max_01-02 ; if m03 >= max_01-02
+;CPY max_01-02, max_01-03, !IS_03_ge_max_01-02 ; if m03 < max_01-02
+;
+;PGE m04, max_01-03, IS_04_ge_max_01-03 ; IS_04_ge_max_01-03true if m04>=max_01-03
+;CPY m04, max_01-04, IS_04_ge_max_01-03 ; if m04 >= max_01-03
+;CPY max_01-03, max_01-04, !IS_04_ge_max_01-03 ; if m04 < max_01-03
+;
+
+
+

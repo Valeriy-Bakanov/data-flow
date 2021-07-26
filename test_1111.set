@@ -1,0 +1,45 @@
+; Вычисление r = axb + a/c
+
+;
+MUL A,B, AB ; AB <- AxB
+DIV A,C, AC ; AC <- A/C
+;
+ADD AB,AC, R_1, false ; 
+SUB AB,AC, R_2, true ;
+NEG AB, ABNEG, false ;
+ABS AC, ACABS, true ;
+;
+DRE AC, AB, R_3,  Pred  ;
+DQU AB, AC, R_4, !Pred ;
+SIN AB, ABSIN, Pred ;
+COS AC, ACCOS, !Pred ;
+;
+SET -1, A ; -1 -> A
+SET 2, B ; 2 -> B
+SET 3, C ; 3 -> C
+;
+PLE AB,AC, Pred ; 
+PGE AB,AC, Pred_1 ; 
+PEQ A,C, Pred_2 ;
+PNE A,B, Pred_3 ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
