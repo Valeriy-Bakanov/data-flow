@@ -262,9 +262,11 @@ INT all_maxProcs, // всего участвующих в вычислениях АИУ
 if( Ready_Op1 ) { \
  MI_fOp1(i) = true; \
  snprintf(tmp,sizeof(tmp), " #%d/%d(1|2)", i,Rule); strcat(strInfoLine, tmp); } \
+/******************************/
 if( Ready_Op2 ) { \
  MI_fOp2(i) = true; \
  snprintf(tmp,sizeof(tmp), " #%d/%d(2|2)", i,Rule); strcat(strInfoLine, tmp); } \
+/******************************/
 if( MI_fOp1(i) && MI_fOp2(i) ) { \
  snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
 //
