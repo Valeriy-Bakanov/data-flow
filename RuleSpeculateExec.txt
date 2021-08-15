@@ -1,0 +1,100 @@
+
+fSpeculateExec; // при true инструкция вфыполняется, но результат теряется, иначе - записывается в Mem_Data[]
+bool SpeculateExec = false; // при true инструкция с Predicate=false выполнить, но результат не сохранять
+SpeculateExec  = tINI->ReadInteger(RWC.Sect18, RWC.Sect18_Var1, 0); // при true инструкция с Predicate=false выполнить, но результат не сохранять
+Mem_Instruction[i].fSpeculateExec = false;
+ for( ULI i=0; i<Really_Set; i++ ) // по всему пулу инструкций в Mem_Instruction[]
+ {
+  Mem_Instruction[i].fSpeculateExec = false ; // обычное (не спекулятивное) выполнение (исходное значение)
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+ if( SpeculateExec && Mem_Instruction[i_Set].fSpeculateExec ) // это спекулятивное выполнение..!
+  goto cont ; // обходим подготовку инструкций, зависящих от данной ( i_Set )
+//
+////////////////////////////////////////////////////////////////////////////////
+ Add_toData( i_Set, Mem_Proc[i_Proc].adrResult, Result ); // добавить результат выполнившейся инструкции
+////////////////////////////////////////////////////////////////////////////////
+..
+////////////////////////////////////////////////////////////////////////////////
+ } // конец по всем инструкциям for(UI i=0; i<Really_Set; i++)  ----------------
+////////////////////////////////////////////////////////////////////////////////
+//
+ if( strlen(str) ) // если в str что-то записывалось...
+  t_printf( "-I- %s(){2}: по выполнению инструкции #%d/%d установлены флаги готовности операндов у инструкций: %s -I-",
+                   __FUNC__, i_Set, i_Proc, str);
+////////////////////////////////////////////////////////////////////////////////
+//
+cont: // конец спекулятивного выполнения инсрукций =============================
+//
+// устанавливаем флаг однократного выполнения инструкции .......................
+ Mem_Instruction[i_Set].flagExecOut = true; // установили флаг ИНСТРУКЦИЯ_ИСПОЛЬЗОВАНА
+// снимаем флаг ИНСТРУКЦИЯ_ВЫПОЛНЯЕТСЯ
+ Mem_Instruction[i_Set].flagExec    = false; // сняли флаг ИНСТРУКЦИЯ_ВЫПОЛНЯЕТСЯ
+
+
+======================================================================================================
+
+
+    Mem_Instruction[i].flagSpeculateExec = ( SpeculateExec && !Mem_Instruction[i].fPredicat_TRUE ) ?
+                                             true : false ; // спекулятивное/нет выполнение
+//
+   if( MI_flagOp1(i) && MI_flagOp2(i) ) // флаг ГОТОВ у 1-го и 2-го операндов
+//    
+   Mem_Instruction[i].flagSpeculateExec = ( SpeculateExec && !flagPredicat_TRUE ) ?
+                                             true : false ; // спекулятивное/нет выполнение
+//
+   if( ( !SpeculateExec && Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
+           SpeculateExec ) // спекулятивное выполнение
+     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер инстр
+//
+
+
+===============================================================================================
+
+   if( Op1_Ready ) // если 1-й операнд ГОТОВ
+   {
+    MI_flagOp1(i) = true;
+    snprintf(tmp,sizeof(tmp), " %d(Pred 1|1)", i); strcat(str, tmp); // флаг ГОТОВ у 1-го операнда
+    snprintf(tmp,sizeof(tmp), " %d(Pred *|1)", i); strcat(str, tmp); // флаг ГОТОВ у инструкции
+//
+    Mem_Instruction[i].flagSpeculateExec = ( SpeculateExec && !flagPredicat_TRUE ) ?
+                                             true : false ; // спекулятивное/нет выполнение
+//
+    if( ( !SpeculateExec && fPredicat_TRUE ) || // стандартное выполнение
+           SpeculateExec ) // спекулятивное выполнение
+     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер
+   }
+
+
+
+kulagin@mirea
+
+Сегодня сосранья сделано фото кормящихся ослов. 
+4-й этаж 9-этажного дома в Щёлкино. 
+
+БукОлики, однако!..
+
+
+
+При желании ноут можно взять недорого:
+https://news.allcrimea.net/news/2021/8/9/nad-krymom-obedinilis-tsiklon-i-kaspiiskaya-depressiya-chego-zhdat-149421/
+https://avatars.mds.yandex.net/get-o-yandex/5288247/be1d932ac30e4c7be66e752e889be0c8/260x194
+https://o.yandex.ru/komputernaya-tehnika/offer/111449029920890880/
+
+https://o.yandex.ru/komputernaya-tehnika/noutbuki/?yclid=4608366074999126589&utm_source=yandex_direct&utm_medium=cpc&utm_campaign=460.objavlenija.smartbanner_59550352_place-rsya_geo-msk-r1_type-smartbanner-retargeting-inside-exp-pin-2&utm_content=4483418494_10355820394_adaptiv&pinned_offer_id=112907037044682752&region_id=28786
+
+
+Чуть ранее (2019) подсуетились бы - получили работающую железку.
+Подарил другу в Балашихе - пусть внук ломает!
+
+
+
+
+
+
+
+
+
+
+
+
