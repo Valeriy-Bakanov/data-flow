@@ -252,11 +252,11 @@ INT all_maxProcs, // всего участвующих в вычислениях АИУ
 #define SBM1 F1->SB->Panels->Items[1] // для вывода в Panels[1]
 #define SBM2 F1->SB->Panels->Items[2] // для вывода в Panels[2]
 //
-#define MI_aOp1(i) ( !strcmp(Mem_Instruction[i].aOp1,aResult) ) // проверка совпадения с aResult 1-го имени операнда i-той инструкции
-#define MI_aOp2(i) ( !strcmp(Mem_Instruction[i].aOp2,aResult) ) // ... 2-го операнда i-той инструкции
+#define MI_AOP1(i) ( !strcmp(Mem_Instruction[i].aOp1,aResult) ) // проверка совпадения с aResult 1-го имени операнда i-той инструкции
+#define MI_AOP2(i) ( !strcmp(Mem_Instruction[i].aOp2,aResult) ) // ... 2-го операнда i-той инструкции
 //
-#define MI_fOp1(i) ( Mem_Instruction[i].fOp1 ) // обращение к флагу готовности 1-го операнда i-той инструкции
-#define MI_fOp2(i) ( Mem_Instruction[i].fOp2 ) // ... 2-го операнда i-той инструкции
+#define MI_FOP1(i) ( Mem_Instruction[i].fOp1 ) // обращение к флагу готовности 1-го операнда i-той инструкции
+#define MI_FOP2(i) ( Mem_Instruction[i].fOp2 ) // ... 2-го операнда i-той инструкции
 //
 //------------------------------------------------------------------------------
 //
@@ -271,6 +271,7 @@ struct { // DrawColorExec (выделение ячеек цветом при выполнении программы)
  bool needDrawColors;
  TColor clReadyOperand, // RGB(255,153,255) цвет ячейки ОПЕРАНДЫ_ГОТОВЫ (салатовый)
         clTruePredicat, // RGB(128,255,0) ...ПРЕДИКАТ=TRUE (зелёный)
+        clSpeculateExec, // цвет результата СПЕКУЛЯТИВНОГО ВЫПОЛНЕНИЯ
         clExecSet; // RGB(255,51,153) ...ИНСТРУКЦИЯ_ВЫПОЛНИЛАСЬ (светло-красный)
 } DCE; // [DrawColorExec] выделение цветом в динамике выполнения
 //
@@ -292,7 +293,7 @@ struct { // Read-Write-Config (имена секций и значений файла конфигурации систем
       *Sect10, *Sect10_Var1,
       *Sect11, *Sect11_Var1,
       *Sect12, *Sect12_Var1,
-      *Sect13, *Sect13_Var1,*Sect13_Var2,*Sect13_Var3,*Sect13_Var4,
+      *Sect13, *Sect13_Var1,*Sect13_Var2,*Sect13_Var3,*Sect13_Var4,*Sect13_Var5,
       *Sect14, *Sect14_Var1,*Sect14_Var2,*Sect14_Var3,*Sect14_Var4,
       *Sect15, *Sect15_Var1,*Sect15_Var2,
       *Sect16, *Sect16_Var1,
@@ -323,7 +324,7 @@ struct { // Read-Write-Config (имена секций и значений файла конфигурации систем
  "WaitNextInstruction", // [12] через сколько тиков после конца выполнения инструкции можно считать, что программа закончеа
   "WaitTicks",
  "DrawColorExec", // [13] цвета ячеек при исполнении программы
-  "needDrawColors","clReadyOperand","clTruePredicat","clExecSet",
+  "needDrawColors","clReadyOperand","clTruePredicat","clExecSet","clSpeculateExec",
  "DrawColorTest", // [14] цвета ячеек при тестировании программы
   "clOperandOperation","clNonExecuted","clNonUsedResult","clNonDefOperands",
  "DrawColorGraph", // [15] начало и конец тела графика интенсивности вычислений
@@ -393,7 +394,7 @@ struct mi {
       aPredicat[_ID_LEN]; // адрес (строка) флага предиката операции
  bool fOp1,fOp2, // признак готовности 1-го и 2-го операндов
       fPredicat, // существование флага предиката ( true/false или переменная )
-      fPredicat_TRUE, // TRUE - истинность предиктора (инструкцию можно добавлять в буфер команд)
+      fPredicat_TRUE, // TRUE - истинность предиката (инструкцию можно добавлять в буфер команд)
       fSpeculateExec, // при TRUE инструкция выполняется, но результат теряется (режим Itanium)
       fExec,       // признак того (TRUE), что эта инструкция В ДАННЫЙ МОМЕНТ выполнятся
       fExecOut,    // признак исполнения инструкции (TRUE - исполнялась один раз)
@@ -1010,6 +1011,7 @@ void __fastcall Read_Config( int Rule)
  DCE.clReadyOperand     = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var2, RGB(255,153,255)); // цвет готовности операндов
  DCE.clTruePredicat     = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var3, RGB(128,255,  0)); // цвет состояния TRUE флага-предиката
  DCE.clExecSet          = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var4, RGB(255, 51,153)); // цвет выполнения  инструкции
+ DCE.clSpeculateExec    = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var5, RGB(192,192,192)); // цвет ячейки результата СПЕКУЛЯТИВНО выполненной инструкции 
 //
  DCT.clOperandOperation = tINI->ReadInteger(RWC.Sect14, RWC.Sect14_Var1, RGB(255,185,185)); // связь ОПЕРАНДЫ<->ОПЕРАЦИИ
  DCT.clNonExecuted      = tINI->ReadInteger(RWC.Sect14, RWC.Sect14_Var2, RGB(255,185,255)); // неисполненные инструкции
@@ -1060,8 +1062,9 @@ void __fastcall Write_Config()  // сохраняет данные в файл конфигурации
  tINI->WriteInteger(RWC.Sect13, RWC.Sect13_Var2, DCE.clReadyOperand); // цвет готовности операндов
  tINI->WriteInteger(RWC.Sect13, RWC.Sect13_Var3, DCE.clTruePredicat); // цвет состояния TRUE флага предиктора
  tINI->WriteInteger(RWC.Sect13, RWC.Sect13_Var4, DCE.clExecSet); // цвет выполнения  инструкции
+ tINI->WriteInteger(RWC.Sect13, RWC.Sect13_Var5, DCE.clSpeculateExec); // цвет ячейки результата СПЕКУЛЯТИВНО выполненной операции
 //
- tINI->WriteInteger(RWC.Sect14, RWC.Sect14_Var1, DCT.clOperandOperation); // связь ОПЕРАНДЫ<->ОПЕРАЦИИ
+ tINI->WriteInteger(RWC.Sect14, RWC.Sect14_Var1, DCT.clOperandOperation); // связь ОПЕРАНДЫ->ОПЕРАЦИИ
  tINI->WriteInteger(RWC.Sect14, RWC.Sect14_Var2, DCT.clNonExecuted); // неисполненные инструкции
  tINI->WriteInteger(RWC.Sect14, RWC.Sect14_Var3, DCT.clNonUsedResult); // неиспользованные результаты
  tINI->WriteInteger(RWC.Sect14, RWC.Sect14_Var4, DCT.clNonDefOperands); // неопределённые операнды
@@ -1622,13 +1625,13 @@ TF1::Mixed_Sets(TObject *Sender)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall // очищаем ВСЕ ФЛАГИ в Mem_Sets[]
+void __fastcall // очищаем ВСЕ ФЛАГИ в Mem_Instructions[]
 Install_All_Flags()
 {
  for( INT i=0; i<Really_Set; i++ ) // по всем инструкциям ... не все ОБНУЛЯЕМ !
  {
-  MI_fOp1(i) = false;
-  MI_fOp2(i) = false;
+  MI_FOP1(i) = false;
+  MI_FOP2(i) = false;
   Mem_Instruction[i].fPredicat      = false;
   Mem_Instruction[i].fPredicat_TRUE = false;
 //
@@ -2294,7 +2297,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  else
  if(!strcmp(Set, "SIN")) // это инструкция SIN
  {
-  Result = sin ( Op1 );
+  Result = sin ( Op1 ); // используеи стандартную функцию
  }
 // конец выполнения инструкции SIN .............................................
 //
@@ -2302,43 +2305,24 @@ ExecuteInstructions_Except_SET( INT i_Set )
  else
  if(!strcmp(Set, "COS")) // это инструкция COS
  {
-  Result = cos ( Op1 );
+  Result = cos ( Op1 ); // используеи стандартную функцию
  }
 // конец выполнения инструкции COS .............................................
 //
 ////////////////////////////////////////////////////////////////////////////////
  else
  if(!strcmp(Set, "ASN")) // это инструкция ASN
-
-  if( fabs ( Op1 ) <= 1.0 )
-   Result = asin ( Op1 );
-  else
   {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументе {%.*g}. Выборка инструкций остановлена... -E-",
-                 __FUNC__, Set, i_Set, ACC_REAL, Op1);
-   AddLineToProtocol(tmp);
-   Display_Error(tmp);
-   Code_Error = -6; // индикация ошибки вычисления arcSIN ---
-   return;
+   Result = asin ( Op1 ); // используеи стандартную функцию
   }
 // конец выполнения инструкции ASN .............................................
 //
 ////////////////////////////////////////////////////////////////////////////////
  else
  if(!strcmp(Set, "ACN")) // это инструкция ACN
-//
-  if( fabs ( Op1 ) <= 1.0 )
-   Result = acos ( Op1 );
-//
-  else
-  {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументе {%.*g}. Выборка инструкций остановлена... -E-",
-                 __FUNC__, Set, i_Set, ACC_REAL, Op1);
-   AddLineToProtocol(tmp);
-   Display_Error(tmp);
-   Code_Error = -7; // индикация ошибки вычисления arcCOS ---
-   return;
-  }
+ {
+   Result = acos ( Op1 ); // используеи стандартную функцию
+ }
 // конец выполнения инструкции ACN .............................................
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -2346,16 +2330,6 @@ ExecuteInstructions_Except_SET( INT i_Set )
  if(!strcmp(Set, "TAN")) // это инструкция TAN... какъ писАать частицу НЕ
 // в нашей солнечной стране? Фазиль Искандер, однако !..
   {
-   if( fabs ( Op1 ) > M_PI_2 - MIN_FLOAT ) // MIN_FLOAT ) // избегаем машинной бесконечности
-   {
-    snprintf(tmp,sizeof(tmp), "-W- %s(): инструкция %s (#%d) не может быть корректно выполнена при аргументе {%.*g}. Принято MAX значение... -W-",
-                  __FUNC__, Set,Set, i_Set, ACC_REAL, Op1);
-    AddLineToProtocol(tmp);
-    Display_Error(tmp);
-//
-    Result = ( Op1 > 0.0 ) ? MAX_FLOAT: -MAX_FLOAT; // (+) или (-) машинная бесконечность...
-   }
-   else
     Result = tan ( Op1 ); // использована стандартная функция
   }
 // конец выполнения инструкции TAN .............................................
@@ -2365,7 +2339,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  if(!strcmp(Set, "ATN")) // это инструкция ATN... какъ писаить частицу НЕ
 // в нашей солнечной стране? Фазиль Искандер, однако !..
   {
-   Result = atan ( Op1 ); // используеи стандартную ф-ю
+   Result = atan ( Op1 ); // используеи стандартную функцию
   }
 // конец выполнения инструкции ATN .............................................
 //
@@ -2495,7 +2469,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  else
  if(!strcmp(Set, "SNH")) // это инструкция SNH
  {
-  Result = sinh ( Op1 ); // используеи стандартную ф-ю
+  Result = sinh ( Op1 ); // используеи стандартную функцию
  }
 // конец выполнения инструкции SNH .............................................
 
@@ -2503,7 +2477,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  else
  if(!strcmp(Set, "CNH")) // это инструкция CNH
  {
-  Result = cosh ( Op1 );
+  Result = cosh ( Op1 ); // используеи стандартную функцию
  }
 // конец выполнения инструкции CNH .............................................
 //
@@ -2511,7 +2485,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  else
  if(!strcmp(Set, "TNH")) // это инструкция TNH
  {
-  Result = tanh ( Op1 ); // используеи стандартную ф-ю
+  Result = tanh ( Op1 ); // используеи стандартную функцию
  }
 // конец выполнения инструкции TNH .............................................
 
@@ -3155,23 +3129,23 @@ Calc_03_Param_Instruction( INT i_Set ) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set 
 //
    switch( Get_CountOperandsByInstruction(Mem_Instruction[i].Set) ) // по числу операндов инструкции i
     {
-     case 1: if( !MI_fOp1(i) && // первый входной операнд НЕ ГОТОВ "и"
-                  MI_aOp1(i) ) // aResult[i_Set] == aOp1[i]
+     case 1: if( !MI_FOP1(i) && // первый входной операнд НЕ ГОТОВ "и"
+                  MI_AOP1(i) ) // aResult[i_Set] == aOp1[i]
                Param ++;
              break;
 //
-     case 2: if( !MI_fOp1(i) && // первый входной операнд НЕ ГОТОВ "и"
-                  MI_fOp2(i) && // второй входной операнд ГОТОВ "и"
-                  MI_aOp1(i) )  // aResult[i_Set] == aOp1[i]
+     case 2: if( !MI_FOP1(i) && // первый входной операнд НЕ ГОТОВ "и"
+                  MI_FOP2(i) && // второй входной операнд ГОТОВ "и"
+                  MI_AOP1(i) )  // aResult[i_Set] == aOp1[i]
                Param ++ ;
 //
-             if(  MI_fOp1(i) && // первый входной операнд ГОТОВ "и"
-                 !MI_fOp2(i) && // второй входной операнд НЕ ГОТОВ "и"
-                  MI_aOp1(i) )  // aResult[i_Set] == aOp2[i]
+             if(  MI_FOP1(i) && // первый входной операнд ГОТОВ "и"
+                 !MI_FOP2(i) && // второй входной операнд НЕ ГОТОВ "и"
+                  MI_AOP1(i) )  // aResult[i_Set] == aOp2[i]
                Param ++ ;
 //
-             if( !MI_fOp1(i) && // первый входной операнд НЕ ГОТОВ "и"
-                 !MI_fOp2(i) )  // второй входной операнд НЕ ГОТОВ "и"
+             if( !MI_FOP1(i) && // первый входной операнд НЕ ГОТОВ "и"
+                 !MI_FOP2(i) )  // второй входной операнд НЕ ГОТОВ "и"
               if(!strcmp( Mem_Instruction[i].aOp1, aResult)) // aResult[i_Set] == aOp1[i]
                Param += 0.5 ;
               else
@@ -3389,13 +3363,13 @@ void __fastcall TF1::DrawNotUsedResults(TObject *Sender)
    n_Op = Get_CountOperandsByInstruction(Mem_Instruction[j].Set); // число операндов инструкции j
 //
    if( n_Op == 1 && // если ОДИН операнд... "И"
-       MI_aOp1(j) ) // aResult РАВЕН aOp1
+       MI_AOP1(j) ) // aResult РАВЕН aOp1
     goto end_i;
 //
    if( n_Op == 2 && // если ДВА операнда... "И"
        (
-        MI_aOp1(j) || // aResult РАВЕН aOp1 "ИЛИ"
-        MI_aOp2(j) // aResult РАВЕН aOp2
+        MI_AOP1(j) || // aResult РАВЕН aOp1 "ИЛИ"
+        MI_AOP2(j) // aResult РАВЕН aOp2
        )
      )
     goto end_i;
@@ -3514,7 +3488,7 @@ void __fastcall Draw_AllTableInstructions()
 //
  for( INT i=0; i<Really_Set; i++ ) // по всем строкам Mem_Instruction[]
  {
-  if( MI_fOp1(i) ) // если 1-й операнд ГОТОВ...
+  if( MI_FOP1(i) ) // если 1-й операнд ГОТОВ...
   {
    Sel_Cell[Really_Select].Col = 2; // столбец ОПЕРАНД-1
    Sel_Cell[Really_Select].Row = i + 1;
@@ -3522,7 +3496,7 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
 //
-  if( MI_fOp2(i) && // если 2-й операнд ГОТОВ...
+  if( MI_FOP2(i) && // если 2-й операнд ГОТОВ...
       Get_CountOperandsByInstruction( Mem_Instruction[i].Set ) == 2 ) // если два операнда у инструкции
   {
    Sel_Cell[Really_Select].Col = 3; // столбец ОПЕРАНД-2
@@ -3538,6 +3512,16 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select].clBackground = DCE.clExecSet,
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
+//
+/*
+  if( Mem_Instruction[i].fSpeculateExec)  // цвет ячейки результата СПЕКУЛЯТИВНО выполнившейся инсрукции
+  {
+   Sel_Cell[Really_Select].Col = 4; // столбец РЕЗУЛЬТАТ
+   Sel_Cell[Really_Select].Row = i + 1;
+   Sel_Cell[Really_Select].clBackground = DCE.clSpeculateExec,
+   Sel_Cell[Really_Select++].clSymbol   = clBlack;
+  }
+*/  
 //
   if( !is_PredicatOrSET( Mem_Instruction[i].Set ) && // это инструкция - НЕ ПРЕДИКАТ
        Mem_Instruction[i].fPredicat_TRUE ) // флаг предиката TRUE
@@ -5183,10 +5167,10 @@ int __fastcall Work_TimeSets_Protocol_AIU()
    ii_Set  = atoi( GetSubString(mTpr->Strings[ii_Op].c_str(),41,50) ); // номер выполняющегося на данном АИУ оператора
 //
    if( ( Get_CountOperandsByInstruction(Mem_Instruction[ii_Set].Set) == 1 && // всего один операнд...
-         MI_aOp1(ii_Set) ) ||
+         MI_AOP1(ii_Set) ) ||
        ( Get_CountOperandsByInstruction(Mem_Instruction[ii_Set].Set) == 2 && // два операнда...
-        (MI_aOp1(ii_Set) ||
-         MI_aOp2(ii_Set) ) ) )
+        (MI_AOP1(ii_Set) ||
+         MI_AOP2(ii_Set) ) ) )
     F3->Series1->NextTask->Value[i_Op] = ii_Op ; // ниточка связи бАров "i_Op <-> ii_Op"
 //
   }  // конец  for( ii_Op=0; ii_Op < mTpr->Count; ii_Op++ )
@@ -5846,43 +5830,8 @@ void __fastcall TF1::SG_MouseUp(TObject *Sender, TMouseButton Button,
 } // ----- конец TF1::SG_MouseUp -----------------------------------------------
 
 //
+#include "Finalize_XXX.cpp" // Finalize_Only_SET, Finalize_Except_SET
 //
-//
-#define do_Ops_2( i, Rule ) /* вариант 2-х операндов в инструкции */ \
-if( Ready_Op1 ) { \
- Mem_Instruction[i].fOp1 = true; \
- snprintf(tmp,sizeof(tmp), " #%d/%d(1|2)", i,Rule); strcat(strInfoLine, tmp); } \
-/**********/ \
-if( Ready_Op2 ) { \
- Mem_Instruction[i].fOp2 = true; \
- snprintf(tmp,sizeof(tmp), " #%d/%d(2|2)", i,Rule); strcat(strInfoLine, tmp); } \
-/**********/ \
-if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 ) { \
- snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
-//
-#define do_Ops_1( i, Rule ) /* вариант 1-го операнда в инструкции */ \
-if( Ready_Op1 ) { \
- Mem_Instruction[i].fOp1 = true; \
- snprintf(tmp,sizeof(tmp), " #%d/%d(1|1)", i,Rule); strcat(strInfoLine, tmp); \
- snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
-//
-#define turnOn_fP_TRUE( i ) /* включить бит для индикации цветом истинности флага-ПРЕДИКАТА */ \
-if( flagPredicat_TRUE ) \
- Mem_Instruction[i].fPredicat_TRUE = true;  // установим бит флаг-ПРЕДИКАТ для индикации цветом
-//
-#define turnOn_fSpecExec_2( i ) /* установить бит режима спекулятивного выполнения (2 операнда)  */ \
-if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
-   !flagPredicat_TRUE ) /* однако флаг-ПРЕДИКАТ сбрОшен... */ \
- Mem_Instruction[i].fSpeculateExec = true;
-//
-#define turnOn_fSpecExec_1( i ) /* установить бит режима спекулятивного выполнения (1 операнд)  */ \
-if( Mem_Instruction[i].fOp1 && /* по флагам готовности 1-й операнда ГОТОВЫ */ \
-   !flagPredicat_TRUE ) /* однако флаг-ПРЕДИКАТ сбрОшен... */ \
- Mem_Instruction[i].fSpeculateExec = true;
-//
-#include "Finalize_000.cpp" // Finalize_Only_SET,Finalize_Except_SET;  GetData() не находит данные
-//
-//#include "Finalize_001.cpp" // Finalize_Only_SET,Finalize_Except_SET;  GetData() не находит проблем
-//
+
 
 

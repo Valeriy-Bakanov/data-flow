@@ -1,16 +1,33 @@
-; test_01
+; ’¥αβ¨ΰ®Ά ­¨¥ ΰ¥¦¨¬  ‘…“‹’‚ƒ ‚›‹…
 ;
-ADD A,B,A_plus_B,  IS_A_gt_B
-SUB A,B,A_minus_B, !IS_A_gt_B
 ;
-MUL A,B, A_mult_B, IS_A_gt_B
-DIV A,B, A_div_B,  !IS_A_gt_B
+SET 3, A
+SET 2, B
 ;
-SET 1.0, A ; A <- 1.0
-SET 7.0, B ; B <- 7.0 
+PGE A,B Pr1
 ;
-SUB A,B,C ; C <- A - B
-PGE C, IS_A_gt_B
+ADD A,B, C1,  Pr1
+SUB A,B, C2, !Pr1
+;
+NEG C1, AAA, !Pr1
+;
+SIN C1, S1,  Pr1
+TAN C2, T1, !Pr1
+;
+SUB C1,C1, CC, Pr1
+;
+PGE S1,CC, Pr2
+;
+
+
+
+
+
+
+
+
+
+
 
 
 
