@@ -130,6 +130,18 @@ char trueLowerCase[]  = "true",        trueUpperCase[] ="TRUE",
   F1->Wonderful->Enabled  = false; \
   F1->Analize->Enabled    = false; }
 //
+int tick_ScanForGraph = 10; // врем€ сканир.при выводе графика интенс.выч.(тактов)
+INT StartNumb = 100; // начальный номер инструкций дл€ вывода в виде »√ј
+#define DEFAULT_RETURN_GET_DATA 0.123456789 // возвращаемое при ненахождении заданного числа в Mem_Data[]
+//
+struct timeb t0, t1; // момент начала выборки инструкций
+void   ftime(struct timeb *buf);
+//
+INT all_maxProcs, // всего участвующих в вычислени€х ј»”
+    simult_maxProcs, // max число ќƒЌќ¬–≈ћ≈ЌЌќ участвующих в вычислени€х ј»”
+    serial_Ticks,   // сумма времен работы ј»” (фактически врем€ ѕќ—Ћ≈ƒќ¬ј“≈Ћ№Ќќ√ќ выполнени€, такты)
+    parallel_Ticks; // врем€ выполнени€ параллельной программы, такты
+//
 //------------------------------------------------------------------------------
 char uniqueStr[_512] = "\0"; // уникальна€ строка дл€ имен файлов ( дата + врем€ до мсек )
 //
@@ -230,14 +242,6 @@ char* __fastcall PutDateTimeToString(INT flag); // выдача текущих даты и времени
 void  __fastcall Make_Row_Current( INT Row ); // сделать строку Row (начинаем с 0) текущей
 void  __fastcall Run_Infinity(); // повтор загруженной программы бесконечное число раз
 //
-struct timeb t0, t1; // момент начала выборки инструкций
-void   ftime(struct timeb *buf);
-//
-INT all_maxProcs, // всего участвующих в вычислени€х ј»”
-    simult_maxProcs, // max число ќƒЌќ¬–≈ћ≈ЌЌќ участвующих в вычислени€х ј»”
-    serial_Ticks,   // сумма времен работы ј»” (фактически врем€ ѕќ—Ћ≈ƒќ¬ј“≈Ћ№Ќќ√ќ выполнени€, такты)
-    parallel_Ticks; // врем€ выполнени€ параллельной программы, такты
-//
 //==============================================================================
 #define mR F1->M1  // доступ к M1
 #define mB F1->SG_Buffer // доступ к массиву €чеек визуализации буфера команд
@@ -337,9 +341,6 @@ struct { // Read-Write-Config (имена секций и значений файла конфигурации систем
   "SpeculateExec"
  } ; // [Read-Write-Config] имена секций и значений файла конфигурации
 //
-int outGlobal; // тэг варианта меню, из которого вызвана функци€ выбора цвета
-//
-#define color_Graph clRed  // цвет графика интенсивности вычислений
 //------------------------------------------------------------------------------
 #define BUFFER_EMPTY (-1313) // буфер пуст
 //==============================================================================
@@ -439,12 +440,6 @@ INT max_Buffer = _128,  // первоначальный захват
 bool buffer_Fill = false; // если TRUE - буфер заполнен
 float Level_Buffer_Fill = 0.0; // заполненность буфера в %% [0 - 100]
 //
-////////////////////////////////////////////////////////////////////////////////
-int tick_ScanForGraph = 10; // врем€ сканир.при выводе графика интенс.выч.(тактов)
-//
-INT StartNumb = 100; // начальный номер инструкций дл€ вывода в виде »√ј
-////////////////////////////////////////////////////////////////////////////////
-//
 // описание параметров каждой инструкции
 struct ip {
  char Set[_SET_LEN]; // мнемоника инструкции (3 символа + терминирующий "0")
@@ -536,6 +531,8 @@ char attrVar[6]  = "$\0", // до 5 символов в начале переменных, говор€щие возмож
 bool flagAlarmData   = true,
      flagAlarmBuffer = true,
      flagAlarmParser = true;
+//
+int outGlobal; // тэг варианта меню, из которого вызвана функци€ выбора цвета
 //
 bool SpeculateExec   = false; // при true инструкци€ с flagPredicate_TRUE=false выполнить, но результат не сохран€ть
 //
@@ -1343,8 +1340,8 @@ Get_Data( char Addr[], int Id )
    return Mem_Data[i].Data;
 //
 // не нашли... информируем об этом !!! /////////////////////////////////////////
- t_printf( "\n-E- %s()[%d] не нашЄл в Mem_Data[] значени€ по адресу %s. ѕрин€то 1.0e0 -E-\n",
-           __FUNC__,Id,Addr );
+ t_printf( "\n-E- %s()[%d] не нашЄл в Mem_Data[] значени€ по адресу %s. ѕрин€то %.9f -E-\n",
+           __FUNC__,Id,Addr, DEFAULT_RETURN_GET_DATA );
 //
  MessageBeep( MB_ICONERROR ); // привлекаем внимание к событию!..
 //
@@ -1370,42 +1367,38 @@ Line_Set( INT i_Set, int Rule )
 ////////////////////////////////////////////////////////////////////////////////
   case 0: strcpy(tmp1, "?");
           if( is_SET( Set )) // это SET ........................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*g}, %s {%s} %s %s",
+           snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
                      Mem_Instruction[i_Set].Set,
                      ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                      Mem_Instruction[i_Set].aResult, tmp1,
-                     startComments,
                      Mem_Instruction[i_Set].Comment);
           break; // break case 0;
 ////////////////////////////////////////////////////////////////////////////////
   case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL, Get_Data( Mem_Instruction[i_Set].aResult, 0 )); // содержимое по адресу (строка!) aResult
           if( is_SET( Set ) ) // это SET .......................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*g}, %s {%s} %s %s",
+           snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
                      Mem_Instruction[i_Set].Set,
                      ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                      Mem_Instruction[i_Set].aResult, tmp1,
-                     startComments,
                      Mem_Instruction[i_Set].Comment);
           else
 //==============================================================================
           switch( Get_CountOperandsByInstruction(Set) )
            { // ... по числу входных операндов инструкции Set
-            case 1: snprintf(tmp,sizeof(tmp), "%s %s {%.*g}, %s {%s} %s %s",
+            case 1: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%s} %s",
                               Mem_Instruction[i_Set].Set,
                               Mem_Instruction[i_Set].aOp1,
                               ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1, 1 ),
                               Mem_Instruction[i_Set].aResult, tmp1,
-                              startComments,
-                               Mem_Instruction[i_Set].Comment);
+                              Mem_Instruction[i_Set].Comment);
                     break;
-            case 2: snprintf(tmp,sizeof(tmp), "%s %s {%.*g}, %s {%.*g}, %s {%s} %s %s",
+            case 2: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%.*g}, %s{%s} %s",
                               Mem_Instruction[i_Set].Set,
                               Mem_Instruction[i_Set].aOp1,
                               ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1, 2 ),
                               Mem_Instruction[i_Set].aOp2,
                               ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp2, 3 ),
                               Mem_Instruction[i_Set].aResult, tmp1,
-                              startComments,
                               Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
@@ -1417,29 +1410,26 @@ Line_Set( INT i_Set, int Rule )
 //
 ////////////////////////////////////////////////////////////////////////////////
   case -1:if( is_SET( Set ) ) // это SET .......................................
-           snprintf(tmp,sizeof(tmp), "%s {%.*g}, %s %s %s",
+           snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s %s",
                      Mem_Instruction[i_Set].Set,
                      ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
                      Mem_Instruction[i_Set].aResult,
-                     startComments,
                      Mem_Instruction[i_Set].Comment);
           else
 //==============================================================================
           switch( Get_CountOperandsByInstruction(Set) )
            { // ... по числу входных операндов инструкции Set
-            case 1: snprintf(tmp,sizeof(tmp), "%s %s, %s %s %s",
+            case 1: snprintf(tmp,sizeof(tmp), "%s %s, %s %s",
                               Mem_Instruction[i_Set].Set,
                               Mem_Instruction[i_Set].aOp1,
                               Mem_Instruction[i_Set].aResult,
-                              startComments,
-                               Mem_Instruction[i_Set].Comment);
+                              Mem_Instruction[i_Set].Comment);
                     break;
-            case 2: snprintf(tmp,sizeof(tmp), "%s %s, %s, %s %s %s",
+            case 2: snprintf(tmp,sizeof(tmp), "%s %s, %s, %s %s",
                               Mem_Instruction[i_Set].Set,
                               Mem_Instruction[i_Set].aOp1,
                               Mem_Instruction[i_Set].aOp2,
                               Mem_Instruction[i_Set].aResult,
-                              startComments,
                               Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
@@ -3505,7 +3495,7 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
 //
-  if( Mem_Instruction[i].fExecOut )  // инструкции, которые выполнились 1 раз (готов результат)
+  if( Mem_Instruction[i].fExecOut ) // инструкции, которые выполнились 1 раз (готов результат)
   {
    Sel_Cell[Really_Select].Col = 4; // столбец –≈«”Ћ№“ј“
    Sel_Cell[Really_Select].Row = i + 1;
@@ -3513,15 +3503,14 @@ void __fastcall Draw_AllTableInstructions()
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
 //
-/*
-  if( Mem_Instruction[i].fSpeculateExec)  // цвет €чейки результата —ѕ≈ ”Ћя“»¬Ќќ выполнившейс€ инсрукции
+  if( SpeculateExec && // задан режим спекул€тивного выполнени€
+      Mem_Instruction[i].fSpeculateExec ) // цвет €чейки результата —ѕ≈ ”Ћя“»¬Ќќ выполнившейс€ инсрукции
   {
    Sel_Cell[Really_Select].Col = 4; // столбец –≈«”Ћ№“ј“
    Sel_Cell[Really_Select].Row = i + 1;
    Sel_Cell[Really_Select].clBackground = DCE.clSpeculateExec,
    Sel_Cell[Really_Select++].clSymbol   = clBlack;
   }
-*/  
 //
   if( !is_PredicatOrSET( Mem_Instruction[i].Set ) && // это инструкци€ - Ќ≈ ѕ–≈ƒ» ј“
        Mem_Instruction[i].fPredicat_TRUE ) // флаг предиката TRUE

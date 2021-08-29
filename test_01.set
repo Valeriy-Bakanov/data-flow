@@ -18,6 +18,10 @@ SUB C1,C1, CC, Pr1
 ;
 PGE S1,CC, Pr2
 ;
+ADD S1,C1, S1C1_A, true
+SUB S1,S1, S1S1_S, !true
+;
+
 
 
 
