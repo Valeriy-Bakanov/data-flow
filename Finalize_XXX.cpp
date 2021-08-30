@@ -44,18 +44,17 @@ if( flagPredicat_TRUE ) \
 /*-*/
 #define TURN_ON_FSPECUL_EXEC_2 /* установить бит режима спекулятивного выполнения (2 операнда)  */ \
 if( MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
-  ((flagPredicat && /* имя флага-предимката совпадает с заданным */ \
-   !Mem_Instruction[i].fPredicat_TRUE) ||  /* значение флага-предикат сброшен */ \
-   !strcmp( aPredicat, falseLowerCase )) ) /* статический false */ \
+  ( ( flagPredicat && /* имя флага-предимката совпадает с заданным */ \
+     !Mem_Instruction[i].fPredicat_TRUE ) ||  /* значение флага-предикат сброшен */ \
+     !strcmp( aPredicat, falseLowerCase ) ) ) /* статический false */ \
  Mem_Instruction[i].fSpeculateExec = true; /* установим флаг для индикации цветом в ячейках таблицы */
 //
 #define TURN_ON_FSPECUL_EXEC_1 /* установить бит режима спекулятивного выполнения (1 операнд)  */ \
 if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
-  ((flagPredicat && /* имя флага-предимката совпадает с заданным */ \
-   !Mem_Instruction[i].fPredicat_TRUE) ||  /* значение флага-предикат сброшен */ \
-   !strcmp( aPredicat, falseLowerCase )) ) /* статический false */ \
+  ( ( flagPredicat && /* имя флага-предимката совпадает с заданным */ \
+   !Mem_Instruction[i].fPredicat_TRUE ) ||  /* значение флага-предикат сброшен */ \
+   !strcmp( aPredicat, falseLowerCase ) ) ) /* статический false */ \
  Mem_Instruction[i].fSpeculateExec = true; /* установим флаг для индикации цветом в ячейках таблицы */
-
 //
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -479,8 +478,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
    if( MI_FOP1(i) && MI_FOP2(i) && // по флагам готовности 1-й и 2-й операнды ГОТОВЫ
      ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
        (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || // спекулятивное выполнение
-                             Mem_Instruction[i].fSpeculateExec ) ) )
-     )
+                             Mem_Instruction[i].fSpeculateExec ) ) )     )
      Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер команд для исполнения
 //
    break; // конец Rule==210

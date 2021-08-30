@@ -111,6 +111,7 @@ __published:	// IDE-managed Components
         TMenuItem *NotePad1;
         TMenuItem *ExtendedSave_IGA;
         TMenuItem *N10;
+        TMenuItem *N13;
         
         void __fastcall Main_Form_OnCreate(TObject *Sender);
         void __fastcall OnClose_F1(TObject *Sender, TCloseAction &Action);

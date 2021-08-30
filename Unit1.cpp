@@ -4474,6 +4474,10 @@ void __fastcall TF1::SelectColors(TObject *Sender)
            if( CD_1->Execute() )
             DCE.clExecSet = CD_1->Color;
            break;
+  case 24: CD_1->Color = DCE.clSpeculateExec;
+           if( CD_1->Execute() )
+            DCE.clSpeculateExec = CD_1->Color;
+           break;
 // =============================================================================
   case 31: CD_1->Color = DGR.clGraphStart;
            if( CD_1->Execute() )
