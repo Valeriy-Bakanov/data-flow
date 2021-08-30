@@ -21,6 +21,9 @@ PGE S1,CC, Pr2
 ADD S1,C1, S1C1_A, true
 SUB S1,S1, S1S1_S, !true
 ;
+COS A,AA, Pr0
+POW A,B,AB, !Pr0
+;
 
 
 
