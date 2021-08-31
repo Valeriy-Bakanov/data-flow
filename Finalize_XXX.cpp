@@ -56,6 +56,28 @@ if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
    !strcmp( aPredicat, falseLowerCase ) ) ) /* статический false */ \
  Mem_Instruction[i].fSpeculateExec = true; /* установим флаг для индикации цветом в ячейках таблицы */
 //
+#define ADD_TO_BUFF_2 /* добавить инструкцию в буфер для стандартного выполнения (2 операнда) */ \
+if( MI_FOP1(i) && MI_FOP2(i) ) /* флаги готовности у 1-го и 2-го операндов */ \
+ Add_toBuffer( i, Rule ); /* добавить ГКВ-команду в буфер команд для исполнения */
+//
+#define ADD_TO_BUFF_1 /* добавить инструкцию в буфер для стандартного выполнения (1 операнд) */ \
+if( MI_FOP1(i) ) /* флаги готовности у 1-го операндовf */ \
+ Add_toBuffer( i, Rule ); /* добавить ГКВ-команду в буфер команд для исполнения */
+//
+#define ADD_TO_BUFF_SPECUL_2 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (2 операнда) */ \
+if( MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
+  ( ( !SpeculateExec && Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
+  (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || /* стандартное выполнения */ \
+                        Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
+ Add_toBuffer( i, Rule ); /* добавить ГКВ-инструкцию в буфер команд для исполнения */
+//
+#define ADD_TO_BUFF_SPECUL_1 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (1 операнд) */ \
+if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
+  ( ( !SpeculateExec && Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
+  (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || /* стандартное выполнения */ \
+                        Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
+ Add_toBuffer( i, Rule ); /* добавить ГКВ-инструкцию в буфер команд для исполнения */
+//
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall
@@ -163,12 +185,7 @@ Finalize_Only_SET( INT i_Set )
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && // по флагам готовности 1-й операнд ГОТОВ
-     ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
-       (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || // спекулятивное выполнение
-                             Mem_Instruction[i].fSpeculateExec ) ) )
-     )
-     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер команд для исполнения
+   ADD_TO_BUFF_SPECUL_1 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (1 операнд) */ \
 //
    break; // конец Rule==10
 //
@@ -179,8 +196,7 @@ Finalize_Only_SET( INT i_Set )
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) ) // флаг готовности у 1-го операнда
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+   ADD_TO_BUFF_1 /* добавить инструкцию в буфер для стандартного выполнения (1 операнд) */ \
 //
    break; // конец Rule==11
 //
@@ -195,12 +211,7 @@ Finalize_Only_SET( INT i_Set )
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && MI_FOP2(i) && // по флагам готовности 1-й и 2-й операнды ГОТОВЫ
-     ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
-       (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || // спекулятивное выполнение
-                             Mem_Instruction[i].fSpeculateExec ) ) )
-     )
-     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер команд для исполнения
+   ADD_TO_BUFF_SPECUL_2 // добавить инструкцию в буфер с возможностью спекулятивного выполнения (2 операнда)
 //
    break; // конец Rule==20
 //
@@ -211,8 +222,7 @@ Finalize_Only_SET( INT i_Set )
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && MI_FOP2(i) ) // флаги готовности у 1-го и 2-го операндов
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+   ADD_TO_BUFF_2 // добавить инструкцию в буфер для стандартного выполнения (2 операнда)
 //
    break; // конец Rule==21
 //
@@ -379,12 +389,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && // по флагам готовности 1-й операнд ГОТОВ
-     ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
-       (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || // спекулятивное выполнение
-                             Mem_Instruction[i].fSpeculateExec ) ) )
-     )
-     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер команд для исполнения
+   ADD_TO_BUFF_SPECUL_1 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (1 операнд) */ \
 //
    break; // конец Rule==100
 //
@@ -411,13 +416,8 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) &&  // по флагам готовности 1-й операнд ГОТОВ
-     ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
-       (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || // спекулятивное выполнение
-                             Mem_Instruction[i].fSpeculateExec ) ) )
-     )
-     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер команд для исполнения
-//
+   ADD_TO_BUFF_SPECUL_1 // добавить инструкцию в буфер с возможностью спекулятивного выполнения (1 операнд)
+
    break; // конец Rule==110
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -427,8 +427,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) ) // флаг готовности у 1-го операнда
-    Add_toBuffer( i , Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+   ADD_TO_BUFF_1 /* добавить инструкцию в буфер для стандартного выполнения (1 операнд) */ \
 //
    break; // конец Rule==111
 //
@@ -443,12 +442,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && MI_FOP2(i) && // по флагам готовности 1-й и 2-й операнды ГОТОВЫ
-     ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
-       (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || // спекулятивное выполнение
-                             Mem_Instruction[i].fSpeculateExec ) ) )
-     )
-     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер команд для исполнения
+   ADD_TO_BUFF_SPECUL_2 // добавить инструкцию в буфер с возможностью спекулятивного выполнения (2 операнда)
 //
    break; // конец Rule==200
 //
@@ -459,8 +453,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && MI_FOP2(i) ) // флаги готовности у 1-го и 2-го операндов
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+   ADD_TO_BUFF_2 // добавить инструкцию в буфер для стандартного выполнения (2 операнда)
 //
    break; // конец Rule==201
 //
@@ -475,11 +468,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && MI_FOP2(i) && // по флагам готовности 1-й и 2-й операнды ГОТОВЫ
-     ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || // стандартное выполнение
-       (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || // спекулятивное выполнение
-                             Mem_Instruction[i].fSpeculateExec ) ) )     )
-     Add_toBuffer( i, Rule ); // добавить ГКВ-инструкцию в буфер команд для исполнения
+   ADD_TO_BUFF_SPECUL_2 // добавить инструкцию в буфер с возможностью спекулятивного выполнения (2 операнда)
 //
    break; // конец Rule==210
 //
@@ -490,8 +479,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) && MI_FOP2(i) ) // флаги готовности у 1-го и 2-го операндов
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+   ADD_TO_BUFF_2 // добавить инструкцию в буфер для стандартного выполнения (2 операнда)
 //
    break; // конец Rule==211
 //

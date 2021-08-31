@@ -4,13 +4,13 @@
 ; файл MAX-2_MASS-8.PRED.SET
 ;
 SET 11, m01 ; первый элемент массива
-SET 99, m02
+SET 8, m02
 SET 123, m03
-SET 23, m04
+SET 13, m04
 SET 13, m05
 SET 9, m06
 SET 7, m07
-SET 2, m08
+SET 8, m08
 ;
 SUB m02, m01, 02-01 ; 2-й элемент минус 1-й (1-я пара чисел)
 PGE m02, m01,        IS_02_ge_01 ; IS_02_ge_01 -> true if m02>=m01
