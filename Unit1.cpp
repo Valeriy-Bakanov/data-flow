@@ -180,7 +180,7 @@ void   __fastcall Add_toData(INT i_Set, char* aResult, REAL Data); // добавляет 
 void   __fastcall Add_toBuffer(INT i_Set, int Rule); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set (Rule определяет точку вызова функции)
 int    __fastcall Get_TicksByInstruction(char *Set); // возвращает из Set_Params->Time время выполнения инструкции Set(char *Set);
 int    __fastcall Get_Free_Proc(); // возвращает число свободных АИУ
-REAL   __fastcall Get_Data(char Addr[], int Id); // возвращает из Mem_Data[] число по адресу (строка!) Addr
+REAL   __fastcall Get_Data(char Addr[]); // возвращает из Mem_Data[] число по адресу (строка!) Addr
 void   __fastcall Display_Error(char *str); // информация об арифметической ошибке
 void   __fastcall Test_Visu_Buffer_Fill(); // тестирование индикация заполненности буфера
 int    __fastcall Select_Instruction_fromBuffer(); // возвращает номер инструкции из буфера по условию мах ПРИОРИТЕТА
@@ -1331,7 +1331,7 @@ StopCalculations( int Rule )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 REAL __fastcall // возвращает из Mem_Data[] число по адресу (имени) Addr
-Get_Data( char Addr[], int Id )
+Get_Data( char Addr[])
 { // если строка 'Addr / Dаta' не существует - выдается предупреждение и результат = 1.0e0
  char tmp[_512]="\0";
 //
@@ -1340,12 +1340,12 @@ Get_Data( char Addr[], int Id )
    return Mem_Data[i].Data;
 //
 // не нашли... информируем об этом !!! /////////////////////////////////////////
- t_printf( "\n-E- %s()[%d] не нашёл в Mem_Data[] значения по адресу %s. Принято %.9f -E-\n",
-           __FUNC__,Id,Addr, DEFAULT_RETURN_GET_DATA );
+ t_printf( "\n-E- %s() не нашёл в Mem_Data[] значения по адресу %s. Принято %.9f -E-\n",
+           __FUNC__, Addr, DEFAULT_RETURN_GET_DATA );
 //
  MessageBeep( MB_ICONERROR ); // привлекаем внимание к событию!..
 //
-  return 1.0 ;
+ return DEFAULT_RETURN_GET_DATA ;
 } // ---------------------------------------------------------------------------
 
 
@@ -1357,8 +1357,8 @@ Line_Set( INT i_Set, int Rule )
   // при Rule = 1  содержимое aResult возвращается
   // при Rule = -1 возвращается только строка инструкции
  char Set[_SET_LEN]="\0",
-      tmp1[_512]="\0",
-      tmp[_512]="\0";
+      tmp[_512]="\0",
+      tmp1[_512]="\0";
 //
  strcpy(Set, Mem_Instruction[i_Set].Set); // мнемоника инструкции... далее такъ проще работать !
 //
@@ -1368,42 +1368,42 @@ Line_Set( INT i_Set, int Rule )
   case 0: strcpy(tmp1, "?");
           if( is_SET( Set )) // это SET ........................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
-                     Mem_Instruction[i_Set].Set,
-                     ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
-                     Mem_Instruction[i_Set].aResult, tmp1,
-                     Mem_Instruction[i_Set].Comment);
+                    Mem_Instruction[i_Set].Set,
+                    ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
+                    Mem_Instruction[i_Set].aResult, tmp1,
+                    Mem_Instruction[i_Set].Comment);
           break; // break case 0;
 ////////////////////////////////////////////////////////////////////////////////
-  case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL, Get_Data( Mem_Instruction[i_Set].aResult, 0 )); // содержимое по адресу (строка!) aResult
+  case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL, Get_Data( Mem_Instruction[i_Set].aResult )); // содержимое по адресу (строка!) aResult
           if( is_SET( Set ) ) // это SET .......................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
-                     Mem_Instruction[i_Set].Set,
-                     ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
-                     Mem_Instruction[i_Set].aResult, tmp1,
-                     Mem_Instruction[i_Set].Comment);
+                    Mem_Instruction[i_Set].Set,
+                    ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
+                    Mem_Instruction[i_Set].aResult, tmp1,
+                    Mem_Instruction[i_Set].Comment);
           else
 //==============================================================================
           switch( Get_CountOperandsByInstruction(Set) )
            { // ... по числу входных операндов инструкции Set
-            case 1: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%s} %s",
-                              Mem_Instruction[i_Set].Set,
-                              Mem_Instruction[i_Set].aOp1,
-                              ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1, 1 ),
-                              Mem_Instruction[i_Set].aResult, tmp1,
-                              Mem_Instruction[i_Set].Comment);
+            case 1: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%s} ; %s",
+                             Mem_Instruction[i_Set].Set,
+                             Mem_Instruction[i_Set].aOp1,
+                             ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1 ),
+                             Mem_Instruction[i_Set].aResult, tmp1,
+                             Mem_Instruction[i_Set].Comment);
                     break;
-            case 2: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%.*g}, %s{%s} %s",
-                              Mem_Instruction[i_Set].Set,
-                              Mem_Instruction[i_Set].aOp1,
-                              ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1, 2 ),
-                              Mem_Instruction[i_Set].aOp2,
-                              ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp2, 3 ),
-                              Mem_Instruction[i_Set].aResult, tmp1,
-                              Mem_Instruction[i_Set].Comment);
+            case 2: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%.*g}, %s{%s} ; %s",
+                             Mem_Instruction[i_Set].Set,
+                             Mem_Instruction[i_Set].aOp1,
+                             ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1 ),
+                             Mem_Instruction[i_Set].aOp2,
+                             ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp2 ),
+                             Mem_Instruction[i_Set].aResult, tmp1,
+                             Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
 //
-           } // конец switch(Get_CountOperandsByInstruction(Set))
+           } // конец switch( Get_CountOperandsByInstruction(Set) )
 //==============================================================================
 //
           break; // break case 1;
@@ -1411,26 +1411,26 @@ Line_Set( INT i_Set, int Rule )
 ////////////////////////////////////////////////////////////////////////////////
   case -1:if( is_SET( Set ) ) // это SET .......................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s %s",
-                     Mem_Instruction[i_Set].Set,
-                     ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
-                     Mem_Instruction[i_Set].aResult,
-                     Mem_Instruction[i_Set].Comment);
+                    Mem_Instruction[i_Set].Set,
+                    ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
+                    Mem_Instruction[i_Set].aResult,
+                    Mem_Instruction[i_Set].Comment);
           else
 //==============================================================================
           switch( Get_CountOperandsByInstruction(Set) )
            { // ... по числу входных операндов инструкции Set
-            case 1: snprintf(tmp,sizeof(tmp), "%s %s, %s %s",
-                              Mem_Instruction[i_Set].Set,
-                              Mem_Instruction[i_Set].aOp1,
-                              Mem_Instruction[i_Set].aResult,
-                              Mem_Instruction[i_Set].Comment);
+            case 1: snprintf(tmp,sizeof(tmp), "%s %s, %s ; %s",
+                             Mem_Instruction[i_Set].Set,
+                             Mem_Instruction[i_Set].aOp1,
+                             Mem_Instruction[i_Set].aResult,
+                             Mem_Instruction[i_Set].Comment);
                     break;
-            case 2: snprintf(tmp,sizeof(tmp), "%s %s, %s, %s %s",
-                              Mem_Instruction[i_Set].Set,
-                              Mem_Instruction[i_Set].aOp1,
-                              Mem_Instruction[i_Set].aOp2,
-                              Mem_Instruction[i_Set].aResult,
-                              Mem_Instruction[i_Set].Comment);
+            case 2: snprintf(tmp,sizeof(tmp), "%s %s, %s, %s ; %s",
+                             Mem_Instruction[i_Set].Set,
+                             Mem_Instruction[i_Set].aOp1,
+                             Mem_Instruction[i_Set].aOp2,
+                             Mem_Instruction[i_Set].aResult,
+                             Mem_Instruction[i_Set].Comment);
                     break;
            default: break;
 //
@@ -1445,7 +1445,7 @@ Line_Set( INT i_Set, int Rule )
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- DelSpacesTabsAround(tmp); // обрезаем пробелы спереди и сзади
+ DelSpacesTabsAround( tmp ); // обрезаем пробелы спереди и сзади
 //
  return tmp;
 //
@@ -2156,13 +2156,13 @@ ExecuteInstructions_Except_SET( INT i_Set )
  switch( Get_CountOperandsByInstruction(Set) ) // ... число входных операндов инструкции Set
  {
   case 1: strcpy( aOp1, Mem_Instruction[i_Set].aOp1 ); // адрес (строка!) ПЕРВОГО ОПЕРАНДА
-          Op1 = Get_Data( aOp1, 4 ); // значение ПЕРВОГО ОПЕРАНДА
+          Op1 = Get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
           break;
 //
   case 2: strcpy(aOp1, Mem_Instruction[i_Set].aOp1); // адрес (строка!) ПЕРВОГО ОПЕРАНДА
           strcpy(aOp2, Mem_Instruction[i_Set].aOp2); // ... ВТОРОГО ОПЕРАНДА
-          Op1 = Get_Data( aOp1, 5 ); // значение ПЕРВОГО ОПЕРАНДА
-          Op2 = Get_Data( aOp2, 6 ); // значение ВТОРОГО ОПЕРАНДА
+          Op1 = Get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
+          Op2 = Get_Data( aOp2 ); // значение ВТОРОГО ОПЕРАНДА
           break;
 //
  default: break;
@@ -2722,7 +2722,7 @@ Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] стр
 //
 ////////////////////////////////////////////////////////////////////////////////
  t_printf( "-I- %s(): инструкция #%d/%d [%s] добавлена в буфер (%s) -I-",
-            __FUNC__, i_Set,Rule, Line_Set(i_Set, -1), Get_Time_asLine());
+            __FUNC__, i_Set,Rule, Line_Set(i_Set, -1), Get_Time_asLine() );
 ////////////////////////////////////////////////////////////////////////////////
  Mem_Instruction[i_Set].fAddBuffer = true; // флаг добавления инструкции в буфер =======
  mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали ФЛАГИ данной инструкции =
@@ -2870,10 +2870,10 @@ Select_Set_fromBuffer() // возвращает номер инструкции из буфера по условию мах 
 // итак, i_Set_Prior_Max - инструкция с максимальном приоритетом ///////////////
 //
  t_printf( "-I- %s(): инструкция #%d/%d [%s] (приор. = %.*g) выбрана из буфера для исполнения (%s) -I-",
-                  __FUNC__, i_Set_Prior_Max, i_Buffer,
-                  Line_Set(i_Set_Prior_Max, -1),
-                  ACC_REAL,Mem_Buffer[i_Buffer].Priority,
-                  Get_Time_asLine());
+            __FUNC__, i_Set_Prior_Max, i_Buffer,
+            Line_Set(i_Set_Prior_Max, -1),
+            ACC_REAL,Mem_Buffer[i_Buffer].Priority,
+            Get_Time_asLine());
 //
 // теперь уберем инструкцию i_Set_Prior_Max из буфера
 //
@@ -2974,7 +2974,7 @@ char* __fastcall
 Get_Time_asLine() // вернуть вр емя (в тактах начиная с 0) в строке
 {
  static // чтобы данные не "забивались" другими на стэке
- char tmp[_512];
+ char tmp[_512]="\0";
 //
  snprintf(tmp,sizeof(tmp), "текущий момент: %d тактов", localTick);
  return tmp;

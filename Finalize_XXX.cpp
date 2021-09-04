@@ -22,19 +22,19 @@ Mem_Instruction[i].Set, Mem_Instruction[i].aOp1, Mem_Instruction[i].aOp2, Mem_In
 */
 #define DO_OPS_2 /* вариант 2-х операндов в инструкции */ \
 if( Ready_Op1 ) { \
- Mem_Instruction[i].fOp1 = true; \
+ MI_FOP1(i) = true; \
  snprintf(tmp,sizeof(tmp), " #%d/%d(1|2)", i,Rule); strcat(strInfoLine, tmp); } \
 /*-*/ \
 if( Ready_Op2 ) { \
- Mem_Instruction[i].fOp2 = true; \
+ MI_FOP2(i) = true; \
  snprintf(tmp,sizeof(tmp), " #%d/%d(2|2)", i,Rule); strcat(strInfoLine, tmp); } \
 /*-*/ \
-if( Mem_Instruction[i].fOp1 && Mem_Instruction[i].fOp2 ) { \
+if( MI_FOP1(i) && MI_FOP2(i) ) { \
  snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
 /*-*/
 #define DO_OPS_1 /* вариант 1-го операнда в инструкции */ \
 if( Ready_Op1 ) { \
- Mem_Instruction[i].fOp1 = true; \
+ MI_FOP1(i) = true; \
  snprintf(tmp,sizeof(tmp), " #%d/%d(1|1)", i,Rule); strcat(strInfoLine, tmp); \
  snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
 /*-*/
@@ -43,7 +43,7 @@ if( flagPredicat_TRUE ) \
  Mem_Instruction[i].fPredicat_TRUE = true;  // установим бит флаг-ПРЕДИКАТ для индикации цветом
 /*-*/
 #define TURN_ON_FSPECUL_EXEC_2 /* установить бит режима спекулятивного выполнения (2 операнда)  */ \
-if( MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
+if(  MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
   ( ( flagPredicat && /* имя флага-предимката совпадает с заданным */ \
      !Mem_Instruction[i].fPredicat_TRUE ) ||  /* значение флага-предикат сброшен */ \
      !strcmp( aPredicat, falseLowerCase ) ) ) /* статический false */ \
@@ -66,16 +66,16 @@ if( MI_FOP1(i) ) /* флаги готовности у 1-го операндовf */ \
 //
 #define ADD_TO_BUFF_SPECUL_2 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (2 операнда) */ \
 if( MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
-  ( ( !SpeculateExec && Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
-  (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || /* стандартное выполнения */ \
-                        Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
+  ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
+  (    SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || /* стандартное выполнения */ \
+                          Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
  Add_toBuffer( i, Rule ); /* добавить ГКВ-инструкцию в буфер команд для исполнения */
 //
 #define ADD_TO_BUFF_SPECUL_1 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (1 операнд) */ \
 if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
-  ( ( !SpeculateExec && Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
-  (  SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || /* стандартное выполнения */ \
-                        Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
+  ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
+  (    SpeculateExec && ( Mem_Instruction[i].fPredicat_TRUE || /* стандартное выполнения */ \
+                          Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
  Add_toBuffer( i, Rule ); /* добавить ГКВ-инструкцию в буфер команд для исполнения */
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,8 +105,6 @@ Finalize_Only_SET( INT i_Set )
 //
  REAL Result = StrToReal( Mem_Instruction[i_Set].aOp1, i_Set ); // запомнили значение 1-го операнда (константа) инструкции SET номер i_Set
  strcpy( aResult, Mem_Instruction[i_Set].aResult ); // строка-адрес результата выполненной инструкции
-//
-// Mem_Instruction[i_Set].fOp1 = true; // у SET всегда 1-й готов!...
 //
  s_isPredicat = false; // is_Predicat( Mem_Instruction[i_Set].Set ); // у SET всегда FALSE
 //
@@ -196,7 +194,7 @@ Finalize_Only_SET( INT i_Set )
 //
    TEST_PRINT // отладочная печать
 //
-   ADD_TO_BUFF_1 /* добавить инструкцию в буфер для стандартного выполнения (1 операнд) */ \
+   ADD_TO_BUFF_1 /* добавить инструкцию в буфер для стандартного выполнения (1 операнд) */
 //
    break; // конец Rule==11
 //
@@ -272,7 +270,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
       aPredicat[_ID_LEN]="\0", // поле предиката
       namePredicat[_ID_LEN] = "\0", // имя поля предиката (без возможного флага отрицания)
       strInfoLine[_4096]="\0",
-      tmp[_256]="\0";
+      tmp[_512]="\0";
  bool s_isPredicat, // TRUE, если РОДИТЕЛЬСКАЯ (выполнившаяся) инструкция есть ПРЕДИКАТ
       isPredicat, // TRUE, если ЗАВИСИМАЯ инструкция есть ПРЕДИКАТ
       flagNot, // TRUE, если в ЗАВИСИМОЙ инструкции первый символ имени флага-предиката "!" или "~"
@@ -294,23 +292,50 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 ////////////////////////////////////////////////////////////////////////////////
 // // при СПЕКУЛЯТИВНОМ выполнении добавлять информацмю в пул данных не нужно !
  if( !( SpeculateExec && Mem_Instruction[i_Set].fSpeculateExec ) )
+ {
   Add_toData( i_Set, Mem_Proc[i_Proc].aResult, Result ); // добавить результат выполнившейся инструкции
+//
+  t_printf( "-I- %s(){1}: АИУ #%d выполнило инструкцию #%d [%s] [%d/%d/%d тактов] -I-",
+            __FUNC__, i_Proc, i_Set, Line_Set(i_Set, 1), // Line_Set(i_Set, 1) !!!!!!!!!!!
+            Mem_Proc[i_Proc].tick_Start, localTick, localTick-Mem_Proc[i_Proc].tick_Start);
+ }
+//
 ////////////////////////////////////////////////////////////////////////////////
 //
  s_isPredicat = is_Predicat( Mem_Instruction[i_Set].Set ); // TRUE, если выполнившаяся инструкция суть ПРЕДИКАТ
 //
- t_printf( "-I- %s(){1}: АИУ #%d выполнило инструкцию #%d [%s] [%d/%d/%d тактов] -I-",
-            __FUNC__, i_Proc, i_Set, Line_Set(i_Set, 1),
-            Mem_Proc[i_Proc].tick_Start, localTick, localTick - Mem_Proc[i_Proc].tick_Start);
-//
  Vizu_Data(); // визуализировать...
 //
 ////////////////////////////////////////////////////////////////////////////////
-// добавили запись в набор строк Tpr для анализа загрУженности АИУ..............
- snprintf(strInfoLine,sizeof(strInfoLine), "%10d%10d%10d%10d%10d [%s]",
-          i_Proc, Mem_Proc[i_Proc].tick_Start, localTick, localTick - Mem_Proc[i_Proc].tick_Start,
-          i_Set, Line_Set(i_Set, 1));
- mTpr->Add(strInfoLine); // добавили строку в список Tpr
+// добавить запись в набор строк Tpr для анализа загрУженности АИУ..............
+ switch( Get_CountOperandsByInstruction(Mem_Instruction[i_Set].Set) ) // по числу операндов в инструкции
+ {
+  case 1: // один операнд
+  snprintf( tmp,sizeof(tmp), "%s %s{%.*g},%s{%.*g},%s ; %s",
+            Mem_Instruction[i_Set].Set,
+            Mem_Instruction[i_Set].aOp1,ACC_REAL,Get_Data(Mem_Instruction[i_Set].aOp1 ),
+            Mem_Instruction[i_Set].aResult,ACC_REAL,Result,
+            Mem_Instruction[i_Set].aPredicat,
+            Mem_Instruction[i_Set].Comment );
+  break;
+///
+  case 2: // два операнда
+  snprintf( tmp,sizeof(tmp), "%s %s{%.*g},%s{%.*g},%s{%.*g},%s ; %s",
+            Mem_Instruction[i_Set].Set,
+            Mem_Instruction[i_Set].aOp1,ACC_REAL,Get_Data(Mem_Instruction[i_Set].aOp1 ),
+            Mem_Instruction[i_Set].aOp2,ACC_REAL,Get_Data(Mem_Instruction[i_Set].aOp2 ),
+            Mem_Instruction[i_Set].aResult,ACC_REAL,Result,
+            Mem_Instruction[i_Set].aPredicat,
+            Mem_Instruction[i_Set].Comment );
+  break;
+ } // конец switch по числу операндов у инструкции
+//
+ snprintf( strInfoLine,sizeof(strInfoLine), "%10d%10d%10d%10d%10d [%s]",
+           i_Proc, Mem_Proc[i_Proc].tick_Start, localTick, localTick-Mem_Proc[i_Proc].tick_Start, i_Set,
+           tmp ) ;
+//
+ mTpr->Add( strInfoLine ); // добавили строку в список Tpr
+// t_printf( "\n=-=-=-=%s\n", strInfoLine );
 //
  strcpy(strInfoLine, "\0"); // очистим strInfoLine для дальнейшего использования
 //
@@ -376,7 +401,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-  switch( Rule=100*Get_CountOperandsByInstruction(Set)+10*s_isPredicat+isPredicat )
+  switch( Rule = 100*Get_CountOperandsByInstruction(Set) + 10*s_isPredicat + isPredicat )
   {
 ////////////////////////////////////////////////////////////////////////////////
    case 100: // один операнд; НЕ_ПРЕДИКАТ -> НЕ_ПРЕДИКАТ + (возможно) flag-пПРЕДИКАТ
@@ -400,8 +425,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
    TEST_PRINT // отладочная печать
 //
-   if( MI_FOP1(i) ) // флаг готовности у 1-го операнда
-    Add_toBuffer( i, Rule ); // добавить ГКВ-команду в буфер команд для исполнения
+   ADD_TO_BUFF_1 // добавить инструкцию в буфер для стандартного выполнения (1 операнд)
 //
    break; // конец Rule==101
 //
@@ -417,7 +441,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
    TEST_PRINT // отладочная печать
 //
    ADD_TO_BUFF_SPECUL_1 // добавить инструкцию в буфер с возможностью спекулятивного выполнения (1 операнд)
-
+//
    break; // конец Rule==110
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -504,10 +528,10 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
  if( strlen(strInfoLine) ) // если в strInfoLine что-то записывалось...
   t_printf( "-I- %s(){2}: по выполнению инструкции #%d/%d установлены флаги готовности операндов у инструкций: %s -I-",
-             __FUNC__, i_Set, i_Proc, strInfoLine);
+             __FUNC__, i_Set, i_Proc, strInfoLine );
 //
 ////////////////////////////////////////////////////////////////////////////////
-cont: // конец спекулятивного выполнения инсрукций =============================
+cont: // конец спекулятивного выполнения инструкций ============================
 ////////////////////////////////////////////////////////////////////////////////
 //
 // устанавливаем флаг однократного выполнения инструкции .......................
@@ -515,14 +539,14 @@ cont: // конец спекулятивного выполнения инсрукций =============================
 // снимаем флаг ИНСТРУКЦИЯ_ВЫПОЛНЯЕТСЯ
  Mem_Instruction[i_Set].fExec    = false; // сняли флаг ИНСТРУКЦИЯ_ВЫПОЛНЯЕТСЯ
 //
- Draw_AllTableInstructions(); // выделение ячеек цветом (после .fExecOut ...)
+ Draw_AllTableInstructions(); // выделение ячеек цветом (после *.fExecOut ...)
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
  Mem_Proc[i_Proc].Busy = false; // АИУ номер i_Proc теперь СВОБОДНО !!! --------
 //
  t_printf( "-I- %s(){3}: АИУ #%d освобождено (%s) после выполнения инструкции #%d -I-",
-           __FUNC__, i_Proc, Get_Time_asLine(), i_Set);
+            __FUNC__, i_Proc, Get_Time_asLine(), i_Set);
 //
  Free_Proc ++ ; // число свободных АИУ увеличили на 1 ==========================
 //
