@@ -118,7 +118,7 @@ Finalize_Only_SET( INT i_Set )
  mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали это в таблице SG_Sets
 //
  t_printf( "-I- %s(){1}: инструкция #%d [%s] выполнена (%s) -I-",
-            __FUNC__, i_Set, Line_Set(i_Set, 1), Get_Time_asLine());
+            __FUNC__, i_Set, Line_Set(i_Set, 1, 0.0), Get_Time_asLine());
 //
 ////////////////////////////////////////////////////////////////////////////////
 // установим флаг ГОТОВ у ВСЕХ операндов, совпадающих по имени с адресом aResult в пуле инструкций Mem_Sets[i_set]
@@ -296,7 +296,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
   Add_toData( i_Set, Mem_Proc[i_Proc].aResult, Result ); // добавить результат выполнившейся инструкции
 //
   t_printf( "-I- %s(){1}: АИУ #%d выполнило инструкцию #%d [%s] [%d/%d/%d тактов] -I-",
-            __FUNC__, i_Proc, i_Set, Line_Set(i_Set, 1), // Line_Set(i_Set, 1) !!!!!!!!!!!
+            __FUNC__, i_Proc, i_Set, Line_Set(i_Set, 1, 0.0),
             Mem_Proc[i_Proc].tick_Start, localTick, localTick-Mem_Proc[i_Proc].tick_Start);
  }
 //
@@ -308,31 +308,13 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
 ////////////////////////////////////////////////////////////////////////////////
 // добавить запись в набор строк Tpr для анализа загрУженности АИУ..............
- switch( Get_CountOperandsByInstruction(Mem_Instruction[i_Set].Set) ) // по числу операндов в инструкции
- {
-  case 1: // один операнд
-  snprintf( tmp,sizeof(tmp), "%s %s{%.*g},%s{%.*g},%s ; %s",
-            Mem_Instruction[i_Set].Set,
-            Mem_Instruction[i_Set].aOp1,ACC_REAL,Get_Data(Mem_Instruction[i_Set].aOp1 ),
-            Mem_Instruction[i_Set].aResult,ACC_REAL,Result,
-            Mem_Instruction[i_Set].aPredicat,
-            Mem_Instruction[i_Set].Comment );
-  break;
-///
-  case 2: // два операнда
-  snprintf( tmp,sizeof(tmp), "%s %s{%.*g},%s{%.*g},%s{%.*g},%s ; %s",
-            Mem_Instruction[i_Set].Set,
-            Mem_Instruction[i_Set].aOp1,ACC_REAL,Get_Data(Mem_Instruction[i_Set].aOp1 ),
-            Mem_Instruction[i_Set].aOp2,ACC_REAL,Get_Data(Mem_Instruction[i_Set].aOp2 ),
-            Mem_Instruction[i_Set].aResult,ACC_REAL,Result,
-            Mem_Instruction[i_Set].aPredicat,
-            Mem_Instruction[i_Set].Comment );
-  break;
- } // конец switch по числу операндов у инструкции
 //
  snprintf( strInfoLine,sizeof(strInfoLine), "%10d%10d%10d%10d%10d [%s]",
            i_Proc, Mem_Proc[i_Proc].tick_Start, localTick, localTick-Mem_Proc[i_Proc].tick_Start, i_Set,
-           tmp ) ;
+           Line_Set(i_Set, -1, Result ) ) ;
+//
+ if( SpeculateExec && Mem_Instruction[i_Set].fSpeculateExec ) // спекулятивное выполнение
+  strcat( strInfoLine, SPECUL );
 //
  mTpr->Add( strInfoLine ); // добавили строку в список Tpr
 // t_printf( "\n=-=-=-=%s\n", strInfoLine );

@@ -81,6 +81,7 @@ char trueLowerCase[]  = "true",        trueUpperCase[] ="TRUE",
 //
 #define is_SET(Set) ( !strcmp( Set, SET ) ) // это инструкция SET
 #define is_PredicatOrSET(Set) ( is_Predicat( Set ) || !strcmp( Set, SET ) ) // это ПРЕДИКАТ или DET
+char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 //
 #define strNcpy(d,s) strncpy(d,s,sizeof(d)) // безопасный вариант
 //------------------------------------------------------------------------------
@@ -175,7 +176,7 @@ void   __fastcall Start_DataFlow_Process(int Mode); // начали счет (в заданном M
 //
 int    __fastcall Get_CountOperandsByInstruction(char *Set); // возвращает число операндов инструкции Set
 char*  __fastcall GetSubString(char *Str, int n1, int n2); // вернуть подстроку из Str от n1 до n2 символов включительно
-char*  __fastcall Line_Set(INT i_Set, int Rule); // возвращает текст инструкции из Mem_Sets[i]
+char*  __fastcall Line_Set(INT i_Set, short int Rule, REAL Result); // возвращает текст инструкции из Mem_Sets[i]
 void   __fastcall Add_toData(INT i_Set, char* aResult, REAL Data); // добавляет в Mem_Data[] число по адресу (строка!) Addr
 void   __fastcall Add_toBuffer(INT i_Set, int Rule); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set (Rule определяет точку вызова функции)
 int    __fastcall Get_TicksByInstruction(char *Set); // возвращает из Set_Params->Time время выполнения инструкции Set(char *Set);
@@ -1352,10 +1353,12 @@ Get_Data( char Addr[])
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall // возвращает текст инструкции из Mem_Sets[i]
-Line_Set( INT i_Set, int Rule )
+Line_Set( INT i_Set, short int Rule, REAL Result )
 { // при Rule = 0  содержимое aResult не выдается (выдается "?")
-  // при Rule = 1  содержимое aResult возвращается
-  // при Rule = -1 возвращается только строка инструкции
+  // при Rule = 1  содержимое aResult возвращается Get_Data()
+  // при Rule = -1 величина Result берётся из формальных параметров (используется при
+  // реализации спекулятивных вычислений, когда результат в Mem_Data[] не записываетсянет)
+  // при Rule = 2 возвращается только строка инструкции
  char Set[_SET_LEN]="\0",
       tmp[_512]="\0",
       tmp1[_512]="\0";
@@ -1366,6 +1369,7 @@ Line_Set( INT i_Set, int Rule )
  {
 ////////////////////////////////////////////////////////////////////////////////
   case 0: strcpy(tmp1, "?");
+//
           if( is_SET( Set )) // это SET ........................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
                     Mem_Instruction[i_Set].Set,
@@ -1374,7 +1378,10 @@ Line_Set( INT i_Set, int Rule )
                     Mem_Instruction[i_Set].Comment);
           break; // break case 0;
 ////////////////////////////////////////////////////////////////////////////////
-  case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL, Get_Data( Mem_Instruction[i_Set].aResult )); // содержимое по адресу (строка!) aResult
+  case -1:
+  case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL,
+                   Rule==1 ? Get_Data( Mem_Instruction[i_Set].aResult ) : Result ); // содержимое по адресу (строка!) aResult
+//
           if( is_SET( Set ) ) // это SET .......................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
                     Mem_Instruction[i_Set].Set,
@@ -1409,7 +1416,7 @@ Line_Set( INT i_Set, int Rule )
           break; // break case 1;
 //
 ////////////////////////////////////////////////////////////////////////////////
-  case -1:if( is_SET( Set ) ) // это SET .......................................
+  case 2: if( is_SET( Set ) ) // это SET .......................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s %s",
                     Mem_Instruction[i_Set].Set,
                     ACC_REAL, atof(Mem_Instruction[i_Set].aOp1),
@@ -2112,7 +2119,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
       aOp2[_ID_LEN]="\0",
       aResult[_ID_LEN]="\0",
       aPredicate[_ID_LEN]="\0",
-      tmp[_1024]="\0";
+      tmp[_512]="\0";
  INT  i_Proc; // номер свободного АИУ
  __int64 Divident, Devider; // Quotient, Remainder; // числитель/знаменатель//частное/остаток (целые 64 бит)
 //
@@ -2666,8 +2673,11 @@ ExecuteInstructions_Except_SET( INT i_Set )
    Mem_Proc[i_Proc].Op2    = Op2; // запомнили ВТОРОЙ операнд
    Mem_Proc[i_Proc].Result = Result; // запомнили результат операции
 //
-   t_printf( "-I- %s(): инструкция #%d [%s] была выполнена на АИУ #%d -I-",
-              __FUNC__, i_Set, Line_Set(i_Set, -1), i_Proc);
+   snprintf( tmp, sizeof(tmp),"-I- %s(): инструкция #%d [%s] была выполнена на АИУ #%d -I-",
+              __FUNC__, i_Set, Line_Set(i_Set, 2, 0.0), i_Proc );
+   if( SpeculateExec && Mem_Instruction[i_Proc].fSpeculateExec ) // спекулятивное выполнение
+    strcat( tmp, SPECUL );
+   t_printf( tmp ) ;
 //
   if( pass_Counts>0 && !(count_Ops % pass_Counts) ) // каждые pass_Counts раз
     Make_Row_Current( i_Set ); // сделаем данную строку в SG_Set[][] текущей (индикация динамики выполнения)
@@ -2695,7 +2705,7 @@ Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] стр
   if( flagAlarmBuffer ) // один раз выведем сообщение
   {
    t_printf( "->\n-E- %s(): инструкция #%d/%d [%s] не добавлена в буфер, ибо он полон (%s) -E-\n->",
-              __FUNC__, i_Set,Rule, Line_Set(i_Set, -1), Get_Time_asLine() );
+              __FUNC__, i_Set,Rule, Line_Set(i_Set, 2, 0.0), Get_Time_asLine() );
 //
    flagAlarmBuffer = false;
   }
@@ -2722,7 +2732,7 @@ Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] стр
 //
 ////////////////////////////////////////////////////////////////////////////////
  t_printf( "-I- %s(): инструкция #%d/%d [%s] добавлена в буфер (%s) -I-",
-            __FUNC__, i_Set,Rule, Line_Set(i_Set, -1), Get_Time_asLine() );
+            __FUNC__, i_Set,Rule, Line_Set(i_Set, 2, 0.0), Get_Time_asLine() );
 ////////////////////////////////////////////////////////////////////////////////
  Mem_Instruction[i_Set].fAddBuffer = true; // флаг добавления инструкции в буфер =======
  mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали ФЛАГИ данной инструкции =
@@ -2871,7 +2881,7 @@ Select_Set_fromBuffer() // возвращает номер инструкции из буфера по условию мах 
 //
  t_printf( "-I- %s(): инструкция #%d/%d [%s] (приор. = %.*g) выбрана из буфера для исполнения (%s) -I-",
             __FUNC__, i_Set_Prior_Max, i_Buffer,
-            Line_Set(i_Set_Prior_Max, -1),
+            Line_Set(i_Set_Prior_Max, 2, 0.0),
             ACC_REAL,Mem_Buffer[i_Buffer].Priority,
             Get_Time_asLine());
 //
@@ -2943,7 +2953,7 @@ Test_aResult_Eq_aOperand( INT i_Set ) // не совпадает ли в инструкции i_Set
   case 1: if( !strcmp( Mem_Instruction[i_Set].aResult, Mem_Instruction[i_Set].aOp1 ) ) // совпадают ?
            {
             t_printf( "-W- %s(): в инструкции #%d [%s] адрес результата совпадает с адресом входного операнда. Нарушен ПРИНЦИП ОДНОКРАТНОГО ПРИСВАИВАНИЯ... -W-",
-                             __FUNC__, i_Set, Line_Set(i_Set, -1));
+                             __FUNC__, i_Set, Line_Set(i_Set, 2, 0.0));
             return true; // ДА - есть совпадение !!!
            }
           else
@@ -2954,7 +2964,7 @@ Test_aResult_Eq_aOperand( INT i_Set ) // не совпадает ли в инструкции i_Set
               !strcmp( Mem_Instruction[i_Set].aResult, Mem_Instruction[i_Set].aOp2 ) ) // совпадают ?
            {
             t_printf( "-W- %s(): в инструкции #%d [%s] адрес результата совпадает с адресом одного из входных операндов. Нарушен ПРИНЦИП ОДНОКРАТНОГО ПРИСВАИВАНИЯ... -W-",
-                             __FUNC__, i_Set, Line_Set(i_Set, -1));
+                             __FUNC__, i_Set, Line_Set(i_Set,2, 0.0));
             return true; // ДА - есть совпадение !!!
            }
           else
@@ -4729,7 +4739,7 @@ void __fastcall Save_Protocol_Data()
 //
  for( INT i=0; i<Really_Data; i++ ) // по всем Mem_Data[i]
  {
-  snprintf( tmp,sizeof(tmp), "#%d [%s]", Mem_Data[i].i_Set, Line_Set(Mem_Data[i].i_Set, -1) ); // в результате какой команды определилось данное значение..?
+  snprintf( tmp,sizeof(tmp), "#%d [%s]", Mem_Data[i].i_Set, Line_Set(Mem_Data[i].i_Set, 2, 0.0) ); // в результате какой команды определилось данное значение..?
 //
   if( is_ResultIsPredicat( Mem_Data[i].Addr ) ) // это результат выполнения инструкции-ПРЕДИКАТА...
    fprintf( fptr, "%20s%20s     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data ? trueOutput : falseOutput, tmp );
