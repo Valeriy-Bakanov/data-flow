@@ -1,12 +1,5 @@
 #define TEST_PRINT  /* тестовая печать */ \
 /*
-t_printf( "\n-=-#%d/%d/%d %d-%d-%d %s{%f} %s{%d}\n", \
-              i_Set,i,Rule, \
-              flagNot,flagPredicat,flagPredicat_TRUE, \
-              aResult, Result, \
-              aPredicat, \
-              Mem_Instruction[i].fPredicat_TRUE );
-/*
 t_printf( "\n-=- Выполнившаяся инструкция (i_Set): #%d [%s %s,%s,%s(%f),|%s|]  {%d/%d/%d|%d/%d/%d}\n\
 -=- Зависимая инструкция    (i/Rule): #%d/%d [%s %s,%s,%s,|%s|]  {%d/%d/%d/%d|%d/%d}\n",\
 i_Set, \
@@ -20,6 +13,32 @@ Mem_Instruction[i].Set, Mem_Instruction[i].aOp1, Mem_Instruction[i].aOp2, Mem_In
   flagNot,flagPredicat,flagPredicat_TRUE, SpeculateExec, \
   Mem_Instruction[i].fPredicat_TRUE, Mem_Instruction[i].fSpeculateExec );
 */
+#define TUNE_FLAGS /* формирование флогов flagNot,flagPredicat,flagPredicat_TRUE */ \
+if ( !isPredicat ) /* это инструкция - НЕ ПРЕДИКАТ... */ \
+ flagNot = ( aPredicat[0] == symbolNot_1 || aPredicat[0] == symbolNot_2 ) \
+             ? true : false; /* TRUE, если в поле aPredicat первый символ '!' или '~' (отрицание) */ \
+/* проверяем, совпадает ли имя возврашённой переменной с именем */ \
+/* переменной в поле предиката ЗАВИСИМОЙ инструкции */ \
+flagPredicat = false; /* начальная установка */ \
+if( !isPredicat &&  /* ЗАВиСИМАЯ инструкция - НЕ ПРЕДИКАТ */ \
+      strcmp( aPredicat, trueLowerCase  ) && /* "и" это НЕ статический true */ \
+      strcmp( aPredicat, falseLowerCase ) )  /* "и" это НЕ статический false */ \
+ if( (  flagNot && !strcmp( &aPredicat[1], aResult ) ) || /* флаг-ПРЕДИКАТ отрицается (имя начинается с '!' или '~' ) */ \
+     ( !flagNot && !strcmp(  aPredicat,    aResult ) ) ) /* флаг-ПРЕДИКАТ не отрицаетсяСЯ (имя не нечинается с '!' или '~' ) */ \
+  flagPredicat = true; \
+/* теперь определяем значение Result на true или false и окончательно */ \
+/* (с учётом статических true/false) устанавливаем flagPredicat_TRUE */ \
+ flagPredicat_TRUE = false; /* начальная установка */ \
+ if( flagPredicat ) /* переменная-предикат определена, но значение ещё неизвестно */ \
+  if( ( flagNot && !Result ) || /* имя начинается с '!' или '~' и Result==FALSE */ \
+     ( !flagNot &&  Result ) ) /* имя Не начинается с '!' или '~' и Result==TRUE */ \
+   flagPredicat_TRUE = true; \
+/* отдельно обрабатываем статический true или false */ \
+ if( !strcmp( aPredicat, trueLowerCase ) ) /* если true... */ \
+  flagPredicat_TRUE = true; \
+ if( !strcmp( aPredicat, falseLowerCase ) ) /* если false... */ \
+  flagPredicat_TRUE = false; \
+/*-*/
 #define DO_OPS_2 /* вариант 2-х операндов в инструкции */ \
 if( Ready_Op1 ) { \
  MI_FOP1(i) = true; \
@@ -136,35 +155,7 @@ Finalize_Only_SET( INT i_Set )
 //
   isPredicat = is_Predicat( Set ); // TRUE, если ЗАВИСИМАЯ инструкция - ПРЕДИКАТ
 //
-//--- проверяем, начинается ли имя флага ПРЕДИКАТА с '!' или '~' ...............
-  if ( !isPredicat ) // это инструкция - НЕ ПРЕДИКАТ...
-   flagNot = ( aPredicat[0] == symbolNot_1 || aPredicat[0] == symbolNot_2 )
-               ? true : false; // TRUE, если в поле aPredicat первый символ '!' или '~' (отрицание)
-//
-//--- проверяем, совпадает ли имя возврашённой переменной с именем -------------
-//--- переменной в поле предиката ЗАВИСИМОЙ инструкции -------------------------
-  flagPredicat = false;  // начальная установка
-  if( !isPredicat &&  // ЗАВИСИМАЯ инструкция - НЕ ПРЕДИКАТ
-       strcmp( aPredicat, trueLowerCase  ) && // "и" это НЕ статический true
-       strcmp( aPredicat, falseLowerCase ) )  // "и" это НЕ статический false
-   if( (  flagNot && !strcmp( &aPredicat[1], aResult ) ) || // флаг-ПРЕДИКАТ отрицается (имя начинается с '!' или '~' )
-       ( !flagNot && !strcmp(  aPredicat,    aResult ) ) ) // флаг-ПРЕДИКАТ не отрицаетсяСЯ (имя не нечинается с '!' или '~' )
-    flagPredicat = true;
-//
-//--- теперь определяем значение Result на true или false и окончательно -------
-//--- (с учётом статических true/false) устанавливаем flagPredicat_TRUE --------
-//
-  flagPredicat_TRUE = false; // начальная установка
-  if( flagPredicat ) // переменная-предикат определена, но значение ещё неизвестно
-   if( ( flagNot && !Result ) || // имя начинается с '!' или '~' и Result==FALSE
-      ( !flagNot &&  Result ) ) // имя Не начинается с '!' или '~' и Result==TRUE
-    flagPredicat_TRUE = true;
-//
-//--- отдельно обрабатываем статический true или false -------------------------
-  if( !strcmp( aPredicat, trueLowerCase ) ) // если true...
-   flagPredicat_TRUE = true;
-  if( !strcmp( aPredicat, falseLowerCase ) ) // если false...
-   flagPredicat_TRUE = false;
+  TUNE_FLAGS // формирование флогов flagNot,flagPredicat,flagPredicat_TRUE
 //
   Ready_Op1 = MI_AOP1( i ) ; // флаг готовности операнда 2
   Ready_Op2 = MI_AOP2( i ) ; // флаг готовности операнда 2
@@ -339,39 +330,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 //
   isPredicat = is_Predicat( Set ); // TRUE, если это инструкция ПРЕДИКАТ
 //
-////////////////////////////////////////////////////////////////////////////////
-//
-//--- проверяем, начинается ли имя переменной предиката с '!' или '~'
-  if ( !isPredicat ) // это инструкция - НЕ предикат
-   flagNot = ( aPredicat[0]==symbolNot_1 || aPredicat[0]==symbolNot_2 )
-               ? true : false; // TRUE, если в поле aPredicat первый символ '!' или '~'
-//
-//--- проверяем, совпадает ли имя возврашённой переменной с именем -------------
-//--- переменной в поле предиката i-той инструкции -----------------------------
-  flagPredicat = false;  // начальная установка
-  if( !isPredicat &&  // ЗАВИСИМАЯ инструкция - НЕ ПРЕДИКАТ
-       strcmp( aPredicat, trueLowerCase  ) && // "и" это НЕ статический true
-       strcmp( aPredicat, falseLowerCase ) )  // "и" это НЕ статический false
-   if( (  flagNot && !strcmp( &aPredicat[1], aResult ) ) || // флаг-ПРЕДИКАТ отрицается (имя начинается с '!' или '~' )
-       ( !flagNot && !strcmp(  aPredicat,    aResult ) ) ) // флаг-ПРЕДИКАТ не отрицаетсяСЯ (имя не нечинается с '!' ил
-    flagPredicat = true;
-//
-//--- теперь определяем значение Result на true или false и окончательно -------
-//--- (с учётом статических true/false) устанавливаем flagPredicat_TRUE --------
-//
-  flagPredicat_TRUE = false; // начальная установка
-  if( flagPredicat ) // переменная-предикат определена, но значение ещё неизвестно
-   if( ( flagNot  && !Result ) || // имя начинается с '!' или '~' и Result==FALSE
-       ( !flagNot &&  Result ) ) // имя НЕ начинается с '!' или '~' и Result==TRUE
-    flagPredicat_TRUE = true;
-//
-//--- отдельно обрабатываем статический true или false -------------------------
-  if( !strcmp( aPredicat, trueLowerCase ) ) // если true...
-   flagPredicat_TRUE = true;
-  if( !strcmp( aPredicat, falseLowerCase ) ) // если false...
-   flagPredicat_TRUE = false;
-//
-////////////////////////////////////////////////////////////////////////////////
+  TUNE_FLAGS // формирование флогов flagNot,flagPredicat,flagPredicat_TRUE
 //
   if(Mem_Instruction[i].fExec    || // если инструкция ВЫПОЛНЯЕТСЯ "или"
      Mem_Instruction[i].fExecOut || // уже ВЫПОЛНЕНА "или"
