@@ -41,7 +41,6 @@ __published:	// IDE-managed Components
         TMenuItem *N4;
         TMenuItem *N7;
         TMenuItem *N8;
-        TMenuItem *N9;
         TMenuItem *Info;
         TMenuItem *Info_AW;
         TMenuItem *N15;
@@ -75,7 +74,6 @@ __published:	// IDE-managed Components
         TMenuItem *N33;
         TMenuItem *N34;
         TMenuItem *N35;
-        TMenuItem *N6;
         TMenuItem *SaveIGA;
         TMenuItem *SPFhome;
         TIdHTTP *INC0;

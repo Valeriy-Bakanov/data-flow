@@ -1,8 +1,8 @@
 object F1: TF1
   Left = 226
-  Top = 232
+  Top = 231
   Width = 1046
-  Height = 618
+  Height = 619
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   ActiveControl = BitBtn_Run
@@ -53,7 +53,7 @@ object F1: TF1
   OnShow = OnShow_F1
   DesignSize = (
     1028
-    557)
+    558)
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
@@ -145,7 +145,7 @@ object F1: TF1
   end
   object SB: TStatusBar
     Left = 0
-    Top = 538
+    Top = 539
     Width = 1028
     Height = 19
     Hint = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1089#1086#1089#1090#1086#1103#1085#1080#1080' '#1089#1080#1089#1090#1077#1084#1099' '#1080' '#1074#1099#1087#1086#1083#1085#1103#1077#1084#1086#1084' '#1076#1077#1081#1089#1090#1074#1080#1080
@@ -167,7 +167,7 @@ object F1: TF1
   end
   object SG_Data: TStringGrid
     Left = 812
-    Top = 216
+    Top = 217
     Width = 190
     Height = 308
     Hint = #1044#1072#1085#1085#1099#1077' ('#1087#1088#1086#1089#1084#1086#1090#1088' - '#1083#1077#1074#1072#1103' '#1082#1085#1086#1087#1082#1072' '#1084#1099#1096#1080', '#1088#1072#1089#1087#1077#1095#1072#1090#1082#1072' Alt+F2)'
@@ -185,7 +185,7 @@ object F1: TF1
   end
   object SG_Set: TStringGrid
     Left = 235
-    Top = 216
+    Top = 217
     Width = 559
     Height = 308
     Hint = 
@@ -235,7 +235,7 @@ object F1: TF1
   end
   object BitBtn_Stop: TBitBtn
     Left = 222
-    Top = 175
+    Top = 183
     Width = 124
     Height = 26
     Hint = #1054#1089#1090#1072#1085#1086#1074' '#1089#1095#1105#1090#1072' (Ctrl+S)'
@@ -245,7 +245,7 @@ object F1: TF1
   end
   object SG_Buffer: TStringGrid
     Left = 4
-    Top = 216
+    Top = 217
     Width = 199
     Height = 308
     Hint = #1041#1091#1092#1077#1088' '#1082#1086#1084#1072#1085#1076' ('#1085#1091#1084#1077#1088#1072#1094#1080#1103' '#1089' 1)'
@@ -262,7 +262,7 @@ object F1: TF1
   end
   object PB_1: TProgressBar
     Left = 206
-    Top = 216
+    Top = 217
     Width = 17
     Height = 308
     Cursor = crCross
@@ -356,14 +356,6 @@ object F1: TF1
         OnClick = Stop_Calculations
       end
       object N8: TMenuItem
-        Caption = '-'
-      end
-      object N9: TMenuItem
-        Caption = #1055#1077#1088#1077#1084#1077#1096#1072#1090#1100' '#1080#1085#1089#1090#1088#1091#1082#1094#1080#1080
-        Hint = #1055#1077#1088#1077#1084#1077#1096#1072#1090#1100' '#1080#1085#1089#1088#1091#1082#1094#1080#1080' '#1089#1083#1094#1095#1072#1081#1085#1099#1084' '#1086#1073#1088#1072#1079#1086#1084
-        OnClick = Mixed_Sets
-      end
-      object N6: TMenuItem
         Caption = '-'
       end
       object SaveIGA: TMenuItem

@@ -1199,13 +1199,12 @@ Vizu_Buffer() // визуализация данных в SG_Buffer из массива структур Mem_Buffer[
 //
  mB->RowCount = Really_Buffer + 1; // настроили число строк в визуализируемом объекте
 //
- for(UI i=0; i<Really_Buffer; i++) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Buffer)...
+ for( INT i=0; i<Really_Buffer; i++ ) // теперь ВИЗУАЛИЗИРУЕМ инструкции (вывод в SG_Buffer)...
   {
    snprintf(tmp,sizeof(tmp), "%7d / %s",  // номер инструкции и ее мнемоника как строка
                              Mem_Buffer[i].i_Set, Mem_Instruction[Mem_Buffer[i].i_Set].Set);
    mB->Cells[0][i+1] = tmp;
 //
-//   snprintf(tmp,sizeof(tmp), "%.3f / %.3f", // готовим строку вмда "Param / Priority"
    snprintf(tmp,sizeof(tmp), "%.*g / %.*g", // готовим строку вмда "Param / Priority"
                              ACC_REAL,Mem_Buffer[i].Param,
                              ACC_REAL,Mem_Buffer[i].Priority);
@@ -1260,11 +1259,13 @@ TF1::OnClose_F1(TObject *Sender, TCloseAction &Action)
 void __fastcall // нажатие кнопки СТОП
 TF1::Stop_Calculations(TObject *Sender)
 {
-
  Write_Config();
-
+//
  StopCalculations( 0 ); // выполнение остановлено пользователем
-} // конец Stop_Calculations ---------------------------------------------------
+//
+ do_Run // "включили" все кнопки Выполнение
+//
+} // ----- конец Stop_Calculations ---------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1585,25 +1586,25 @@ TF1::Mixed_Sets(TObject *Sender)
  Vizu_Buffer();  // визуализировали данные в буфере
 //
 ////////////////////////////////////////////////////////////////////////////////
- BitBtn_Run->Enabled = false; // включили" кнопку Выполнение
+ BitBtn_Run->Enabled = false; // выключили" кнопку Выполнение
 
  srand((unsigned) time(&t)); // инициализации датчика случайных чисел текущим временем
 
  SBM0->Text = " Происходит случайное перемешивание инструкций..."; // вывод текста в StatusBarMain
 
- for(ULI i=0; i<Really_Set; i++) // перемешиваем Really_Sets раз
+ for( INT i=0; i<Really_Set; i++ ) // перемешиваем Really_Sets раз
  {
   i1 = random(Really_Set), // "старый" номер инструкции (счет начинаем с нуля)
   i2 = random(Really_Set); // "новый" номер инструкции
 //
-  if(i1 == i2) // нечего менять местами...
+  if(i1 == i2) // нЕчего менять местами...
    continue;
 //
   M_I = Mem_Instruction[i1]; // запомнили "старое"
   Mem_Instruction[i1] = Mem_Instruction[i2]; // #i2 -> #i1
   Mem_Instruction[i2] = M_I; // #i1 -> #i2
 //
-  if(!(Really_Set % 10)) // каждый десятый раз
+  if( !(Really_Set % 10) ) // каждый десятый раз
   {
    Vizu_Sets(); // визуализировать таблицу
    Delay(10);
@@ -2014,7 +2015,7 @@ TF1::Run_Calculations(TObject *Sender)
 //
  Start_DataFlow_Process( 0 ); // начинаем счет по кнопке ВЫПОЛНИТЬ
 //
-} // конец F1:Run_Calculations(TObject *Sender) --------------------------------
+} // ----- конец F1:Run_Calculations(TObject *Sender) --------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2025,11 +2026,11 @@ Start_DataFlow_Process( int Mode )
 // Mode = 0 соответствует нажатию кнопки ВЫПОЛНИТЬ
 // Mode = 1 -,-,-,-,- "Перемешать инструкции и выполнить"
 //
- do_Stop // "выключили" все кнопки Выполнение 
+ do_Stop // "выключили" все кнопки Выполнение
 //
  Regim = 1;  // начать выполнение программы
 //
- for(UI i=0; i<max_Proc; i++) // все АИУ...
+ for( INT i=0; i<max_Proc; i++ ) // все АИУ...
   Mem_Proc[i].Busy = false; // "СВОБОДНЫ"..!!!
 //
  Free_Proc = max_Proc; // пока все АИУ свободны
@@ -2047,7 +2048,10 @@ Start_DataFlow_Process( int Mode )
 //
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  if( Mode == 1 ) // перемешать инструкции в ПАМЯТИ_ИНСТРУКЦИЙ
-  F1->Mixed_Sets( NULL );
+ {
+  F1->Mixed_Sets( NULL ); // перемешать инструкции
+  Vizu_Sets(); // визуализировали ПЕРЕМЕШАННЫЕ инструкции в ОКНЕ_ИНСТРУКЦИЙ
+ }
 ////////////////////////////////////////////////////////////////////////////////
  mTpr->Clear(); // очистить список строк данных для анализа работы всех АИУ
 ////////////////////////////////////////////////////////////////////////////////
@@ -3197,7 +3201,7 @@ TF1::Most_Wonderful(TObject *Sender)
   case IDYES: // нажата кнопка Yes
               Start_DataFlow_Process( 1 ); // начать счет после перемешивания инструкций
               break;
-
+//
   case IDNO:  // нажата кнопка No
               break;
  } // конец switch
