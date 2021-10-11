@@ -152,15 +152,15 @@ void   __fastcall Delay(long mSecs);  // ждать mSecs миллисекунд (с возможность 
 void   __fastcall RunExternal(char* CommandLine, byte RuleParent, byte Priority, bool RuleMessage);
 bool   __fastcall Read_Instructions(); // читает инструкции из файла FileNameSet в массив структур Mem_Instruction[]
 //
-bool   __fastcall Vizu_Sets(); // визуализация инструкций в SG_Set  из массива структур Mem_Instruction[]
+bool   __fastcall Vizu_Instructions(); // визуализация инструкций в SG_Set  из массива структур Mem_Instruction[]
 void   __fastcall Vizu_Data(); // визуализация данных в SG_Data из массива структур Mem_Data[]
 void   __fastcall Vizu_Buffer(); // визуализация данных в SG_Buffer из массива структур Mem_Buffer[]
 //
-char*  __fastcall Vizu_Flags(INT i_Set); // визуализация флагов инструкции Mem_Sets[i_Set]
+char*  __fastcall Vizu_Flags(INT i_Set); // визуализация флагов инструкции Mem_Instruction[i_Set]
 //
 void   __fastcall Primary_Init_Data(); // первоначальное присваивание данных ячейкам памяти etc etc
 void   __fastcall ExecuteInstructions_Except_SET(INT i_Set); // выполняет все (кроме SET) инструкции номер i_Set
-void   __fastcall Install_All_Flags(); // очищаем ВСЕ ФЛАГИ в Mem_Sets[]
+void   __fastcall Install_All_Flags(); // очищаем ВСЕ ФЛАГИ в Mem_Instruction[]
 void   __fastcall Calc_Stat_Proc();  // вычисляется статистика использования АИУ
 //
 float  __fastcall Calc_Param(INT i_Set); // вычисляется ПОЛЕЗНОСТЬ инструкции i_Set
@@ -176,7 +176,7 @@ void   __fastcall Start_DataFlow_Process(int Mode); // начали счет (в заданном M
 //
 int    __fastcall Get_CountOperandsByInstruction(char *Set); // возвращает число операндов инструкции Set
 char*  __fastcall GetSubString(char *Str, int n1, int n2); // вернуть подстроку из Str от n1 до n2 символов включительно
-char*  __fastcall Line_Set(INT i_Set, short int Rule, REAL Result); // возвращает текст инструкции из Mem_Sets[i]
+char*  __fastcall Line_Set(INT i_Set, short int Rule, REAL Result); // возвращает текст инструкции из Mem_Instruction[i]
 void   __fastcall Add_toData(INT i_Set, char* aResult, REAL Data); // добавляет в Mem_Data[] число по адресу (строка!) Addr
 void   __fastcall Add_toBuffer(INT i_Set, int Rule); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set (Rule определяет точку вызова функции)
 int    __fastcall Get_TicksByInstruction(char *Set); // возвращает из Set_Params->Time время выполнения инструкции Set(char *Set);
@@ -204,6 +204,8 @@ REAL   __fastcall StrToReal(char *str, INT i_Set); // конвертация строки в REAL 
 void   __fastcall GetFileFromServer( char FileName[] ); // получить файл с сервера
 //
 bool   __fastcall Test_All_Operands(); // тестирует потенциальное существование операндов для всех инструкций (останов при ошибке)
+void   __fastcall Mixed_Instructions(); // перемешать все инструкции в Mem_Instructions[] в случайном поряден
+void   __fastcall Start_DF( int Mode ); // старт вычислений (без / с перемешиванмем инструкций при Mode 0 / #0 )
 //
 int    __fastcall RunPreProcessor(); // препроцессор обработки макросов
 int    __fastcall PreProcRow_For1(INT iRow, char* c, INT iCycle); // расширитель iRow строки тела макроса одномерного массива
@@ -622,7 +624,7 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
   Install_All_Flags(); // очистить все флаги инструкций
 //
-  Vizu_Sets(); // визуализация инструкций в SG_Set из массива структур Mem_Instruction[]
+  Vizu_Instructions(); // визуализация инструкций в SG_Set из массива структур Mem_Instruction[]
  }
  else // не удалось прочитать
  {
@@ -892,9 +894,9 @@ TF1::Rewrite_Files(TObject *Sender)
 //
  mR->Clear(); // очистили Memo_Run .............................................
 //
- Install_All_Flags(); // очистили все флаги в Mem_Sets[]
+ Install_All_Flags(); // очистили все флаги в Mem_Instruction[]
 //
- Vizu_Sets(); // визуализировали инструкции в ОКНЕ_ИНСТРУКЦИЙ
+ Vizu_Instructions(); // визуализировали инструкции в ОКНЕ_ИНСТРУКЦИЙ
 //
  Really_Data = 0; // очистили пул данных
  Vizu_Data();  // визуализировали данные в ОКНЕ_ДАННЫХ
@@ -1080,7 +1082,7 @@ void __fastcall Write_Config()  // сохраняет данные в файл конфигурации
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 bool __fastcall // визуализация инструкций в SG_Set из массива структур Mem_Instruction[]
-Vizu_Sets()
+Vizu_Instructions()
 {
  char Set[_SET_LEN]="\0", // мнемоника инструкции
       tmp[_512]="\0";
@@ -1143,7 +1145,7 @@ Vizu_Sets()
 //
   return true;
 //
-} // --- конец Vizu_Sets -------------------------------------------------------
+} // --- конец Vizu_Instructions -----------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1353,7 +1355,7 @@ Get_Data( char Addr[])
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-char* __fastcall // возвращает текст инструкции из Mem_Sets[i]
+char* __fastcall // возвращает текст инструкции из Mem_Instruction[i]
 Line_Set( INT i_Set, short int Rule, REAL Result )
 { // при Rule = 0  содержимое aResult не выдается (выдается "?")
   // при Rule = 1  содержимое aResult возвращается Get_Data()
@@ -1573,51 +1575,32 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall  // перемешивает инструции в Mem_Sets[] и в ОКНЕ_ИНСТРУКЦИЙ
-TF1::Mixed_Sets(TObject *Sender)
+void __fastcall  // перемешивает инструции в Mem_Instrucrtions[]
+Mixed_Instructions()
 {
- INT i1,i2; // номера перемешиваемых инструкций в Mem_Sets[]
+ INT i1,i2; // номера перемешиваемых инструкций в Mem_Instruction[]
  time_t t; // начальное значение для датчика случайных чисел
 //
- Really_Data = 0; // очистили ОКНО_ДАННЫХ
- Vizu_Data();
+ do_Stop // "выключили" все кнопки Выполнение
 //
- Really_Buffer = 0; // очистили буфер
- Vizu_Buffer();  // визуализировали данные в буфере
-//
-////////////////////////////////////////////////////////////////////////////////
- BitBtn_Run->Enabled = false; // выключили" кнопку Выполнение
-
  srand((unsigned) time(&t)); // инициализации датчика случайных чисел текущим временем
-
- SBM0->Text = " Происходит случайное перемешивание инструкций..."; // вывод текста в StatusBarMain
-
+//
  for( INT i=0; i<Really_Set; i++ ) // перемешиваем Really_Sets раз
  {
-  i1 = random(Really_Set), // "старый" номер инструкции (счет начинаем с нуля)
-  i2 = random(Really_Set); // "новый" номер инструкции
-//
-  if(i1 == i2) // нЕчего менять местами...
-   continue;
+  i1 = random( Really_Set ), // "старый" номер инструкции (счет начинаем с нуля)
+  i2 = random( Really_Set ); // "новый" номер инструкции
 //
   M_I = Mem_Instruction[i1]; // запомнили "старое"
-  Mem_Instruction[i1] = Mem_Instruction[i2]; // #i2 -> #i1
-  Mem_Instruction[i2] = M_I; // #i1 -> #i2
+  Mem_Instruction[i1] = Mem_Instruction[i2]; // #i1 <- #i2
+  Mem_Instruction[i2] = M_I; // #i2 <- #i1
+ }
 //
-  if( !(Really_Set % 10) ) // каждый десятый раз
-  {
-   Vizu_Sets(); // визуализировать таблицу
-   Delay(10);
-  }
+ SBM0->Text = " Инструкции перемешаны случайным образом..."; // вывод текста в StatusBarMain
+ MessageBeep( MB_ICONASTERISK ); // предупреждение...
+ Delay( 1000 );
 //
- } // конец по Mem_Instruction[i]
+ do_Run // "включили" все кнопки Выполнение
 //
- Vizu_Sets(); // визуализировать таблицу
-//
- SBM0->Text = " Инструкции перемешаны случайным образом"; // вывод текста в StatusBarMain
-//
-////////////////////////////////////////////////////////////////////////////////
- BitBtn_Run->Enabled = true; // включили кнопку Выполнение
 } //----------------------------------------------------------------------------
 
 
@@ -1655,13 +1638,13 @@ void __fastcall TF1::Load_Sets(TObject *Sender)
 //
    Write_Config(); // переписать файл конфигурации (в основном касается поля FileNameSet)
 //
-   Read_Instructions(); // читаем файл в Mem_Sets[]
+   Read_Instructions(); // читаем файл в Mem_Instruction[]
 //
    mR->Clear(); // очистили Memo_Run ...........................................
 //
-   Install_All_Flags(); // очистили все флаги в Mem_Sets[] !!!!!!!!!!!!!!!!!!!!!!!
+   Install_All_Flags(); // очистили все флаги в Mem_Instruction[] !!!!!!!!!!!!!!
 //
-   Vizu_Sets(); // визуализировали инструкции в ОКНЕ_ИНСТРУКЦИЙ
+   Vizu_Instructions(); // визуализировали инструкции в ОКНЕ_ИНСТРУКЦИЙ
 //
    Really_Data = 0; // очистили пул данных
    Vizu_Data();  // визуализировали данные в ОКНЕ_ДАННЫХ
@@ -1686,8 +1669,6 @@ GetSubString( char *Str, int n1, int n2 )
 {
  char tmp[_1024] = "\0"; // рабочая строка
  int j = -1;
-//
-// strcpy(tmp, "\0"); // обнулили строку
 //
  for(int i=0; i<strlen(Str); i++)
   if( ((i+1) >= n1) &&
@@ -1850,7 +1831,7 @@ Calc_Stat_Proc()
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-char* __fastcall // визуализация флагов инструкции Mem_Sets[] номер i_Set
+char* __fastcall // визуализация флагов инструкции Mem_Instruction[] номер i_Set
 Vizu_Flags( INT i_Set )
 {
  char Set[_SET_LEN]="\0",
@@ -1943,6 +1924,17 @@ Vizu_Flow_Exec() // визуализировать процент выполнения программы
 void __fastcall // начали вычисления (нажатие кнопки СЧЕТ)
 TF1::Run_Calculations(TObject *Sender)
 {
+ Start_DF( 0 ); // старт без перемешивания инсрукций
+} // ---- конец TF1::Run_Calculations ------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall
+Start_DF( int Mode )
+{
+// Mode = 0 соответствует нажатию кнопки ВЫПОЛНИТЬ
+// Mode = 1 -,-,- "Перемешать инструкции и выполнить"
 //
  Read_Config( 1 ); // перечитали файл конфигурации (без изменения положения и размеров F1)
 //
@@ -1960,15 +1952,15 @@ TF1::Run_Calculations(TObject *Sender)
 //
  randomize(); // инициализация функции rand() при выполнении инструкции RND
 //
- Master_Timer->Enabled = true; // включили главный таймер
+ F1->Master_Timer->Enabled = true; // включили главный таймер
  localTick, // начало выполнения программы (глобал)
  localTickOfEndLastExecuteSet = 0; // момент последнего тика выполнения последней инструкции (глобал)
 //
 // для единокраной выдачи сообщений о переполнении Mem_Data[] и Mem_Buffer и проблемах с парсером (глобальные)
  flagAlarmData = flagAlarmBuffer = flagAlarmParser = true;
 //
- Label_Data->Font->Color   = clBlack;
- Label_Buffer->Font->Color = clBlack;
+ F1->Label_Data->Font->Color   = clBlack;
+ F1->Label_Buffer->Font->Color = clBlack;
 //
  if( F2 )
   F2->Close(); // окно графика интенсивности вычислений закрыли
@@ -1976,14 +1968,12 @@ TF1::Run_Calculations(TObject *Sender)
  if( F3 )
   F3->Close(); // окно графика интенсивности вычислений закрыли
 //
-// Label_AIU->Caption = E_AIU->Text;
-//
- ULI max_Proc_New = StrToInt( E_AIU->Text ); // взяли число АИУ (параллельных вычислителей)
+ ULI max_Proc_New = StrToInt( F1->E_AIU->Text ); // взяли число АИУ (параллельных вычислителей)
 //
  max_Proc = (max_Proc >  MAX_PROC) ? MAX_PROC : max_Proc;
  max_Proc = (max_Proc <=        0) ? 1        : max_Proc;
- E_AIU->Text = max_Proc_New;
- E_AIU->Repaint(); // принудительно перерисуем...
+ F1->E_AIU->Text = max_Proc_New;
+ F1->E_AIU->Repaint(); // принудительно перерисуем...
 //
  if( max_Proc_New != max_Proc ) // заказали иное число АИУ, чем было
  {
@@ -1994,10 +1984,10 @@ TF1::Run_Calculations(TObject *Sender)
   Mem_Proc = ( mp* ) realloc( Mem_Proc, max_Proc * sizeof( mp ) ); // перераспределили ТОЛЬКО память под АИУ
  } // конец  if( max_Proc_New != max_Proc )
 //
-  mR->Clear(); // очистили Memo_Run .............................................
+ mR->Clear(); // очистили Memo_Run .............................................
 //
- Install_All_Flags(); // очистили все флаги в Mem_Sets[]
- Vizu_Sets(); // визуализировали все инструкции в ОКНЕ_ИНСТРУКЦИЙ
+ Install_All_Flags(); // очистили все флаги в Mem_Instruction[]
+ Vizu_Instructions(); // визуализировали все инструкции в ОКНЕ_ИНСТРУКЦИЙ
 //
  Really_Data = 0; // очистили пул данных
  Vizu_Data();  // визуализировали данные в ОКНЕ_ДАННЫХ
@@ -2005,30 +1995,28 @@ TF1::Run_Calculations(TObject *Sender)
  Really_Buffer = 0; // очистили буфер команд
  Vizu_Buffer();  // визуализировали инструкции в БУФЕРЕ_ИНСТРУКЦИЙ
 //
- Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
-//
-//  Rewrite_Files( Sender ); // перечитать файл программы !!!!!!!!!!!!!!!!!!!!!!
+ Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar --------------------
 //
  Clear_AllTableInstructions(); // очистили все ячейки
 //
  Make_Row_Current( 0 ); // установили текущей первую команду
 //
- Start_DataFlow_Process( 0 ); // начинаем счет по кнопке ВЫПОЛНИТЬ
+ Start_DataFlow_Process( Mode ); // начинаем счёт
 //
-} // ----- конец F1:Run_Calculations(TObject *Sender) --------------------------
+} // ----- конец Start_DF ------------------------------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall // начали счет (в заданном Mode режиме)
+void __fastcall // начали счёт (в режиме, заданном Mode )
 Start_DataFlow_Process( int Mode )
 {
 // Mode = 0 соответствует нажатию кнопки ВЫПОЛНИТЬ
-// Mode = 1 -,-,-,-,- "Перемешать инструкции и выполнить"
+// Mode = 1 -,-,- "Перемешать инструкции и выполнить"
 //
  do_Stop // "выключили" все кнопки Выполнение
 //
- Regim = 1;  // начать выполнение программы
+ Regim = 1; // начать выполнение программы
 //
  for( INT i=0; i<max_Proc; i++ ) // все АИУ...
   Mem_Proc[i].Busy = false; // "СВОБОДНЫ"..!!!
@@ -2038,7 +2026,11 @@ Start_DataFlow_Process( int Mode )
  mR->Clear(); // очистили Memo_Run
 //
  Read_Instructions(); // перечитать программу
- Vizu_Sets(); // визуализировали инструкции в ОКНЕ_ИНСТРУКЦИЙ
+//
+ if( Mode != 0 ) // требуется перемешать инструкции в ПАМЯТИ_ИНСТРУКЦИЙ
+  Mixed_Instructions(); // перемешать инструкции
+//
+ Vizu_Instructions(); // визуализировали инструкции в ОКНЕ_ИНСТРУКЦИЙ
 //
  Really_Data = 0; // очистили пул данных
  Vizu_Data();  // визуализировали данные в ОКНЕ_ДАННЫХ
@@ -2046,12 +2038,6 @@ Start_DataFlow_Process( int Mode )
  Really_Buffer = 0; // очистили буфер
  Vizu_Buffer();  // визуализировали данные в буфере
 //
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- if( Mode == 1 ) // перемешать инструкции в ПАМЯТИ_ИНСТРУКЦИЙ
- {
-  F1->Mixed_Sets( NULL ); // перемешать инструкции
-  Vizu_Sets(); // визуализировали ПЕРЕМЕШАННЫЕ инструкции в ОКНЕ_ИНСТРУКЦИЙ
- }
 ////////////////////////////////////////////////////////////////////////////////
  mTpr->Clear(); // очистить список строк данных для анализа работы всех АИУ
 ////////////////////////////////////////////////////////////////////////////////
@@ -2069,7 +2055,7 @@ Start_DataFlow_Process( int Mode )
 //
  if( !Test_All_Operands() ) // выполнение продолжить нельзя..!
  {
-  do_Run // "включили" все кнопки Выполнение 
+  do_Run // "включили" все кнопки Выполнение
   return; // заканчиваем выполнение программы
  }
 //
@@ -2096,20 +2082,20 @@ Primary_Init_Data()
 // фактически это значит, что надо выполнить только ВСЕ инструкции SET
 ////////////////////////////////////////////////////////////////////////////////
 //
- for( ULI i=0; i<Really_Set; i++ ) // цикл по всем инструкциям в Mem_Instruction .......
+ for( INT i=0; i<Really_Set; i++ ) // цикл по всем инструкциям в Mem_Instruction .......
   {
    if( is_SET( Mem_Instruction[i].Set ) ) // это "безАдресный" SET......................
     Finalize_Only_SET( i ); // обрабатывается не АИУ, а ВХОДНЫМ КОММУНИКАТОРОМ
 //
 // вызов Finalize_Only_SET выполняет инструкцию i_Set (добавляет соотв. строку в
-// Mem_Data, устанавливает флаг "выполнено" у данной инструкции, сканирует Mem_Instruction
+// Mem_Data, устанавливает флаг "выполнено" у данной инструкции, сканирует Mem_Instruction[]
 // по всем инструкциям на наличие в списке операндов тольо что внесенного в Mem_Data)
 //
   } // конец цикла по пулу инструкций
 //
 // ЗАВЕРШИЛИ ПЕРВОНАЧАЛЬНУЮ ИНИЦИАЛИЗАЦИЮ ДАННАХ (закончили выполнение всех SET)
 //
-} // конец Primary_Init_Data ---------------------------------------------------
+} // ----- конец Primary_Init_Data ---------------------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2667,7 +2653,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //
 // запомнили в данных АИУ информацию об адресах операндов и результате операции
-   Mem_Proc[i_Proc].i_Set = i_Set; // номер инструкции из Mem_Sets[]
+   Mem_Proc[i_Proc].i_Set = i_Set; // номер инструкции из Mem_Instruction[]
    strcpy( Mem_Proc[i_Proc].aOp1,    Mem_Instruction[i_Set].aOp1 );
    strcpy( Mem_Proc[i_Proc].aOp2,    Mem_Instruction[i_Set].aOp2 );
    strcpy( Mem_Proc[i_Proc].aResult, Mem_Instruction[i_Set].aResult );
@@ -3199,22 +3185,13 @@ TF1::Most_Wonderful(TObject *Sender)
  switch( MessageBox(0, tmp, " Информация/вопрос", MB_YESNO) )
  {
   case IDYES: // нажата кнопка Yes
-              Start_DataFlow_Process( 1 ); // начать счет после перемешивания инструкций
+              Start_DF( 1 ); // старт вычислений с перемешиванмем инструкций
               break;
 //
   case IDNO:  // нажата кнопка No
               break;
  } // конец switch
 //
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall // вызывается из "Работа->Перемешать инструкции+расчет" главного меня
-TF1::Mixed_Start(TObject *Sender)
-{
- Start_DataFlow_Process ( 1 ); // перемешать инструкции и начать расчёт
 } //----------------------------------------------------------------------------
 
 
@@ -5317,7 +5294,7 @@ bool __fastcall Read_Instructions()
    p = strtok(str, " "); // "выкусываем" мнемонику команды
 //
    strcpy(Set, AnsiUpperCase(p).c_str()); // запомнили мнемонику в Set (AnsiUpperCase работает с латиницей)
-   strcpy(Mem_Instruction[i].Set, Set); // запомнили мнемонику инструкции в Mem_Sets[]
+   strcpy(Mem_Instruction[i].Set, Set); // запомнили мнемонику инструкции в Mem_Instruction[]
 //
 // ---- случаи !false, ~false, !true, ~true в поле предиката--------------------
 //
@@ -5422,7 +5399,7 @@ bool __fastcall Read_Instructions()
 //
  fclose(fptr);
 //
- Vizu_Sets(); // визуализировать пул инструкций
+ Vizu_Instructions(); // визуализировать пул инструкций
 //
  return true ;
 //
@@ -5663,15 +5640,11 @@ void __fastcall TF1::Result_toOperands(TObject *Sender)
  mS->Repaint();
 //
  if( strlen(str) ) // строка не пустая
- {
   t_printf( "\n-I- %s(): результат выполнения инструкции #%d используется %d раз/а в качестве операнда/ов: %s -I-",
             __FUNC__ + 5, mS->Row-1, Really_Select, str); // (+5) избавляемся от TF1::
- }
  else // строка пустая
- {
   t_printf( "\n-I- %s(): результат выполнения инструкции #%d не используется в качестве никакого операнда !!! -I-",
             __FUNC__ + 5, mS->Row-1, Really_Select, str); // (+5) избавляемся от TF1::
- }
 //
 } //----- конец TF1::Result_toOperands -----------------------------------------
 

@@ -117,7 +117,6 @@ __published:	// IDE-managed Components
         void __fastcall Run_Calculations(TObject *Sender);
         void __fastcall SG_Sets_DrawCell(TObject *Sender, int ACol, int ARow, TRect &Rect, TGridDrawState State);
         void __fastcall Save_All_Protocols(TObject *Sender);
-        void __fastcall Mixed_Sets(TObject *Sender);
          void __fastcall About_Cluster(TObject *Sender);
         void __fastcall Load_Sets(TObject *Sender);
         void __fastcall About_AW(TObject *Sender);
@@ -131,7 +130,7 @@ __published:	// IDE-managed Components
         void __fastcall INI_Edit(TObject *Sender);
         void __fastcall About_Poems(TObject *Sender);
         void __fastcall Most_Wonderful(TObject *Sender);
-        void __fastcall Mixed_Start(TObject *Sender);
+//
         void __fastcall On_Master_Timer(TObject *Sender);
         void __fastcall SG_SetSelectCell(TObject *Sender, int ACol, int ARow, bool &CanSelect);
         void __fastcall Result_toOperands(TObject *Sender);
