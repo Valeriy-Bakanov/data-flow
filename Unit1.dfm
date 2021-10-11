@@ -1,6 +1,6 @@
 object F1: TF1
-  Left = 226
-  Top = 231
+  Left = 524
+  Top = 273
   Width = 1046
   Height = 619
   HorzScrollBar.Visible = False
@@ -183,7 +183,7 @@ object F1: TF1
     OnMouseDown = SG_Data_Info
     OnTopLeftChanged = SG_Data_TopLeftChanged
   end
-  object SG_Set: TStringGrid
+  object SG_Instruction: TStringGrid
     Left = 235
     Top = 217
     Width = 559
@@ -202,8 +202,8 @@ object F1: TF1
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected]
     PopupMenu = SG_PopUpMenu
     TabOrder = 5
-    OnDblClick = SG_Sets_Edit
-    OnDrawCell = SG_Sets_DrawCell
+    OnDblClick = SG_Instruction_Edit
+    OnDrawCell = SG_Instruction_DrawCell
     OnMouseUp = SG_MouseUp
     OnSelectCell = SG_SetSelectCell
     RowHeights = (
@@ -392,7 +392,6 @@ object F1: TF1
         Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100' '#1092#1072#1081#1083' '#1080#1085#1089#1090#1088#1091#1082#1094#1080#1081
         Hint = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100' '#1092#1072#1081#1083' '#1080#1085#1089#1088#1091#1082#1094#1080#1081' (SET-'#1092#1072#1081#1083'0'
         ShortCut = 16499
-        OnClick = SG_Sets_Edit
       end
       object N25: TMenuItem
         Caption = '-'

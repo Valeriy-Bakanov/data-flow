@@ -246,10 +246,10 @@ void  __fastcall Make_Row_Current( INT Row ); // сделать строку Row (начинаем с 
 void  __fastcall Run_Infinity(); // повтор загруженной программы бесконечное число раз
 //
 //==============================================================================
-#define mR F1->M1  // доступ к M1
+#define mR F1->M1  // доступ к M1 (фрейм протокола)
 #define mB F1->SG_Buffer // доступ к массиву ячеек визуализации буфера команд
 #define mP F1->PB_1      // доступ к указателюзаполненности буфера команд
-#define mS F1->SG_Set    // доступ к массиву ячеек  инструкций
+#define mS F1->SG_Instruction // доступ к массиву ячеек  инструкций
 #define mD F1->SG_Data   // доступ к массиву ячеек данных
 #define mTpr F1->Tpr // доступ к F1->Tpr
 #define mPM  F1->PM  // доступ к F1->PM
@@ -784,7 +784,7 @@ RunExternal(char* CommandLine, byte RuleParent, byte Priority, bool RuleMessage)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall
-TF1::SG_Sets_Edit(TObject *Sender) // вызов редактора файла инструкций
+TF1::SG_Instruction_Edit(TObject *Sender) // вызов редактора файла инструкций
 {
 //
  if( !modeEdit ) // немодальный вызов
@@ -1575,37 +1575,6 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall  // перемешивает инструции в Mem_Instrucrtions[]
-Mixed_Instructions()
-{
- INT i1,i2; // номера перемешиваемых инструкций в Mem_Instruction[]
- time_t t; // начальное значение для датчика случайных чисел
-//
- do_Stop // "выключили" все кнопки Выполнение
-//
- srand((unsigned) time(&t)); // инициализации датчика случайных чисел текущим временем
-//
- for( INT i=0; i<Really_Set; i++ ) // перемешиваем Really_Sets раз
- {
-  i1 = random( Really_Set ), // "старый" номер инструкции (счет начинаем с нуля)
-  i2 = random( Really_Set ); // "новый" номер инструкции
-//
-  M_I = Mem_Instruction[i1]; // запомнили "старое"
-  Mem_Instruction[i1] = Mem_Instruction[i2]; // #i1 <- #i2
-  Mem_Instruction[i2] = M_I; // #i2 <- #i1
- }
-//
- SBM0->Text = " Инструкции перемешаны случайным образом..."; // вывод текста в StatusBarMain
- MessageBeep( MB_ICONASTERISK ); // предупреждение...
- Delay( 1000 );
-//
- do_Run // "включили" все кнопки Выполнение
-//
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 void __fastcall // очищаем ВСЕ ФЛАГИ в Mem_Instructions[]
 Install_All_Flags()
 {
@@ -1921,7 +1890,7 @@ Vizu_Flow_Exec() // визуализировать процент выполнения программы
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall // начали вычисления (нажатие кнопки СЧЕТ)
+void __fastcall // начали вычисления ( нажатие кнопки ВЫПОЛНИТЬ )
 TF1::Run_Calculations(TObject *Sender)
 {
  Start_DF( 0 ); // старт без перемешивания инсрукций
@@ -3180,8 +3149,6 @@ TF1::Most_Wonderful(TObject *Sender)
  strcat(tmp, "Желаете случайным образом ПЕРЕМЕШАТЬ инструкции и далее\n");
  strcat(tmp, "повторить расчёт, дабы убедиться в сказанном?");
 //
-// MessageBeep(0xFFFFFFFF);
-//
  switch( MessageBox(0, tmp, " Информация/вопрос", MB_YESNO) )
  {
   case IDYES: // нажата кнопка Yes
@@ -3257,8 +3224,8 @@ void __fastcall TF1::SG_SetSelectCell(TObject *Sender, int ACol,
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall // вызывается при отрисовке каждой ячейки таблицы SG_Sets
-TF1::SG_Sets_DrawCell(TObject *Sender, int ACol, int ARow,
+void __fastcall // вызывается при отрисовке каждой ячейки таблицы SG_Instruction
+TF1::SG_Instruction_DrawCell(TObject *Sender, int ACol, int ARow,
                       TRect &Rect, TGridDrawState State)
 {
 //
@@ -5481,7 +5448,7 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
  tmp = mS->ColWidths[0] + mS->ColWidths[1] + mS->ColWidths[2]  // ширина первых 0-5 столбцов
      + mS->ColWidths[3] + mS->ColWidths[4] + mS->ColWidths[5];
 //
- mS->ColWidths[7] = SG_Set->Width - tmp - 28; // + 60; // ширина 8-го по счёту столбца SG_Set
+ mS->ColWidths[7] = SG_Instruction->Width - tmp - 28; // + 60; // ширина 8-го по счёту столбца SG_Set
 //
  if( mS->ColWidths[7] <= sizeof(M_I.Comment) ) // не менее sizeof(M_S.Comment)
   mS->ColWidths[7] = sizeof(M_I.Comment);
@@ -5772,10 +5739,10 @@ void __fastcall TF1::SG_MouseUp(TObject *Sender, TMouseButton Button,
  if( !Button==mbRight ) // "ловим" нажатие только правой кнопки мыши
   return;
 //
- SG_Set->MouseToCell( X,Y, Col,Row ); // по X,Y получаем Col,Row для таблицы SG_Set
+ SG_Instruction->MouseToCell( X,Y, Col,Row ); // по X,Y получаем Col,Row для таблицы SG_Set
 //
- SG_Set->Col = Col; // выделить ячейку
- SG_Set->Row = Row;
+ SG_Instruction->Col = Col; // выделить ячейку
+ SG_Instruction->Row = Row;
 //
  if( X==-1 || Y==-1 ) // курсор мыше находится вне SG_Set
   return;
@@ -5783,7 +5750,7 @@ void __fastcall TF1::SG_MouseUp(TObject *Sender, TMouseButton Button,
  if( Col<2 || Col>5 ) // допускаются только столбцы 2-5
   return;
 //
- char *p = &SG_Set->Cells[Col][Row].c_str()[0]; // чтобы далее меньше писать...
+ char *p = &SG_Instruction->Cells[Col][Row].c_str()[0]; // чтобы далее меньше писать...
 //
  if( !strlen( p ) ) // пустая ячейка
   return;
@@ -5805,7 +5772,7 @@ void __fastcall TF1::SG_MouseUp(TObject *Sender, TMouseButton Button,
 //
  TPoint P = GetClientOrigin(); // для коррективки координат...
 //
- SG_PopUpMenu->Popup( X+P.x+SG_Set->Left, Y+P.y+SG_Set->Top ); // "всплываем" меню SG_PopUpMenu
+ SG_PopUpMenu->Popup( X+P.x+SG_Instruction->Left, Y+P.y+SG_Instruction->Top ); // "всплываем" меню SG_PopUpMenu
 //
 } // ----- конец TF1::SG_MouseUp -----------------------------------------------
 
@@ -5814,4 +5781,34 @@ void __fastcall TF1::SG_MouseUp(TObject *Sender, TMouseButton Button,
 //
 
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall  // перемешивает инструции в Mem_Instrucrtions[]
+Mixed_Instructions()
+{
+ INT i1,i2; // номера перемешиваемых инструкций в Mem_Instruction[]
+ time_t t; // начальное значение для датчика случайных чисел  (текущее время)
+ mi vMI; // элемент массива структур Mem_Instruction[]
+//
+ do_Stop // "выключили" все кнопки Выполнение
+//
+ srand((unsigned) time(&t)); // инициализации датчика случайных чисел текущим временем
+//
+ for( INT i=0; i<100*Really_Set; i++ ) // перемешиваем 100 * Really_Sets раз
+ {
+  i1 = random( Really_Set ), // "старый" номер инструкции (счет начинаем с нуля)
+  i2 = random( Really_Set ); // "новый" номер инструкции
+//
+  vMI = Mem_Instruction[i1]; // запомнили "старое"
+  Mem_Instruction[i1] = Mem_Instruction[i2]; // #i1 <- #i2
+  Mem_Instruction[i2] = vMI; // #i2 <- #i1
+ }
+//
+ SBM0->Text = " Инструкции перемешаны случайным образом..."; // вывод текста в StatusBarMain
+ MessageBeep( MB_ICONEXCLAMATION ); // восклицание...
+ Delay( 1000 );
+//
+ do_Run // "включили" все кнопки Выполнение
+//
+} //----------------------------------------------------------------------------
 

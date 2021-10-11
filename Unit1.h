@@ -27,7 +27,7 @@ __published:	// IDE-managed Components
         TLabel *Label_Data;
         TLabel *Label_Set;
         TStringGrid *SG_Data;
-        TStringGrid *SG_Set;
+        TStringGrid *SG_Instruction;
         TMemo *M1;
         TBitBtn *BitBtn_Run;
         TBitBtn *BitBtn_Stop;
@@ -115,7 +115,7 @@ __published:	// IDE-managed Components
         void __fastcall OnClose_F1(TObject *Sender, TCloseAction &Action);
         void __fastcall Stop_Calculations(TObject *Sender);
         void __fastcall Run_Calculations(TObject *Sender);
-        void __fastcall SG_Sets_DrawCell(TObject *Sender, int ACol, int ARow, TRect &Rect, TGridDrawState State);
+        void __fastcall SG_Instruction_DrawCell(TObject *Sender, int ACol, int ARow, TRect &Rect, TGridDrawState State);
         void __fastcall Save_All_Protocols(TObject *Sender);
          void __fastcall About_Cluster(TObject *Sender);
         void __fastcall Load_Sets(TObject *Sender);
@@ -126,7 +126,7 @@ __published:	// IDE-managed Components
         void __fastcall Rewrite_Files(TObject *Sender);
         void __fastcall Show_Chema(TObject *Sender);
         void __fastcall N12Click(TObject *Sender);
-        void __fastcall SG_Sets_Edit(TObject *Sender);
+        void __fastcall SG_Instruction_Edit(TObject *Sender);
         void __fastcall INI_Edit(TObject *Sender);
         void __fastcall About_Poems(TObject *Sender);
         void __fastcall Most_Wonderful(TObject *Sender);
