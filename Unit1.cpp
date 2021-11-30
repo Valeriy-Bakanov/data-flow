@@ -246,7 +246,7 @@ void  __fastcall Make_Row_Current( INT Row ); // сделать строку Row (начинаем с 
 void  __fastcall Run_Infinity(); // повтор загруженной программы бесконечное число раз
 //
 //==============================================================================
-#define mR F1->M1  // доступ к M1 (фрейм протокола)
+#define mR F1->M1  // доступ к M1 (фрейм протокола выполнени€ программы)
 #define mB F1->SG_Buffer // доступ к массиву €чеек визуализации буфера команд
 #define mP F1->PB_1      // доступ к указателюзаполненности буфера команд
 #define mS F1->SG_Instruction // доступ к массиву €чеек  инструкций
@@ -892,7 +892,7 @@ TF1::Rewrite_Files(TObject *Sender)
 {
  Read_Instructions(); // читаем FileNameSet в Mem_Instruction[]
 //
- mR->Clear(); // очистили Memo_Run .............................................
+ mR->Clear(); //  // очистили фрейм вывода протокола расчЄта
 //
  Install_All_Flags(); // очистили все флаги в Mem_Instruction[]
 //
@@ -1609,7 +1609,7 @@ void __fastcall TF1::Load_Sets(TObject *Sender)
 //
    Read_Instructions(); // читаем файл в Mem_Instruction[]
 //
-   mR->Clear(); // очистили Memo_Run ...........................................
+   mR->Clear(); // очистили фрейм вывода протокола расчЄта
 //
    Install_All_Flags(); // очистили все флаги в Mem_Instruction[] !!!!!!!!!!!!!!
 //
@@ -1893,7 +1893,7 @@ Vizu_Flow_Exec() // визуализировать процент выполнени€ программы
 void __fastcall // начали вычислени€ ( нажатие кнопки ¬џѕќЋЌ»“№ )
 TF1::Run_Calculations(TObject *Sender)
 {
- Start_DF( 0 ); // старт без перемешивани€ инсрукций
+ Start_DF( 0 ); // старт без перемешивани€ инструкций
 } // ---- конец TF1::Run_Calculations ------------------------------------------
 
 
@@ -1931,6 +1931,8 @@ Start_DF( int Mode )
  F1->Label_Data->Font->Color   = clBlack;
  F1->Label_Buffer->Font->Color = clBlack;
 //
+ mR->Clear(); // очистили фрейм вывода протокола расчЄта
+//
  if( F2 )
   F2->Close(); // окно графика интенсивности вычислений закрыли
 //
@@ -1953,7 +1955,7 @@ Start_DF( int Mode )
   Mem_Proc = ( mp* ) realloc( Mem_Proc, max_Proc * sizeof( mp ) ); // перераспределили “ќЋ№ ќ пам€ть под ј»”
  } // конец  if( max_Proc_New != max_Proc )
 //
- mR->Clear(); // очистили Memo_Run .............................................
+ mR->Clear(); // очистили фрейм вывода протокола расчЄта
 //
  Install_All_Flags(); // очистили все флаги в Mem_Instruction[]
  Vizu_Instructions(); // визуализировали все инструкции в ќ Ќ≈_»Ќ—“–” ÷»…
@@ -1992,7 +1994,7 @@ Start_DataFlow_Process( int Mode )
 //
  Free_Proc = max_Proc; // пока все ј»” свободны
 //
- mR->Clear(); // очистили Memo_Run
+ mR->Clear(); // очистили фрейм вывода протокола расчЄта
 //
  Read_Instructions(); // перечитать программу
 //
