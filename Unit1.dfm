@@ -8,7 +8,8 @@ object F1: TF1
   ActiveControl = BitBtn_Run
   BorderIcons = [biSystemMenu, biMinimize]
   BorderWidth = 1
-  Caption = 'b'
+  Caption =     #1057#1080#1084#1091#1083#1103#1090#1086#1088' '#1074#1099#1095#1080#1089#1083#1080#1090#1077#1083#1103' '#1072#1088#1093#1080#1090#1077#1082#1090#1091#1088#1099' DATA-FLOW (2009-2021 ver.4.5; ' +
+    #1086#1089#1077#1085#1100' 2021)'
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
