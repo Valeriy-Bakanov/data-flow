@@ -618,13 +618,13 @@ object F1: TF1
     Left = 410
     Top = 70
   end
-  object INC0: TIdHTTP
-    OnStatus = INC0_OnStatus
-    OnDisconnected = INC0_Disconnected
-    OnWork = INC0_OnWork
-    OnWorkBegin = INC0_OnWorkBegin
-    OnWorkEnd = INC0_OnWorkEnd
-    OnConnected = INC0_Connected
+  object HTTP_Get: TIdHTTP
+    OnStatus = HTTP_Get_OnStatus
+    OnDisconnected = HTTP_Get_Disconnected
+    OnWork = HTTP_Get_OnWork
+    OnWorkBegin = HTTP_Get_OnWorkBegin
+    OnWorkEnd = HTTP_Get_OnWorkEnd
+    OnConnected = HTTP_Get_Connected
     Request.Accept = 'text/html, */*'
     Request.ContentLength = 0
     Request.ContentRangeEnd = 0

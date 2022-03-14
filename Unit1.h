@@ -76,7 +76,7 @@ __published:	// IDE-managed Components
         TMenuItem *N35;
         TMenuItem *SaveIGA;
         TMenuItem *SPFhome;
-        TIdHTTP *INC0;
+        TIdHTTP *HTTP_Get;
         TMenuItem *N11;
         TMenuItem *Rar1;
         TMenuItem *N21;
@@ -144,15 +144,15 @@ __published:	// IDE-managed Components
         void __fastcall Save_IGA_Click(TObject *Sender);
         void __fastcall About_SPF(TObject *Sender);
         void __fastcall OnResize_F1(TObject *Sender);
-        void __fastcall INC0_Connected(TObject *Sender);
-        void __fastcall INC0_Disconnected(TObject *Sender);
-        void __fastcall INC0_OnStatus(TObject *axSender,
+        void __fastcall HTTP_Get_Connected(TObject *Sender);
+        void __fastcall HTTP_Get_Disconnected(TObject *Sender);
+        void __fastcall HTTP_Get_OnStatus(TObject *axSender,
                                       const TIdStatus axStatus, const AnsiString asStatusText);
-        void __fastcall INC0_OnWork(TObject *Sender, TWorkMode AWorkMode,
+        void __fastcall HTTP_Get_OnWork(TObject *Sender, TWorkMode AWorkMode,
                                     const int AWorkCount);
-        void __fastcall INC0_OnWorkBegin(TObject *Sender,
+        void __fastcall HTTP_Get_OnWorkBegin(TObject *Sender,
                                          TWorkMode AWorkMode, const int AWorkCountMax);
-        void __fastcall INC0_OnWorkEnd(TObject *Sender,
+        void __fastcall HTTP_Get_OnWorkEnd(TObject *Sender,
                                        TWorkMode AWorkMode);
         void __fastcall OnClickGetRar(TObject *Sender);
         void __fastcall EndedUploadFile(TObject *Sender);

@@ -3691,7 +3691,7 @@ StrToReal( char *str, INT i_Set )
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::INC0_Connected(TObject *Sender)
+void __fastcall TF1::HTTP_Get_Connected(TObject *Sender)
 { // вызываетс€ при соединении с сервером
  SBM0->Text = " —оединение с сервером установлено";
  Delay( 500 );
@@ -3700,7 +3700,7 @@ void __fastcall TF1::INC0_Connected(TObject *Sender)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::INC0_Disconnected(TObject *Sender)
+void __fastcall TF1::HTTP_Get_Disconnected(TObject *Sender)
 { // вызываетс€ при разрыве соединени€ с сервером
  SBM0->Text = " —оединение с сервером разорвано";
  Delay( 500 );
@@ -3709,7 +3709,7 @@ void __fastcall TF1::INC0_Disconnected(TObject *Sender)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::INC0_OnStatus(TObject *axSender, const TIdStatus axStatus, const AnsiString asStatusText)
+void __fastcall TF1::HTTP_Get_OnStatus(TObject *axSender, const TIdStatus axStatus, const AnsiString asStatusText)
 { // состо€ние процесса вџгрузки
   switch( axStatus )
   {
@@ -3742,7 +3742,7 @@ void __fastcall TF1::INC0_OnStatus(TObject *axSender, const TIdStatus axStatus, 
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::INC0_OnWork(TObject *Sender, TWorkMode AWorkMode, const int AWorkCount)
+void __fastcall TF1::HTTP_Get_OnWork(TObject *Sender, TWorkMode AWorkMode, const int AWorkCount)
 { // вызываетс€ при вџгрузке данных с сервера на клиент
  SBM0->Text = Format(" %.0f%% (из %d байт) данных получено с сервера", OPENARRAY(TVarRec, (100.0*AWorkCount/FileSizeFromServer, int(FileSizeFromServer)) ) );
  Delay( 500 );
@@ -3751,7 +3751,7 @@ void __fastcall TF1::INC0_OnWork(TObject *Sender, TWorkMode AWorkMode, const int
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::INC0_OnWorkBegin(TObject *Sender, TWorkMode AWorkMode, const int AWorkCountMax)
+void __fastcall TF1::HTTP_Get_OnWorkBegin(TObject *Sender, TWorkMode AWorkMode, const int AWorkCountMax)
 { // вызываетс€ в начало вџгрузке данных с сервера на клиент
  FileSizeFromServer = AWorkCountMax; // запомнили
  SBM0->Text = Format(" %d байт запрошено дл€ получени€ с сервера", OPENARRAY(TVarRec, (AWorkCountMax) ) );
@@ -3761,7 +3761,7 @@ void __fastcall TF1::INC0_OnWorkBegin(TObject *Sender, TWorkMode AWorkMode, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::INC0_OnWorkEnd(TObject *Sender, TWorkMode AWorkMode)
+void __fastcall TF1::HTTP_Get_OnWorkEnd(TObject *Sender, TWorkMode AWorkMode)
 { // вызываетс€ в конце вџгрузки данных с сервера на клиент
  Delay( 500 );
  SBM0->Text = Format(" %d байт получено с сервера", OPENARRAY(TVarRec, (int(FileSizeFromServer)) ) );
@@ -3780,7 +3780,7 @@ void __fastcall TF1::OnClickGetRar(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::EndedUploadFile(TObject *Sender)
 { // принудительно разорвать соединение с сервером - прекратить вџгрузку файла
- F1->INC0->Disconnect(); // разрываем соединение с сервером
+ F1->HTTP_Get->Disconnect(); // разрываем соединение с сервером
 } //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5809,11 +5809,11 @@ void __fastcall GetFileFromServer( char FileName[] )
 //
 // ShowMessageFmt( "Client: |%s|\n\nServer: |%s|", OPENARRAY(TVarRec, (FileNameOnClient,FileNameOnServer) ) );
 //
- F1->INC0->Get( FileNameOnServer, UnLoadStream ); // метод Get выгружает файл посредством потока UnLoadStream
+ F1->HTTP_Get->Get( FileNameOnServer, UnLoadStream ); // метод Get выгружает файл посредством потока UnLoadStream
  UnLoadStream->SaveToFile( FileNameOnClient ); // сохран€ем данные в файл на клиенте
 //
  delete UnLoadStream; // поток более не нужен...
 //
- F1->INC0->Disconnect(); // разрываем соединениe с сервером
+ F1->HTTP_Get->Disconnect(); // разрываем соединениe с сервером
 } //----------------------------------------------------------------------------
 
