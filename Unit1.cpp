@@ -3778,34 +3778,6 @@ void __fastcall TF1::OnClickGetRar(TObject *Sender)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall GetFileFromServer( char FileName[] )
-{ // получить файл с HTTP-сервера ( FileNameInServer - полное им€ файла на сервере,
- char FileNameOnServer[_512]="\0", FileNameOnClient[_512]="\0"; // полные имена файла на сервере и клиенте
-//
- TMemoryStream *UnLoadStream = new TMemoryStream;  // создаЄм поток дл€ сохранени€ вџгруженного из —ети файла
-//
-// --- полный путь к каталогу исходных данных (включа€ слэш в конце)
- snprintf( PathToSubDirInData,sizeof(PathToSubDirInData), "%s%s\\", ExtractFilePath ( Application->ExeName ), NameSubDirInData);
- if( !DirectoryExists( PathToSubDirInData ) ) // если не существует этого каталога...
-  if( !CreateDir( PathToSubDirInData ) ) // если не удалось создать...
-   strcpy( PathToSubDirInData, '\0' ); // обнул€ем путь к подкаталогу PathToSubDirOutData
-//
- snprintf( FileNameOnClient,sizeof(FileNameOnClient), "%s%s", PathToSubDirInData, FileName ); // куда сохран€ть на клиенте (+++)
- snprintf( FileNameOnServer,sizeof(FileNameOnServer), "%s/dataflow/content/%s", MySite, FileName ); // полное им€ файла на сервере (+++)
-//
-// ShowMessageFmt( "Client: |%s|\n\nServer: |%s|", OPENARRAY(TVarRec, (FileNameOnClient,FileNameOnServer) ) );
-//
- F1->INC0->Get( FileNameOnServer, UnLoadStream ); // метод Get выгружает файл посредством потока UnLoadStream
- UnLoadStream->SaveToFile( FileNameOnClient ); // сохран€ем данные в файл на клиенте
-//
- delete UnLoadStream; // поток более не нужен...
-//
- F1->INC0->Disconnect(); // разрываем соединениe с сервером
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::EndedUploadFile(TObject *Sender)
 { // принудительно разорвать соединение с сервером - прекратить вџгрузку файла
  F1->INC0->Disconnect(); // разрываем соединение с сервером
@@ -5815,5 +5787,33 @@ Mixed_Instructions()
 //
  do_Run // "включили" все кнопки ¬ыполнение
 //
+} //----------------------------------------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall GetFileFromServer( char FileName[] )
+{ // получить файл с HTTP-сервера ( FileNameInServer - полное им€ файла на сервере,
+ char FileNameOnServer[_512]="\0", FileNameOnClient[_512]="\0"; // полные имена файла на сервере и клиенте
+//
+ TMemoryStream *UnLoadStream = new TMemoryStream;  // создаЄм поток дл€ сохранени€ вџгруженного из —ети файла
+//
+// --- полный путь к каталогу исходных данных (включа€ слэш в конце)
+ snprintf( PathToSubDirInData,sizeof(PathToSubDirInData), "%s%s\\", ExtractFilePath ( Application->ExeName ), NameSubDirInData);
+ if( !DirectoryExists( PathToSubDirInData ) ) // если не существует этого каталога...
+  if( !CreateDir( PathToSubDirInData ) ) // если не удалось создать...
+   strcpy( PathToSubDirInData, '\0' ); // обнул€ем путь к подкаталогу PathToSubDirOutData
+//
+ snprintf( FileNameOnClient,sizeof(FileNameOnClient), "%s%s", PathToSubDirInData, FileName ); // куда сохран€ть на клиенте (+++)
+ snprintf( FileNameOnServer,sizeof(FileNameOnServer), "%s/dataflow/content/%s", MySite, FileName ); // полное им€ файла на сервере (+++)
+//
+// ShowMessageFmt( "Client: |%s|\n\nServer: |%s|", OPENARRAY(TVarRec, (FileNameOnClient,FileNameOnServer) ) );
+//
+ F1->INC0->Get( FileNameOnServer, UnLoadStream ); // метод Get выгружает файл посредством потока UnLoadStream
+ UnLoadStream->SaveToFile( FileNameOnClient ); // сохран€ем данные в файл на клиенте
+//
+ delete UnLoadStream; // поток более не нужен...
+//
+ F1->INC0->Disconnect(); // разрываем соединениe с сервером
 } //----------------------------------------------------------------------------
 
