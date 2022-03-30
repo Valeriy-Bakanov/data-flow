@@ -73,6 +73,7 @@ object F3: TF3
     ShowHint = True
     TabOrder = 0
     object Series1: TGanttSeries
+      ColorEachPoint = True
       Marks.Arrow.Color = clLime
       Marks.ArrowLength = 1
       Marks.BackColor = clWhite

@@ -1,14 +1,14 @@
 object F1: TF1
-  Left = 395
-  Top = 147
-  Width = 1046
+  Left = 32
+  Top = 154
+  Width = 1024
   Height = 619
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   ActiveControl = BitBtn_Run
   BorderIcons = [biSystemMenu, biMinimize]
   BorderWidth = 1
-  Caption = ' DATA-FLOW architecture computer simulator ver 4.5 (2009-2022)'
+  Caption = ' DATA-FLOW architecture computer simulator ver 4.6 (2009-2022)'
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
@@ -50,29 +50,31 @@ object F1: TF1
   OnResize = OnResize_F1
   OnShow = OnShow_F1
   DesignSize = (
-    1028
+    1006
     558)
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
-    Left = 938
+    Left = 670
     Top = 185
     Width = 54
     Height = 16
     Hint = #1042#1099#1095#1080#1089#1083#1077#1085#1085#1099#1077' '#1076#1072#1085#1085#1099#1077' ('#1079#1072#1087#1086#1083#1085#1077#1085#1085#1086#1089#1090#1100' '#1073#1091#1092#1077#1088#1072' '#1076#1072#1085#1085#1099#1093')'
-    Alignment = taRightJustify
-    Anchors = [akLeft, akTop, akRight]
+    Anchors = [akBottom]
     Caption = #1044#1072#1085#1085#1099#1077
+    Color = clBtnFace
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clBlack
     Font.Height = -13
     Font.Name = 'System'
     Font.Style = [fsBold]
+    ParentColor = False
     ParentFont = False
+    Transparent = True
     WordWrap = True
   end
   object Label_Set: TLabel
-    Left = 747
+    Left = 877
     Top = 185
     Width = 62
     Height = 16
@@ -144,7 +146,7 @@ object F1: TF1
   object SB: TStatusBar
     Left = 0
     Top = 539
-    Width = 1028
+    Width = 1006
     Height = 19
     Hint = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1089#1086#1089#1090#1086#1103#1085#1080#1080' '#1089#1080#1089#1090#1077#1084#1099' '#1080' '#1074#1099#1087#1086#1083#1085#1103#1077#1084#1086#1084' '#1076#1077#1081#1089#1090#1074#1080#1080
     AutoHint = True
@@ -164,7 +166,7 @@ object F1: TF1
     SimplePanel = False
   end
   object SG_Data: TStringGrid
-    Left = 812
+    Left = 790
     Top = 217
     Width = 190
     Height = 308
@@ -184,7 +186,7 @@ object F1: TF1
   object SG_Instruction: TStringGrid
     Left = 235
     Top = 217
-    Width = 559
+    Width = 537
     Height = 308
     Hint = 
       #1054#1087#1077#1088#1072#1094#1080#1080' ('#1084#1072#1096#1080#1085#1085#1099#1077' '#1080#1085#1089#1090#1088#1091#1082#1094#1080#1080') '#1080' '#1080#1093' '#1086#1087#1077#1088#1072#1085#1076#1099' ('#1080#1089#1093#1086#1076#1085#1099#1077' '#1076#1072#1085#1085#1099#1077#13#10#1076 +
@@ -244,7 +246,7 @@ object F1: TF1
   object SG_Buffer: TStringGrid
     Left = 4
     Top = 217
-    Width = 199
+    Width = 177
     Height = 308
     Hint = #1041#1091#1092#1077#1088' '#1082#1086#1084#1072#1085#1076' ('#1085#1091#1084#1077#1088#1072#1094#1080#1103' '#1089' 1)'
     TabStop = False
@@ -439,7 +441,7 @@ object F1: TF1
       object Rar1: TMenuItem
         Caption = #1055#1086#1083#1091#1095#1080#1090#1100' '#1085#1086#1074#1091#1102' '#1074#1077#1088#1089#1080#1102' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
         Hint = #1042#1099#1075#1088#1091#1079#1082#1072' '#1074' '#1087#1086#1076#1082#1072#1090#1072#1083#1086#1075' In!Data'
-        OnClick = OnClickGetRar
+        OnClick = OnClickGetInstall
       end
       object N21: TMenuItem
         Caption = #1055#1088#1077#1082#1088#1072#1090#1080#1090#1100' '#1074#1099#1075#1088#1091#1079#1082#1091
@@ -618,22 +620,6 @@ object F1: TF1
     Left = 410
     Top = 70
   end
-  object HTTP_Get: TIdHTTP
-    OnStatus = HTTP_Get_OnStatus
-    OnDisconnected = HTTP_Get_Disconnected
-    OnWork = HTTP_Get_OnWork
-    OnWorkBegin = HTTP_Get_OnWorkBegin
-    OnWorkEnd = HTTP_Get_OnWorkEnd
-    OnConnected = HTTP_Get_Connected
-    Request.Accept = 'text/html, */*'
-    Request.ContentLength = 0
-    Request.ContentRangeEnd = 0
-    Request.ContentRangeStart = 0
-    Request.ProxyPort = 0
-    Request.UserAgent = 'Mozilla/3.0 (compatible; Indy Library)'
-    Left = 264
-    Top = 64
-  end
   object CD_1: TColorDialog
     Ctl3D = True
     OnShow = CD_1_Show
@@ -663,5 +649,33 @@ object F1: TF1
       ShortCut = 16467
       OnClick = M1_CopyToNotepad
     end
+  end
+  object FTP_Post: TIdFTP
+    UseNagle = False
+    Left = 560
+    Top = 24
+  end
+  object FTP_Get: TIdFTP
+    OnStatus = FTP_Get_OnStatus
+    OnDisconnected = FTP_Get_Disconnected
+    OnWork = FTP_Get_OnWork
+    OnWorkBegin = FTP_Get_OnWorkBegin
+    OnWorkEnd = FTP_Get_OnWorkEnd
+    OnConnected = FTP_Get_Connected
+    UseNagle = False
+    Passive = True
+    Left = 248
+    Top = 80
+  end
+  object IdAntiFreeze1: TIdAntiFreeze
+    Left = 136
+    Top = 88
+  end
+  object IPWatch: TIdIPWatch
+    Active = True
+    HistoryEnabled = False
+    HistoryFilename = 'iphist.dat'
+    Left = 48
+    Top = 48
   end
 end

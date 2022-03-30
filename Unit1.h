@@ -18,6 +18,13 @@
 #include <IdTCPClient.hpp>
 #include <IdTCPConnection.hpp>
 #include <Mask.hpp>
+#include <IdAntiFreeze.hpp>
+#include <IdAntiFreezeBase.hpp>
+#include <IdIntercept.hpp>
+#include <IdSSLIntercept.hpp>
+#include <IdSSLOpenSSL.hpp>
+#include <IdFTP.hpp>
+#include <IdIPWatch.hpp>
 // #include "c:\tproctimer\TProcTimer.h"
 //---------------------------------------------------------------------------
 class TF1 : public TForm
@@ -76,7 +83,6 @@ __published:	// IDE-managed Components
         TMenuItem *N35;
         TMenuItem *SaveIGA;
         TMenuItem *SPFhome;
-        TIdHTTP *HTTP_Get;
         TMenuItem *N11;
         TMenuItem *Rar1;
         TMenuItem *N21;
@@ -110,6 +116,10 @@ __published:	// IDE-managed Components
         TMenuItem *ExtendedSave_IGA;
         TMenuItem *N10;
         TMenuItem *N13;
+        TIdFTP *FTP_Post;
+        TIdFTP *FTP_Get;
+        TIdAntiFreeze *IdAntiFreeze1;
+        TIdIPWatch *IPWatch;
         
         void __fastcall Main_Form_OnCreate(TObject *Sender);
         void __fastcall OnClose_F1(TObject *Sender, TCloseAction &Action);
@@ -144,17 +154,17 @@ __published:	// IDE-managed Components
         void __fastcall Save_IGA_Click(TObject *Sender);
         void __fastcall About_SPF(TObject *Sender);
         void __fastcall OnResize_F1(TObject *Sender);
-        void __fastcall HTTP_Get_Connected(TObject *Sender);
-        void __fastcall HTTP_Get_Disconnected(TObject *Sender);
-        void __fastcall HTTP_Get_OnStatus(TObject *axSender,
-                                      const TIdStatus axStatus, const AnsiString asStatusText);
-        void __fastcall HTTP_Get_OnWork(TObject *Sender, TWorkMode AWorkMode,
-                                    const int AWorkCount);
-        void __fastcall HTTP_Get_OnWorkBegin(TObject *Sender,
-                                         TWorkMode AWorkMode, const int AWorkCountMax);
-        void __fastcall HTTP_Get_OnWorkEnd(TObject *Sender,
-                                       TWorkMode AWorkMode);
-        void __fastcall OnClickGetRar(TObject *Sender);
+        void __fastcall FTP_Get_Connected(TObject *Sender);
+        void __fastcall FTP_Get_Disconnected(TObject *Sender);
+        void __fastcall FTP_Get_OnStatus(TObject *axSender,
+                        const TIdStatus axStatus, const AnsiString asStatusText);
+        void __fastcall FTP_Get_OnWork(TObject *Sender, TWorkMode AWorkMode,
+                        const int AWorkCount);
+        void __fastcall FTP_Get_OnWorkBegin(TObject *Sender, TWorkMode AWorkMode,
+                        const int AWorkCountMax);
+        void __fastcall FTP_Get_OnWorkEnd(TObject *Sender,
+                        TWorkMode AWorkMode);
+        void __fastcall OnClickGetInstall(TObject *Sender);
         void __fastcall EndedUploadFile(TObject *Sender);
         void __fastcall Show_Graph(TObject *Sender);
         void __fastcall OnKeyPress_E_AIU(TObject *Sender, char &Key);
@@ -170,7 +180,7 @@ __published:	// IDE-managed Components
         void __fastcall ExtendedSave_IGA_Click(TObject *Sender);
         void __fastcall Show_AIU(TObject *Sender);
         void __fastcall SG_MouseUp(TObject *Sender, TMouseButton Button,
-          TShiftState Shift, int X, int Y);
+                        TShiftState Shift, int X, int Y);
 //
 private:	// User declarations
 public:		// User declarations

@@ -1,4 +1,6 @@
 //
+//#define WIN32_LEAN_AND_MEAN // защищает от конфликтов winsock.h <-> wonsock2.h
+//
 #include "Unit1.h"
 #include "Unit2.h" // чтобы был доступ к F2 (форма вывода графика интенсивности вычислений)
 #include "Unit3.h" // чтобы был доступ к F3 (форма вывода графика Ганнта)
@@ -93,20 +95,22 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 #define ERR_ALTERNAT -13.4567 // признак деления на 0 при вычислении альтернативности
 //------------------------------------------------------------------------------
 #define REAL double // тип вещественных чисел при вычислениях
-#define INT  long   // тип целых
+#define INT  signed long // тип целых
 //
 #define ULI unsigned long int // длинное целое без знака
 #define UI  unsigned int // целое без знака
 //------------------------------------------------------------------------------
 #define sleep_for_vizu_buffer Delay_Vizu_Buffer(); // время для визуализации буфера
 //------------------------------------------------------------------------------
-#define _128   128 // определение констант для всей программы
-#define _256   256
-#define _512   512
-#define _1024  1024
-#define _2048  2048
-#define _4096  4096
-#define _8192  8192
+#define   _32     32 // определение констант для всей программы
+#define   _64     64
+#define   _128   128
+#define   _256   256
+#define   _512   512
+#define  _1024  1024
+#define  _2048  2048
+#define  _4096  4096
+#define  _8192  8192
 #define _16384 16384
 //------------------------------------------------------------------------------
 #define ACC_REAL 3 // число знаков после зап.при выводе "плавающих" по E-формату
@@ -134,7 +138,7 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
   F1->Wonderful->Enabled  = false; \
   F1->Analize->Enabled    = false; }
 //
-int tick_ScanForGraph = 10; // время сканир.при выводе графика интенс.выч.(тактов)
+int tick_ScanForGraph = 10; // время сканированияпри выводе графика интенсивности вычислений (тактов)
 INT StartNumb = 100; // начальный номер инструкций для вывода в виде ИГА
 #define DEFAULT_RETURN_GET_DATA 0.123456789 // возвращаемое при ненахождении заданного числа в Mem_Data[]
 //
@@ -147,7 +151,9 @@ INT all_maxProcs, // всего участвующих в вычислениях АИУ
     parallel_Ticks; // время выполнения параллельной программы, такты
 //
 //------------------------------------------------------------------------------
-char uniqueStr[_512] = "\0"; // уникальная строка для имен файлов ( дата + время до мсек )
+char uniqueStr[_512] = "\0", // уникальная строка для имен файлов ( дата + время до мсек )
+     tmpPRO[_512],tmpTPR[_512],tmpDAT[_512], // глобалы для передачи в Unload_Date()
+     tmpTST[_512],tmpCOI[_512],tmpGV[_512], tmpMVR[_512];
 //
 void   __fastcall Read_Config( int Rule ); // управление считываем положения и размеров F1
 void   __fastcall Write_Config();
@@ -204,8 +210,6 @@ void   __fastcall Delay_Vizu_Buffer(); // ждет Delay_Buffer миллисек для визуали
 REAL   __fastcall Calc_ConnectedIndex(int Rule); // вычисление характеристик информационного графа программы
 REAL   __fastcall StrToReal(char *str, INT i_Set); // конвертация строки в REAL с проверкой при выполнении инструкции номер i_Set
 //
-void   __fastcall GetFileFromServer( char FileName[] ); // получить файл с сервера
-//
 bool   __fastcall Test_All_Operands(); // тестирует потенциальное существование операндов для всех инструкций (останов при ошибке)
 void   __fastcall Mixed_Instructions(); // перемешать все инструкции в Mem_Instructions[] в случайном поряден
 void   __fastcall Start_DF( int Mode ); // старт вычислений (без / с перемешиванмем инструкций при Mode 0 / #0 )
@@ -248,6 +252,11 @@ char* __fastcall PutDateTimeToString(INT flag); // выдача текущих даты и времени
 void  __fastcall Make_Row_Current( INT Row ); // сделать строку Row (начинаем с 0) текущей
 void  __fastcall Run_Infinity(); // повтор загруженной программы бесконечное число раз
 //
+void  __fastcall GetFileFromServer(  char *FileNameSource, char *FileNameDestination, bool Replace  ); // взять файл с сервера
+void  __fastcall PutFileToServer(  char *FileNameSource, char *FileNameDestination, bool Replace  ); // вЫгрузить файл на сервер
+void  __fastcall Upload_Data(); // вЫгрузить файлы на сервер
+void  __fastcall Unload_Install(); // загрузить с сервера инсталляционную версию продукта
+void  __fastcall Work_LogInOut( bool Rule); // сообщить о начале/конце работы программы DATA_FLOW.EXE
 //==============================================================================
 #define mR F1->M1  // доступ к M1 (фрейм протокола выполнения программы)
 #define mB F1->SG_Buffer // доступ к массиву ячеек визуализации буфера команд
@@ -518,9 +527,10 @@ INT  FileSizeFromServer; // размер файла для выгрузки с сервера
 char NameSubDirOutData[] = "Out!Data", // имя подкаталога для сброса рассчитанных данных
      PathToSubDirOutData[_256], // полный путь к подкаталогу сброса рассчитанных данных
      NameSubDirInData[]  = "In!Data", // имя подкаталога для исходных дынных данных
-     PathToSubDirInData[_256], // полный путь к подкаталогу исходных данных данных
-     MySite[] = "http://vbakanov.ru"; // адрес моего сайта
+     PathToSubDirInData[_256]; // полный путь к подкаталогу исходных данных данных
+//     MySite[] = "http://vbakanov.ru"; // адрес моего сайта
 ////////////////////////////////////////////////////////////////////////////////
+//
 // Определение стратегии порядка выбора инструкций из буфера
 ////////////////////////////////////////////////////////////////////////////////
 int how_Calc_Prior = 0, // вычисление приоритета (0 - прямо пропорц. Parameter, 1 - обратно
@@ -555,7 +565,7 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
  F1->Position = poDefault; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //
- time_t t;
+ ::time_t t;
  srand((unsigned) time(&t));
 //
  Master_Timer->Enabled = false; // выключили главный таймер
@@ -637,7 +647,7 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
   Delay( 1000 ); // ждать 1000 мсек
  }
 //
-} // конец F1 ------------------------------------------------------------------
+} // ----- конец F1 ------------------------------------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -697,6 +707,24 @@ DelSpacesTabsAround(char *str)
 //
 } // --- конец функции DelSpacesTabsAround -------------------------------------
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall ReplaceEqualLengthSubstring( char *String, char *OldSubstring, char *NewSubstring )
+// в строке Strint заменяет подстроки OldSubstring на NewSubstring ОДИНАКОВОЙ ДЛИНЫ
+{
+ INT lenOldSubstring = strlen( OldSubstring ),
+     lenNewSubstring = strlen( NewSubstring ) ;
+ char *p ;
+//
+ if( lenOldSubstring != lenNewSubstring )
+  return ;
+//
+ do // делать, пока p != NULL
+  if( p = strstr( String, OldSubstring ) ) // в строке String нашли подстроку OldSubstring
+   memcpy( p,NewSubstring,lenOldSubstring ); // копируем NewSubstring начиная с p
+ while( p ) ;
+//
+} // --- конец функции ReplaceEqualLegthSubstring ------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1252,6 +1280,8 @@ TF1::OnClose_F1(TObject *Sender, TCloseAction &Action)
                F3->Close(); // окно графика интенсивности вычислений закрыли
 //
               Delay(100); // ждем-c
+//
+              Work_LogInOut( 0 ); // сообщить о конце работы программы DATA_FLOW.EXE
               break;
 //
   case IDNO:  Action=caNone; // нажата кнопка No
@@ -1332,7 +1362,7 @@ StopCalculations( int Rule )
  if( modeGraph & Rule != 0 ) // если FALSE, то только по F6
   F1->Show_Graph( NULL ); // показать график интенсивности вычислений
 //
-} // конец Stop_Calculations ---------------------------------------------------
+} // ----- конец Stop_Calculations ---------------------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3499,6 +3529,8 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
 //
  Read_Config( 0 ); // перечитать файл конфигурации
 //
+ F1->Resize(); // принудительно перерисовываем главное окно для корректной установки положений всех Control's
+//
  if( ParamCount() == 4 ) // берём нужное число параметров командной строки
  {
   strcpy(FileNameSet, ParamStr(1).c_str()); // имя файла инструкицй (и проекта)
@@ -3511,8 +3543,10 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
 //
   BitBtn_Run->Click(); // программно нажали кнопку СЧЁТ !!!
 //
-  do_Stop // "выключили" все кнопки Выполнение 
+  do_Stop // "выключили" все кнопки Выполнение
  } // конец  if ParamCount...
+//
+ Work_LogInOut( 1 ); // сообщить о начале работы программы DATA_FLOW.EXE (сообщение "LogIn")
 //
 } //----- конец F1_OnShow ------------------------------------------------------
 
@@ -3687,101 +3721,6 @@ StrToReal( char *str, INT i_Set )
  return out;
 //
 } // ----- конец функции StrToReal ---------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::HTTP_Get_Connected(TObject *Sender)
-{ // вызывается при соединении с сервером
- SBM0->Text = " Соединение с сервером установлено";
- Delay( 500 );
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::HTTP_Get_Disconnected(TObject *Sender)
-{ // вызывается при разрыве соединения с сервером
- SBM0->Text = " Соединение с сервером разорвано";
- Delay( 500 );
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::HTTP_Get_OnStatus(TObject *axSender, const TIdStatus axStatus, const AnsiString asStatusText)
-{ // состояние процесса вЫгрузки
-  switch( axStatus )
-  {
-   case hsResolving:     //SBM0->Text = " A host name is being resolved for an IP address...";
-                         SBM0->Text = " Доменное имя успешно разрешено в IP-адрес...";
-        break;
-   case hsConnecting:    //SBM0->Text = " A connection is being opened...";
-                         SBM0->Text = " Соединение устанавливается...";
-        break;
-//   case hsConnected:    //SBM0->Text = " A connection has been made...";
-//                        SBM0->Text = " Соединение успешно устанавлено...";
-//        break;
-   case hsDisconnecting: //SBM0->Text = " The connection is being closed...";
-                         SBM0->Text = " Соединение закрывается...";
-        break;
-//   case hsDisconnected:  //SBM0->Text = " The connection has been closed...";
-//                         SBM0->Text = " Соединение разорвано...";
-//        break;
-//   case hsText:          //SBM0->Text = asStatusText;
-//                         SBM0->Text = asStatusText;
-//        break;
-//   default:              //SBM0->Text = asStatusText;
-//                         SBM0->Text = asStatusText;
-  }
-//
- Delay( 500 );
-//
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::HTTP_Get_OnWork(TObject *Sender, TWorkMode AWorkMode, const int AWorkCount)
-{ // вызывается при вЫгрузке данных с сервера на клиент
- SBM0->Text = Format(" %.0f%% (из %d байт) данных получено с сервера", OPENARRAY(TVarRec, (100.0*AWorkCount/FileSizeFromServer, int(FileSizeFromServer)) ) );
- Delay( 500 );
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::HTTP_Get_OnWorkBegin(TObject *Sender, TWorkMode AWorkMode, const int AWorkCountMax)
-{ // вызывается в начало вЫгрузке данных с сервера на клиент
- FileSizeFromServer = AWorkCountMax; // запомнили
- SBM0->Text = Format(" %d байт запрошено для получения с сервера", OPENARRAY(TVarRec, (AWorkCountMax) ) );
- Delay( 500 );
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::HTTP_Get_OnWorkEnd(TObject *Sender, TWorkMode AWorkMode)
-{ // вызывается в конце вЫгрузки данных с сервера на клиент
- Delay( 500 );
- SBM0->Text = Format(" %d байт получено с сервера", OPENARRAY(TVarRec, (int(FileSizeFromServer)) ) );
-} //----------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::OnClickGetRar(TObject *Sender)
-{ // получить файл с сервера
- GetFileFromServer( "install_df.exe" );
-} // ---------------------------------------------------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::EndedUploadFile(TObject *Sender)
-{ // принудительно разорвать соединение с сервером - прекратить вЫгрузку файла
- F1->HTTP_Get->Disconnect(); // разрываем соединение с сервером
-} //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -5142,6 +5081,7 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  Save_Protocol_Master(); // сохраняем главный протокол (*.pro)
   snprintf( tmp, sizeof(tmp), "%s\\pro%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".pro").c_str(), tmp ); // перенос в подкаталог NameSubDirOutData (Out!Data)
+  strcpy( tmpPRO, tmp ); // запомнили в глобале для использования в Upload_Data()
 //
  Save_Protocol_AIU(); // сохраняем протокол использвания АИУ по времени (*.tpr)
   snprintf( tmp, sizeof(tmp), "%s\\tpr%s", NameSubDirOutData, cnst );
@@ -5170,6 +5110,8 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  SBM0->Text = " Все файлы протоколов сохранены...";
 //
  do_Run // "включили" все кнопки Выполнение
+//
+ Upload_Data(); // вЫгрузить файлы на сервер
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
 
@@ -5419,15 +5361,17 @@ void __fastcall TF1::OnResize_F1(TObject *Sender)
  tmp = mR->Top + mR->Height + ( dH - F1->BitBtn_Run->Height ) / 2 + F1->BitBtn_Run->Height - F1->Label_Buffer->Height;
  F1->Label_Buffer->Top = tmp; F1->Label_Buffer->Left = mB->Left + mB->Width - F1->Label_Buffer->Width;
  F1->Label_Set->Top    = tmp; F1->Label_Set->Left    = mS->Left + mS->Width - F1->Label_Set->Width;
- F1->Label_Data->Top   = tmp; F1->Label_Data->Left   = mD->Left + mD->Width - F1->Label_Data->Width;
+//
+// чтобы ширина Label_Data непроизвольно не изменялась надо Anchors={false,false,true,TRUE}
+ F1->Label_Data->Top   = tmp; F1->Label_Data->Left  = mD->Left + mD->Width - F1->Label_Data->Width - 3; // относительно SG_Data
 //
 // определяем ширину последнего столбца SG_Set (столбец комментариев к инструкции)
  tmp = mS->ColWidths[0] + mS->ColWidths[1] + mS->ColWidths[2]  // ширина первых 0-5 столбцов
      + mS->ColWidths[3] + mS->ColWidths[4] + mS->ColWidths[5];
 //
- mS->ColWidths[7] = SG_Instruction->Width - tmp - 28; // + 60; // ширина 8-го по счёту столбца SG_Set
+ mS->ColWidths[7] = SG_Instruction->Width - tmp - 28; // ширина 8-го по счёту столбца SG_Set
 //
- if( mS->ColWidths[7] <= sizeof(M_I.Comment) ) // не менее sizeof(M_S.Comment)
+ if( mS->ColWidths[7] < sizeof(M_I.Comment) ) // не менее sizeof(M_S.Comment)
   mS->ColWidths[7] = sizeof(M_I.Comment);
 //
 // секции нижней информационной панели -----------------------------------------
@@ -5753,10 +5697,6 @@ void __fastcall TF1::SG_MouseUp(TObject *Sender, TMouseButton Button,
 //
 } // ----- конец TF1::SG_MouseUp -----------------------------------------------
 
-//
-#include "Finalize_XXX.cpp" // Finalize_Only_SET, Finalize_Except_SET
-//
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -5764,7 +5704,7 @@ void __fastcall  // перемешивает инструции в Mem_Instrucrtions[]
 Mixed_Instructions()
 {
  INT i1,i2; // номера перемешиваемых инструкций в Mem_Instruction[]
- time_t t; // начальное значение для датчика случайных чисел  (текущее время)
+ ::time_t t; // начальное значение для датчика случайных чисел  (текущее время)
  mi vMI; // элемент массива структур Mem_Instruction[]
 //
  do_Stop // "выключили" все кнопки Выполнение
@@ -5789,31 +5729,12 @@ Mixed_Instructions()
 //
 } //----------------------------------------------------------------------------
 
+//
+#include "Finalize_XXX.cpp" // Finalize_Only_SET, Finalize_Except_SET
+//
+#include "FTP_GetPost.cpp" // обмен с сервером vbakanov.ru по FTP (Indy 8.0.25)
+//
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall GetFileFromServer( char FileName[] )
-{ // получить файл с HTTP-сервера ( FileNameInServer - полное имя файла на сервере,
- char FileNameOnServer[_512]="\0", FileNameOnClient[_512]="\0"; // полные имена файла на сервере и клиенте
-//
- TMemoryStream *UnLoadStream = new TMemoryStream;  // создаём поток для сохранения вЫгруженного из Сети файла
-//
-// --- полный путь к каталогу исходных данных (включая слэш в конце)
- snprintf( PathToSubDirInData,sizeof(PathToSubDirInData), "%s%s\\", ExtractFilePath ( Application->ExeName ), NameSubDirInData);
- if( !DirectoryExists( PathToSubDirInData ) ) // если не существует этого каталога...
-  if( !CreateDir( PathToSubDirInData ) ) // если не удалось создать...
-   strcpy( PathToSubDirInData, '\0' ); // обнуляем путь к подкаталогу PathToSubDirOutData
-//
- snprintf( FileNameOnClient,sizeof(FileNameOnClient), "%s%s", PathToSubDirInData, FileName ); // куда сохранять на клиенте (+++)
- snprintf( FileNameOnServer,sizeof(FileNameOnServer), "%s/dataflow/content/%s", MySite, FileName ); // полное имя файла на сервере (+++)
-//
-// ShowMessageFmt( "Client: |%s|\n\nServer: |%s|", OPENARRAY(TVarRec, (FileNameOnClient,FileNameOnServer) ) );
-//
- F1->HTTP_Get->Get( FileNameOnServer, UnLoadStream ); // метод Get выгружает файл посредством потока UnLoadStream
- UnLoadStream->SaveToFile( FileNameOnClient ); // сохраняем данные в файл на клиенте
-//
- delete UnLoadStream; // поток более не нужен...
-//
- F1->HTTP_Get->Disconnect(); // разрываем соединениe с сервером
-} //----------------------------------------------------------------------------
+
+
 

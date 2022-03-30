@@ -1,3 +1,4 @@
+
 #define TEST_PRINT  /* тестовая печать */ \
 /*
 t_printf( "\n-=- Выполнившаяся инструкция (i_Set): #%d [%s %s,%s,%s(%f),|%s|]  {%d/%d/%d|%d/%d/%d}\n\
@@ -13,6 +14,7 @@ Mem_Instruction[i].Set, Mem_Instruction[i].aOp1, Mem_Instruction[i].aOp2, Mem_In
   flagNot,flagPredicat,flagPredicat_TRUE, SpeculateExec, \
   Mem_Instruction[i].fPredicat_TRUE, Mem_Instruction[i].fSpeculateExec );
 */
+
 #define TUNE_FLAGS /* формирование флогов flagNot,flagPredicat,flagPredicat_TRUE */ \
 if ( !isPredicat ) /* это инструкция - НЕ ПРЕДИКАТ... */ \
  flagNot = ( aPredicat[0] == symbolNot_1 || aPredicat[0] == symbolNot_2 ) \
@@ -39,6 +41,7 @@ if( !isPredicat &&  /* ЗАВиСИМАЯ инструкция - НЕ ПРЕДИКАТ */ \
  if( !strcmp( aPredicat, falseLowerCase ) ) /* если false... */ \
   flagPredicat_TRUE = false; \
 /*-*/
+
 #define DO_OPS_2 /* вариант 2-х операндов в инструкции */ \
 if( Ready_Op1 ) { \
  MI_FOP1(i) = true; \
@@ -57,10 +60,12 @@ if( Ready_Op1 ) { \
  snprintf(tmp,sizeof(tmp), " #%d/%d(1|1)", i,Rule); strcat(strInfoLine, tmp); \
  snprintf(tmp,sizeof(tmp), " #%d/%d(*|2)", i,Rule); strcat(strInfoLine, tmp); }
 /*-*/
+
 #define TURN_ON_FP_TRUE /* включить бит для индикации цветом истинности флага-ПРЕДИКАТА */ \
 if( flagPredicat_TRUE ) \
  Mem_Instruction[i].fPredicat_TRUE = true;  // установим бит флаг-ПРЕДИКАТ для индикации цветом
 /*-*/
+
 #define TURN_ON_FSPECUL_EXEC_2 /* установить бит режима спекулятивного выполнения (2 операнда)  */ \
 if(  MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
   ( ( flagPredicat && /* имя флага-предимката совпадает с заданным */ \
@@ -68,6 +73,7 @@ if(  MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТО
      !strcmp( aPredicat, falseLowerCase ) ) ) /* статический false */ \
  Mem_Instruction[i].fSpeculateExec = true; /* установим флаг для индикации цветом в ячейках таблицы */
 //
+
 #define TURN_ON_FSPECUL_EXEC_1 /* установить бит режима спекулятивного выполнения (1 операнд)  */ \
 if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
   ( ( flagPredicat && /* имя флага-предимката совпадает с заданным */ \
@@ -75,14 +81,17 @@ if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
    !strcmp( aPredicat, falseLowerCase ) ) ) /* статический false */ \
  Mem_Instruction[i].fSpeculateExec = true; /* установим флаг для индикации цветом в ячейках таблицы */
 //
+
 #define ADD_TO_BUFF_2 /* добавить инструкцию в буфер для стандартного выполнения (2 операнда) */ \
 if( MI_FOP1(i) && MI_FOP2(i) ) /* флаги готовности у 1-го и 2-го операндов */ \
  Add_toBuffer( i, Rule ); /* добавить ГКВ-команду в буфер команд для исполнения */
 //
+
 #define ADD_TO_BUFF_1 /* добавить инструкцию в буфер для стандартного выполнения (1 операнд) */ \
 if( MI_FOP1(i) ) /* флаги готовности у 1-го операндовf */ \
  Add_toBuffer( i, Rule ); /* добавить ГКВ-команду в буфер команд для исполнения */
 //
+
 #define ADD_TO_BUFF_SPECUL_2 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (2 операнда) */ \
 if( MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВЫ */ \
   ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
@@ -90,6 +99,7 @@ if( MI_FOP1(i) && MI_FOP2(i) && /* по флагам готовности 1-й и 2-й операнды ГОТОВ
                           Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
  Add_toBuffer( i, Rule ); /* добавить ГКВ-инструкцию в буфер команд для исполнения */
 //
+
 #define ADD_TO_BUFF_SPECUL_1 /* добавить инструкцию в буфер с возможностью спекулятивного выполнения (1 операнд) */ \
 if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
   ( ( !SpeculateExec &&   Mem_Instruction[i].fPredicat_TRUE ) || /* стандартное выполнение */ \
@@ -97,6 +107,8 @@ if( MI_FOP1(i) && /* по флагам готовности 1-й операнд ГОТОВ */ \
                           Mem_Instruction[i].fSpeculateExec ) ) ) ) /* спекулятивное выполнение */ \
  Add_toBuffer( i, Rule ); /* добавить ГКВ-инструкцию в буфер команд для исполнения */
 //
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall
