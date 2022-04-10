@@ -151,9 +151,17 @@ INT all_maxProcs, // всего участвующих в вычислениях АИУ
     parallel_Ticks; // время выполнения параллельной программы, такты
 //
 //------------------------------------------------------------------------------
-char uniqueStr[_512] = "\0", // уникальная строка для имен файлов ( дата + время до мсек )
-     tmpPRO[_512],tmpTPR[_512],tmpDAT[_512], // глобалы для передачи в Unload_Date()
-     tmpTST[_512],tmpCOI[_512],tmpGV[_512], tmpMVR[_512];
+char uniqueStr[_512] = "\0"; // уникальная строка для имен файлов ( дата + время до мсек )
+struct {  // глобалы для передачи в Unload_Date()
+ char savePRO[_512] /*
+      saveTPR[_512],
+      saveDAT[_512],
+      saveTST[_512],
+      saveCOI[_512],
+      saveGV[_512],
+      saveMVR[_512] */ ;
+} SF; // строки для передачи имён файлов (kj,fks)
+
 //
 void   __fastcall Read_Config( int Rule ); // управление считываем положения и размеров F1
 void   __fastcall Write_Config();
@@ -5081,31 +5089,37 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  Save_Protocol_Master(); // сохраняем главный протокол (*.pro)
   snprintf( tmp, sizeof(tmp), "%s\\pro%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".pro").c_str(), tmp ); // перенос в подкаталог NameSubDirOutData (Out!Data)
-  strcpy( tmpPRO, tmp ); // запомнили в глобале для использования в Upload_Data()
+  strcpy( SF.savePRO, tmp ); // запомнили в глобале для использования в Upload_Data()
 //
  Save_Protocol_AIU(); // сохраняем протокол использвания АИУ по времени (*.tpr)
   snprintf( tmp, sizeof(tmp), "%s\\tpr%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".tpr").c_str(), tmp );
+//  strcpy( SF.saveTPR, tmp ); // запомнили в глобале для использования в Upload_Data()
 //
  Save_Protocol_Data(); // сохраняем протокол рассчитанных данных (*.dat)
   snprintf( tmp, sizeof(tmp), "%s\\dat%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".dat").c_str(), tmp );
+//  strcpy( SF.saveDAT, tmp );
 //
  Save_Protocol_ExecInstructions(); // сохраняем протокол выполнения инструкций (*.tst)
   snprintf( tmp, sizeof(tmp), "%s\\tst%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".tst").c_str(), tmp );
+//  strcpy( SF.saveTST, tmp );
 //
  Save_Protocol_ConnectedGraph(); // сохраняем протокол свЯзности в информ.графе (*.coi)
   snprintf( tmp, sizeof(tmp), "%s\\coi%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".coi").c_str(), tmp );
+//  strcpy( SF.saveCOI, tmp );
 //
  Save_IGA(); // // сохраняем файл списка дуг в информационномграфе (*.gv)
   snprintf( tmp, sizeof(tmp), "%s\\gv%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".gv").c_str(), tmp );
+//  strcpy( SF.saveGV, tmp );
 //
  Extended_Save_IGA(); // сохранить данные о времени выполнения инструкций (*.mvr)
   snprintf( tmp, sizeof(tmp), "%s\\mvr%s", NameSubDirOutData, cnst );
   MoveFile( ChangeFileExt( FileNameSet, ".mvr").c_str(), tmp );
+//  strcpy( SF.saveMVR, tmp );
 //
  SBM0->Text = " Все файлы протоколов сохранены...";
 //
@@ -5732,7 +5746,7 @@ Mixed_Instructions()
 //
 #include "Finalize_XXX.cpp" // Finalize_Only_SET, Finalize_Except_SET
 //
-#include "FTP_GetPost.cpp" // обмен с сервером vbakanov.ru по FTP (Indy 8.0.25)
+#include "FTP_GetPost_DF.cpp" // обмен с сервером vbakanov.ru по FTP (Indy 8.0.25)
 //
 
 
