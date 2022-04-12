@@ -12,6 +12,7 @@
 #include <shellapi.h>
 //
 #include "SysUtils.hpp"
+#include <DateUtils.hpp> // для DayOf, WeekOf, MonthOf и др.
 #include <Clipbrd.hpp>
 #include <dos.h> // sleep
 //
@@ -5289,8 +5290,8 @@ bool __fastcall Read_Instructions()
    } // конец switch...
 //
 //..............................................................................
-   if( !is_SET( Mem_Instruction[i].Set ) ) // если это НЕ инструкция SET
-    bool flag = Test_aResult_Eq_aOperand(i); // тестирование на совпадение адреса результата с адресами операндов
+//   if( !is_SET( Mem_Instruction[i].Set ) ) // если это НЕ инструкция SET
+//    bool flag = Test_aResult_Eq_aOperand(i); // тестирование на совпадение адреса результата с адресами операндов
 //..............................................................................
 //
    Really_Set = i + 1 ; // реальное число инструкций (на 1 больше, ибо счет i с нуля)
@@ -5561,8 +5562,8 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
       aOp1[_ID_LEN]="\0",
       aOp2[_ID_LEN]="\0",
       aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0",
-      tmp[_512]="\0";
+      aPredicat[_ID_LEN]="\0";
+//      tmp[_512]="\0";
  INT Col, Row, n_Op,
      i_save, i_save_no = -1234567;
 //
@@ -5742,6 +5743,15 @@ Mixed_Instructions()
  do_Run // "включили" все кнопки Выполнение
 //
 } //----------------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+long int __fastcall CountMilliSec()
+{ // текущее время в числе миллисекунд (начиная примерно с 2000 года)
+// t_printf( "%d", (long int) ( ((REAL)TDateTime::CurrentDateTime()-36500.0)*86400000.0 ) );
+ return (long int) ( ((REAL)TDateTime::CurrentDateTime()-36500.0)*86400000.0 ); // отняли 100*365 дней...
+} // конец CountMilliSec -------------------------------------------------------
+
 
 //
 #include "Finalize_XXX.cpp" // Finalize_Only_SET, Finalize_Except_SET
