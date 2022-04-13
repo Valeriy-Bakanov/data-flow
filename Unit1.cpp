@@ -264,9 +264,9 @@ void  __fastcall Run_Infinity(); // повтор загруженной программы бесконечное чис
 //
 void  __fastcall GetFileFromServer(  char *FileNameSource, char *FileNameDestination, bool Replace  ); // вз€ть файл с сервера
 void  __fastcall PutFileToServer(  char *FileNameSource, char *FileNameDestination, bool Replace  ); // вџгрузить файл на сервер
-void  __fastcall Upload_Data(); // вџгрузить файлы на сервер
 void  __fastcall Unload_Install(); // загрузить с сервера инсталл€ционную версию продукта
-void  __fastcall Work_LogInOut( bool Rule); // сообщить о начале/конце работы программы DATA_FLOW.EXE
+void  __fastcall Work_LogInOut( int Rule); // сообщить о начале/конце работы программы DATA_FLOW.EXE
+void  __fastcall Upload_Data( int Rule); // вџгрузить файлы на сервер (в зависимости от Rulq)
 //==============================================================================
 #define mR F1->M1  // доступ к M1 (фрейм протокола выполнени€ программы)
 #define mB F1->SG_Buffer // доступ к массиву €чеек визуализации буфера команд
@@ -1291,7 +1291,7 @@ TF1::OnClose_F1(TObject *Sender, TCloseAction &Action)
 //
               Delay(100); // ждем-c
 //
-              Work_LogInOut( 0 ); // сообщить о конце работы программы DATA_FLOW.EXE
+              Work_LogInOut( 1 ); // сообщить о конце работы программы DATA_FLOW.EXE
               break;
 //
   case IDNO:  Action=caNone; // нажата кнопка No
@@ -2011,7 +2011,7 @@ Start_DF( int Mode )
 //
  Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar --------------------
 //
- Clear_AllTableInstructions(); // очистили все €чейки
+ Clear_AllTableInstructions(); // очистили все €чейки таблицы визуализации инструкций
 //
  Make_Row_Current( 0 ); // установили текущей первую команду
 //
@@ -2033,13 +2033,13 @@ Start_DataFlow_Process( int Mode )
  Regim = 1; // начать выполнение программы
 //
  for( INT i=0; i<max_Proc; i++ ) // все ј»”...
-  Mem_Proc[i].Busy = false; // "—¬ќЅќƒЌџ"..!!!
+  Mem_Proc[i].Busy = false; // "cвободны"..!!!
 //
  Free_Proc = max_Proc; // пока все ј»” свободны
 //
  mR->Clear(); // очистили фрейм вывода протокола расчЄта
 //
- Read_Instructions(); // перечитать программу
+ Read_Instructions(); // перечитать программу из файла
 //
  if( Mode != 0 ) // требуетс€ перемешать инструкции в ѕјћя“»_»Ќ—“–” ÷»…
   Mixed_Instructions(); // перемешать инструкции
@@ -2056,31 +2056,26 @@ Start_DataFlow_Process( int Mode )
  mTpr->Clear(); // очистить список строк данных дл€ анализа работы всех ј»”
 ////////////////////////////////////////////////////////////////////////////////
 //
- Already_Exec = 0; // уже инструкций выполнено
+ Already_Exec = 0; // ...уже инструкций выполнено
 //
  Install_All_Flags(); // очистить все флаги
 //
 ////////////////////////////////////////////////////////////////////////////////
- ftime(&t0);  // вз€ли момент времени начала выполнени€ программы
+ ftime( &t0 );  // вз€ли момент времени начала выполнени€ программы
  localTick = 0; // такты начали считать с нул€ !
 ////////////////////////////////////////////////////////////////////////////////
 //
 // это об€зательно ѕ≈–≈ƒ  Primary_Init_Data() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //
- if( !Test_All_Operands() ) // выполнение продолжить нельз€..!
+ if( !Test_All_Operands() ) // если тест всех операндов на возможность √ ¬ неусп≈шен..1
  {
   do_Run // "включили" все кнопки ¬ыполнение
   return; // заканчиваем выполнение программы
  }
 //
+ Upload_Data( 0 ); // вџгрузить SET-файл на сервер ( Rule == 1 )
+//
  Primary_Init_Data(); // инициализаци€ данных посредством SET etc etc
-////////////////////////////////////////////////////////////////////////////////
- sleep_for_vizu_buffer // ждем-с дл€ визуализации буфера
-////////////////////////////////////////////////////////////////////////////////
-// AttemptExecMaxInstructions_fromBuffer(); // пытаемс€ выполнить максимум √ ¬-инструкций из буфера
-// дл€ фактического выполнени€ инструкций из AttemptExecMaxInstructions_fromBuffer()
-// вызываетс€ ExecuteInstructions_Except_SET( i_Set )
-// !!!!! вызов AttemptExecMaxInstructions_fromBuffer() перенесЄн в конец FinalizeOnlySET_ ...
 ////////////////////////////////////////////////////////////////////////////////
  sleep_for_vizu_buffer // ждем-с дл€ визуализации буфера
 ////////////////////////////////////////////////////////////////////////////////
@@ -3557,7 +3552,7 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
  } // конец  if ParamCount...
 //
  SessionStartTime = (long int) ( ((double)TDateTime::CurrentDateTime()-36500.0)*86400000.0 ); // отн€ли 100*365 дней...
- Work_LogInOut( 1 ); // сообщить о начале работы программы DATA_FLOW.EXE (сообщение "LogIn")
+ Work_LogInOut( 0 ); // сообщить о начале работы программы DATA_FLOW.EXE (сообщение "LogIn")
 //
 } //----- конец F1_OnShow ------------------------------------------------------
 
@@ -5128,7 +5123,7 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
 //
  do_Run // "включили" все кнопки ¬ыполнение
 //
- Upload_Data(); // вџгрузить файлы на сервер
+ Upload_Data( 1 ); // вџгрузить PRO (etc) - файлы на сервер ( Rule == 1 )
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
 
