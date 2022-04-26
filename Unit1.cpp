@@ -40,7 +40,7 @@ using namespace std;
 #include "parser.cpp" // Written by Chaos Master, 11-th of Febrary, 2000
 //------------------------------------------------------------------------------
 #pragma package(smart_init)
-// // #pragma link "TProcTimer"
+// #pragma link "TProcTimer"
 #pragma resource "*.dfm"
 #pragma warn -8057 // отключили сообщения E8057 Parameter 'Sender' is never used
 #pragma warn -8080
@@ -3551,8 +3551,8 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
   do_Stop // "выключили" все кнопки Выполнение
  } // конец  if ParamCount...
 //
- SessionStartTime = (long int) ( ((double)TDateTime::CurrentDateTime()-36500.0)*86400000.0 ); // отняли 100*365 дней...
- Work_LogInOut( 0 ); // сообщить о начале работы программы DATA_FLOW.EXE (сообщение "LogIn")
+  SessionStartTime = (long int) ( ((double)TDateTime::CurrentDateTime()-365.0*100) * 365.0*24*60*60*1000 ); // отняли 100*365 дней (результат в мсек)...
+  Work_LogInOut( 0 ); // сообщить о начале работы программы DATA_FLOW.EXE (сообщение "LogIn")
 //
 } //----- конец F1_OnShow ------------------------------------------------------
 
