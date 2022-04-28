@@ -163,7 +163,7 @@ struct {  // глобалы дл€ передачи в Unload_Date()
       saveMVR[_512] */ ;
 } SF; // строки дл€ передачи имЄн файлов (kj,fks)
 //
-long int SessionStartTime = 0L; // врем€ начала сессии исследований (глобал)
+__int64 SessionStartTime = 0L; // врем€ начала сессии исследований (глобал)
 //
 void   __fastcall Read_Config( int Rule ); // управление считываем положени€ и размеров F1
 void   __fastcall Write_Config();
@@ -3551,7 +3551,7 @@ void __fastcall TF1::OnShow_F1(TObject *Sender)
   do_Stop // "выключили" все кнопки ¬ыполнение
  } // конец  if ParamCount...
 //
-  SessionStartTime = (long int) ( ((double)TDateTime::CurrentDateTime()-365.0*100) * 365.0*24*60*60*1000 ); // отн€ли 100*365 дней (результат в мсек)...
+  SessionStartTime = (__int64) ( ((double)TDateTime::CurrentDateTime()-365.0*100) * 365.0*24*60*60*1000 ); // отн€ли 100*365 дней (результат в мсек)...
   Work_LogInOut( 0 ); // сообщить о начале работы программы DATA_FLOW.EXE (сообщение "LogIn")
 //
 } //----- конец F1_OnShow ------------------------------------------------------
