@@ -928,7 +928,7 @@ TF1::Rewrite_Files(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::Show_Chema(TObject *Sender)
 { // показать схему DATA-FLOW вычислителя в PDF
- ShellExecute(0, NULL, "chema.pdf", NULL, NULL,SW_SHOWNORMAL);
+ ShellExecute(0, NULL, "Chema.pdf", NULL, NULL,SW_SHOWNORMAL);
 } //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
