@@ -959,7 +959,7 @@ void __fastcall TF1::Show_Chema(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::N12Click(TObject *Sender)
 {  // показать описание DATA-FLOW вычислителя в PDF
- ShellExecute(0, NULL, "base.pdf", NULL, NULL,SW_SHOWNORMAL);
+ ShellExecute(0, NULL, "Base.pdf", NULL, NULL,SW_SHOWNORMAL);
 } //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
