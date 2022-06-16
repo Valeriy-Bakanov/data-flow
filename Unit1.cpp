@@ -607,8 +607,8 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
  mS->Cells[0][0]  = " # п/п"; // таблица команд (инструкицй)
  mS->ColWidths[0] = 55;
 //
- mS->Cells[1][0]  = " Мнемоника";
- mS->ColWidths[1] = 90;
+ mS->Cells[1][0]  = " Мнемо";
+ mS->ColWidths[1] = 55;
 //
  mS->Cells[2][0]  = " Операнд-1";
  mS->ColWidths[2] = 115;
@@ -631,8 +631,8 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- mD->Cells[0][0] = " Адрес";  // таблица данных
- mD->ColWidths[0]= 90;
+ mD->Cells[0][0] = " Переменная";  // таблица данных
+ mD->ColWidths[0]= 95;
 //
  mD->Cells[1][0] = " Значение";
  mD->ColWidths[1]= 100;
