@@ -527,8 +527,8 @@ int Count_Sets = sizeof(Set_Params) / sizeof(ip); // РЕАЛЬНОЕ число пар в массив
 //
 ////////////////////////////////////////////////////////////////////////////////
 INT localTick = 0,  // общее число тиков (происшедших тактов) по счётчику MasterTimer
-    localTickOfEndLastExecuteSet, // тиков с конца последней выполненной инструкции
-    waitAboveOfEndLastExecuteSet = 1000; // через сколько тиков закнчивать программу
+    localTickOfEndLastExecuteSet = 0, // тиков с конца последней выполненной инструкции
+    waitAboveOfEndLastExecuteSet = 1000; // через сколько тиков заканчивать программу
 int tick_Interval = 10; // цена деления тика таймера в миллисекундах (умолчание)
 ////////////////////////////////////////////////////////////////////////////////
 const int minW_F1 = 1024, minH_F1 = 600; // минимальный размер окна главной формы (F1)
@@ -1907,7 +1907,7 @@ Display_Error(char *str)
 //
  do_Run // "включили" все кнопки Выполнение
 //
- MessageBox( 0, str, "Проблемы с арифметикой", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL );
+ MessageBox( 0, str, "Проблемы с арифметикой...", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL );
 //
 } // ---------------------------------------------------------------------------
 
@@ -1919,10 +1919,10 @@ Vizu_Flow_Exec() // визуализировать процент выполнения программы
  char tmp[_512];
 //
  snprintf(tmp,sizeof(tmp), " АИУ: %d/%d | буфер %.1f%% | выполнено %.1f%% (%d/%d) инструкций",
-                max_Proc - Free_Proc, max_Proc,
-                1.0e2 * Really_Buffer / max_Buffer,
-                1.0e2 * Already_Exec  / Really_Set,
-                Already_Exec, Really_Set);
+              max_Proc - Free_Proc, max_Proc,
+              1.0e2 * Really_Buffer / max_Buffer,
+              1.0e2 * Already_Exec  / Really_Set,
+              Already_Exec, Really_Set);
  SBM0->Text = tmp; // вывод текста в StatusBarMain (секция 0)
 // SBM0->Canvas->Repaint(); // перерисовать принудительно
  SBM->Repaint(); // перерисовать принудительно
@@ -1966,7 +1966,7 @@ Start_DF( int Mode )
  F1->Master_Timer->Enabled = true; // включили главный таймер
 //
  localTick = // начало выполнения программы (глобал)
- localTickOfEndLastExecuteSet = 0; // момент последнего тика выполнения последней инструкции (глобал)
+ localTickOfEndLastExecuteSet = 0; // момент последн.тика выполн.последн.инструкции (глобал)
 //
 // для единократной выдачи сообщений о переполнении Mem_Data[] и Mem_Buffer и проблемах с парсером (глобальные)
  flagAlarmData = flagAlarmBuffer = flagAlarmParser = true;
