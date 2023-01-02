@@ -71,7 +71,7 @@ pattern[] = "[A-Z]{3}" // мнемоника команды (ровно 3 заглавных, латиница)
 #define strcat(dest,src) (strncat(dest,src,sizeof(dest)-strlen(dest)-5)) // безопасное добавление src к dest
 // !!!!! здесь 5 - просто дополнительная защита ("на всякий случай") !!!!!!!!!!!
 //
-char Ident[] = "Bakanov Valery Mikhailovich, http://vbakanov.ru/left_1.htm , Moscow, Russia, 2009-2022\n \
+char Ident[] = "Bakanov Valery Mikhailovich, http://vbakanov.ru/left_1.htm , Moscow, Russia, 2009-2023\n \
 Автор программного продукта Валерий Баканов не является ярым сторонником Объектно-Ориентированного Программирования \
 (внутри автора точно сидит Линус Торвальдс!) и поэтому большая часть кода не использует ООП\n \
 The author of the software Valery Bakanov is not an ardent supporter of Object-Oriented Programming \

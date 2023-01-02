@@ -8,7 +8,7 @@ object F1: TF1
   ActiveControl = BitBtn_Run
   BorderIcons = [biSystemMenu, biMinimize]
   BorderWidth = 1
-  Caption = ' DATA-FLOW architecture computer simulator ver 4.6 (2009-2022)'
+  Caption = ' DATA-FLOW architecture computer simulator ver 4.6 (2009-2023)'
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
