@@ -1935,6 +1935,10 @@ Vizu_Flow_Exec() // визуализировать процент выполнени€ программы
 void __fastcall // начали вычислени€ ( нажатие кнопки ¬џѕќЋЌ»“№ )
 TF1::Run_Calculations(TObject *Sender)
 {
+ Write_Config(); // переписать файл конфигурации
+ max_Proc = StrToInt(F1->E_AIU->Text); // перевели в число (глобал)
+ Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
+//
  Start_DF( 0 ); // старт без перемешивани€ инструкций
 } // ---- конец TF1::Run_Calculations ------------------------------------------
 
@@ -4058,7 +4062,7 @@ void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
 //
   Beep( 440, 100 ); // звуковое предупреждение...
   Beep( 880, 150 );
-//  Beep( 2048, 100 );
+  Beep( 2048, 100 );
  }
 //
 } //----------------------------------------------------------------------------
@@ -5747,6 +5751,7 @@ Mixed_Instructions()
 //
 #include "FTP_GetPost_DF.cpp" // обмен с сервером vbakanov.ru по FTP (Indy 8.0.25)
 //
+
 
 
 
