@@ -1,0 +1,232 @@
+; Баканов В.М., e881e@mail.ru, http://vbakanov.ru/left_1.htm 
+; иммитация умножения матриц 10x10
+;
+SET 2, deg ; показатель степени
+;
+SET  1,  a001 ; исходные данные 
+SET  2,  a002
+SET  3,  a003 
+SET  4,  a004
+SET  5,  a005
+SET  6,  a006
+SET  7,  a007
+SET  8,  a008
+SET  9,  a009
+SET  10, a010
+;
+SET  11,  a011 
+SET  12,  a012
+SET  13,  a013 
+SET  14,  a014
+SET  15,  a015
+SET  16,  a016
+SET  17,  a017
+SET  18,  a018
+SET  19,  a019
+SET  20,  a020
+;
+SET  21,  a021 
+SET  22,  a022
+SET  23,  a023 
+SET  24,  a024
+SET  25,  a025
+SET  26,  a026
+SET  27,  a027
+SET  28,  a028
+SET  29,  a029
+SET  30,  a030
+;
+SET  31,  a031 
+SET  32,  a032
+SET  33,  a033 
+SET  34,  a034
+SET  35,  a035
+SET  36,  a036
+SET  37,  a037
+SET  38,  a038
+SET  39,  a039
+SET  40,  a040
+;
+SET  41,  a041 
+SET  42,  a042
+SET  43,  a043 
+SET  44,  a044
+SET  45,  a045
+SET  46,  a046
+SET  47,  a047
+SET  48,  a048
+SET  49,  a049
+SET  50,  a050
+;
+SET  51,  a051 
+SET  52,  a052
+SET  53,  a053 
+SET  54,  a054
+SET  55,  a055
+SET  56,  a056
+SET  57,  a057
+SET  58,  a058
+SET  59,  a059
+SET  60,  a060
+;
+SET  61,  a061 
+SET  62,  a062
+SET  63,  a063 
+SET  64,  a064
+SET  65,  a065
+SET  66,  a066
+SET  67,  a067
+SET  68,  a068
+SET  69,  a069
+SET  70,  a070
+;
+SET  71,  a071 
+SET  72,  a072
+SET  73,  a073 
+SET  74,  a074
+SET  75,  a075
+SET  76,  a076
+SET  77,  a077
+SET  78,  a078
+SET  79,  a079
+SET  80,  a080
+;
+SET  81,  a081 
+SET  82,  a082
+SET  83,  a083 
+SET  84,  a084
+SET  85,  a085
+SET  86,  a086
+SET  87,  a087
+SET  88,  a088
+SET  89,  a089
+SET  90,  a090
+;
+SET  91,  a091 
+SET  92,  a092
+SET  93,  a093 
+SET  94,  a094
+SET  95,  a095
+SET  96,  a096
+SET  97,  a097
+SET  98,  a098
+SET  99,  a099
+SET  100, a100
+;
+POW a001, deg, b001
+POW a002, deg, b002
+POW a003, deg, b003
+POW a004, deg, b004
+POW a005, deg, b005
+POW a006, deg, b006
+POW a007, deg, b007
+POW a008, deg, b008
+POW a009, deg, b009
+POW a010, deg, b010
+;
+POW a011, deg, b011
+POW a012, deg, b012
+POW a013, deg, b013
+POW a014, deg, b014
+POW a015, deg, b015
+POW a016, deg, b016
+POW a017, deg, b017
+POW a018, deg, b018
+POW a019, deg, b019
+POW a020, deg, b020
+;
+POW a021, deg, b021
+POW a022, deg, b022
+POW a023, deg, b023
+POW a024, deg, b024
+POW a025, deg, b025
+POW a026, deg, b026
+POW a027, deg, b027
+POW a028, deg, b028
+POW a029, deg, b029
+POW a030, deg, b030
+;
+POW a031, deg, b031
+POW a032, deg, b032
+POW a033, deg, b033
+POW a034, deg, b034
+POW a035, deg, b035
+POW a036, deg, b036
+POW a037, deg, b037
+POW a038, deg, b038
+POW a039, deg, b039
+POW a040, deg, b040
+;
+POW a041, deg, b041
+POW a042, deg, b042
+POW a043, deg, b043
+POW a044, deg, b044
+POW a045, deg, b045
+POW a046, deg, b046
+POW a047, deg, b047
+POW a048, deg, b048
+POW a049, deg, b049
+POW a050, deg, b050
+;
+POW a051, deg, b051
+POW a052, deg, b052
+POW a053, deg, b053
+POW a054, deg, b054
+POW a055, deg, b055
+POW a056, deg, b056
+POW a057, deg, b057
+POW a058, deg, b058
+POW a059, deg, b059
+POW a060, deg, b060
+;
+POW a061, deg, b061
+POW a062, deg, b062
+POW a063, deg, b063
+POW a064, deg, b064
+POW a065, deg, b065
+POW a066, deg, b066
+POW a067, deg, b067
+POW a068, deg, b068
+POW a069, deg, b069
+POW a070, deg, b070
+;
+POW a071, deg, b071
+POW a072, deg, b072
+POW a073, deg, b073
+POW a074, deg, b074
+POW a075, deg, b075
+POW a076, deg, b076
+POW a077, deg, b077
+POW a078, deg, b078
+POW a079, deg, b079
+POW a080, deg, b080
+;
+POW a081, deg, b081
+POW a082, deg, b082
+POW a083, deg, b083
+POW a084, deg, b084
+POW a085, deg, b085
+POW a086, deg, b086
+POW a087, deg, b087
+POW a088, deg, b088
+POW a089, deg, b089
+POW a090, deg, b090
+;
+POW a091, deg, b091
+POW a092, deg, b092
+POW a093, deg, b093
+POW a094, deg, b094
+POW a095, deg, b095
+POW a096, deg, b096
+POW a097, deg, b097
+POW a098, deg, b098
+POW a099, deg, b099
+POW a100, deg, b100
+;
+
+
+
+
+
+
+

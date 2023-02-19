@@ -1,0 +1,19 @@
+; Баканов В.М., e881e@mail.ru, http://vbakanov.ru/left_1.htm 
+; Умножение векторов C[]<-A[]хB[] размерности 3
+;
+MUL A0, B0, A0B0 ; A0C0 <- A0 х B0
+MUL A1, B1, A1B1
+MUL A2, B2, A2B2
+;
+ADD A0B0, A1B1, W ; W - временная переменная для суммирования
+ADD W, A2B2, Result ; Result -  решение
+;
+SET 0, A0 ; A0 <- 0
+SET 1, A1 ;
+SET 2, A2 ;
+;
+SET 10, B0 ; B0 <- 0
+SET 12, B1 ;
+SET 13, B2 ;
+
+

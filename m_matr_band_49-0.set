@@ -1,0 +1,120 @@
+; Баканов В.М., e881e@mail.ru, http://vbakanov.ru/left_1.htm 
+; иммитация умножения матриц 7x7
+;
+SET 2, deg ; показатель степени
+;
+SET  1,  a001 ; исходные данные 
+SET  2,  a002
+SET  3,  a003 
+SET  4,  a004
+SET  5,  a005
+SET  6,  a006
+SET  7,  a007
+SET  8,  a008
+SET  9,  a009
+SET  10, a010
+;
+SET  11,  a011 
+SET  12,  a012
+SET  13,  a013 
+SET  14,  a014
+SET  15,  a015
+SET  16,  a016
+SET  17,  a017
+SET  18,  a018
+SET  19,  a019
+SET  20,  a020
+;
+SET  21,  a021 
+SET  22,  a022
+SET  23,  a023 
+SET  24,  a024
+SET  25,  a025
+SET  26,  a026
+SET  27,  a027
+SET  28,  a028
+SET  29,  a029
+SET  30,  a030
+;
+SET  31,  a031 
+SET  32,  a032
+SET  33,  a033 
+SET  34,  a034
+SET  35,  a035
+SET  36,  a036
+SET  37,  a037
+SET  38,  a038
+SET  39,  a039
+SET  40,  a040
+;
+SET  41,  a041 
+SET  42,  a042
+SET  43,  a043 
+SET  44,  a044
+SET  45,  a045
+SET  46,  a046
+SET  47,  a047
+SET  48,  a048
+SET  49,  a049
+;
+POW a001, deg, b001
+POW a002, deg, b002
+POW a003, deg, b003
+POW a004, deg, b004
+POW a005, deg, b005
+POW a006, deg, b006
+POW a007, deg, b007
+POW a008, deg, b008
+POW a009, deg, b009
+POW a010, deg, b010
+;
+POW a011, deg, b011
+POW a012, deg, b012
+POW a013, deg, b013
+POW a014, deg, b014
+POW a015, deg, b015
+POW a016, deg, b016
+POW a017, deg, b017
+POW a018, deg, b018
+POW a019, deg, b019
+POW a020, deg, b020
+;
+POW a021, deg, b021
+POW a022, deg, b022
+POW a023, deg, b023
+POW a024, deg, b024
+POW a025, deg, b025
+POW a026, deg, b026
+POW a027, deg, b027
+POW a028, deg, b028
+POW a029, deg, b029
+POW a030, deg, b030
+;
+POW a031, deg, b031
+POW a032, deg, b032
+POW a033, deg, b033
+POW a034, deg, b034
+POW a035, deg, b035
+POW a036, deg, b036
+POW a037, deg, b037
+POW a038, deg, b038
+POW a039, deg, b039
+POW a040, deg, b040
+;
+POW a041, deg, b041
+POW a042, deg, b042
+POW a043, deg, b043
+POW a044, deg, b044
+POW a045, deg, b045
+POW a046, deg, b046
+POW a047, deg, b047
+POW a048, deg, b048
+POW a049, deg, b049
+;
+
+
+
+
+
+
+
