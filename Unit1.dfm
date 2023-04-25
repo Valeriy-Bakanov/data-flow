@@ -1,6 +1,6 @@
 object F1: TF1
-  Left = 405
-  Top = 225
+  Left = 323
+  Top = 189
   Width = 1024
   Height = 619
   HorzScrollBar.Visible = False
@@ -170,7 +170,9 @@ object F1: TF1
     Top = 217
     Width = 190
     Height = 308
-    Hint = #1044#1072#1085#1085#1099#1077' ('#1087#1088#1086#1089#1084#1086#1090#1088' - '#1083#1077#1074#1072#1103' '#1082#1085#1086#1087#1082#1072' '#1084#1099#1096#1080', '#1088#1072#1089#1087#1077#1095#1072#1090#1082#1072' Alt+F2)'
+    Hint = 
+      #1044#1072#1085#1085#1099#1077' ('#1087#1088#1086#1089#1084#1086#1090#1088' - '#1076#1074'.'#1097#1077#1083#1095#1086#1082' '#1083#1077#1074#1086#1081' '#1082#1085#1086#1087#1082#1086#1081' '#1084#1099#1096#1080', '#1089#1086#1093#1088#1072#1085#1080#1090#1100' Alt+F' +
+      '2)'
     TabStop = False
     Anchors = [akRight, akBottom]
     ColCount = 2
@@ -180,7 +182,7 @@ object F1: TF1
     FixedCols = 0
     RowCount = 2
     TabOrder = 6
-    OnMouseDown = SG_Data_Info
+    OnDblClick = SG_Data_Info
     OnTopLeftChanged = SG_Data_TopLeftChanged
   end
   object SG_Instruction: TStringGrid

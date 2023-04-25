@@ -171,8 +171,6 @@ __published:	// IDE-managed Components
         void __fastcall CD_1_Show(TObject *Sender);
         void __fastcall OnKeyUp_F1(TObject *Sender, WORD &Key, TShiftState Shift);
         void __fastcall Save_Data(TObject *Sender);
-        void __fastcall SG_Data_Info(TObject *Sender,
-                        TMouseButton Button, TShiftState Shift, int X, int Y);
         void __fastcall M1_ClearAll(TObject *Sender);
         void __fastcall M1_CopyAll(TObject *Sender);
         void __fastcall M1_CopyToNotepad(TObject *Sender);
@@ -180,6 +178,7 @@ __published:	// IDE-managed Components
         void __fastcall Show_AIU(TObject *Sender);
         void __fastcall SG_MouseUp(TObject *Sender, TMouseButton Button,
                         TShiftState Shift, int X, int Y);
+        void __fastcall SG_Data_Info(TObject *Sender);
 //
 private:	// User declarations
 public:		// User declarations
