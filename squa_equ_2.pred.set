@@ -2,6 +2,7 @@
 ; ¤«ï ¯®«ãç¥­¨ï à¥è¥­¨ï ¢ ¬­¨¬ëå ç¨á« å ¨á¯®«ì§ã¥¬ ä« £ ¯à¥¤¨ª â 
 ; IS_re ¥áâì true ¯à¨ §­ ç¥­¨¨ ¤¨áªà¨¬¨­ ­â  D>=0 (¢¥é¥áâ¢¥­­ë¥ ª®à­¨)
 ; A x X^2 + B x X + C = 0
+; ¢¥«¨ª¨© ¨­¤¨©áª¨©  áâà®­®¬ ¨ ¬ â¥¬ â¨ª €•Œ€ƒ“’€ (7-© ¢¥ª ­.í.)
 ; in case A = 1, B = 7, C = 3
 ; the solve is: re_X1=-0.45862,im_X1=0; re_X2=-6.5414,im_X2=0
 ; in case A = 1, B = 3, C = 3
@@ -14,19 +15,19 @@ POW B, TWO, BB ; B^2 -> BB
 MUL A4, C, AC4 ; A4 * C -> AC4
 SUB BB, AC4, D ; BB - AC4 -> D[iskriminant]
 ;
-SQR D, sqrt_D, IS_re ; sqrt(D) -> sqrt_D
-ADD B_NEG, sqrt_D, W1, IS_re ; B_NEG + D_SQRT -> W1
-SUB B_NEG, sqrt_D, W2, IS_re ; B_NEG - D_SQRT -> W2
-DIV W1, A2, re_X1, IS_re ; W1/A2 -> re_X1 /; #9  | #109
-DIV W2, A2, re_X2, IS_re ; W2/A2 -> re_X2 /; #10 | #110 
+SQR D, sqrt_D: IS_re ; sqrt(D) -> sqrt_D
+ADD B_NEG, sqrt_D, W1: IS_re ; B_NEG + D_SQRT -> W1
+SUB B_NEG, sqrt_D, W2: IS_re ; B_NEG - D_SQRT -> W2
+DIV W1, A2, re_X1: IS_re ; W1/A2 -> re_X1 /; #9  | #109
+DIV W2, A2, re_X2: IS_re ; W2/A2 -> re_X2 /; #10 | #110 
 ;
-MUL D, NEG_ONE, NEG_D, !IS_re ; NEG_ONE x D -> NEG_D
-SQR NEG_D, sqrt_D, !IS_re ; sqrt(NEG_D) -> sqrt_D
-DIV B_NEG, A2, re_X1,!IS_re ; 1-th root (real)
-DIV sqrt_D, A2, im_X1, !IS_re ; 1-th root (img)
-CPY re_X1, re_X2, !IS_re ; 2-th root (real)
-DIV sqrt_D, A2, W, !IS_re ; temp for im_X2
-MUL W, NEG_ONE, im_X2, !IS_re ; 2-th root (im)
+MUL D, NEG_ONE, NEG_D: !IS_re ; NEG_ONE x D -> NEG_D
+SQR NEG_D, sqrt_D: !IS_re ; sqrt(NEG_D) -> sqrt_D
+DIV B_NEG, A2, re_X1: !IS_re ; 1-th root (real)
+DIV sqrt_D, A2, im_X1: !IS_re ; 1-th root (img)
+CPY re_X1, re_X2: !IS_re ; 2-th root (real)
+DIV sqrt_D, A2, W: !IS_re ; temp for im_X2
+MUL W, NEG_ONE, im_X2: !IS_re ; 2-th root (im)
 ;
 SET 1, A ; 1 -> A
 SET 3, B ; 7/3 -> B (re/im)

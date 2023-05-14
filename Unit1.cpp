@@ -6,7 +6,7 @@
 #include "Unit3.h" // чтобы был доступ к F3 (форма вывода графика Ганнта)
 //
 #include <vcl.h>
-#pragma hdrstop
+#pragma  hdrstop
 #include <IniFiles.hpp>
 #include <System.hpp>
 #include <shellapi.h>
@@ -15,6 +15,7 @@
 #include <DateUtils.hpp> // для DayOf, WeekOf, MonthOf и др.
 #include <Clipbrd.hpp>
 #include <dos.h> // sleep
+#include <sysopen.h>
 //
 #include <iostream.h>
 #include <typeinfo.h>
@@ -25,7 +26,11 @@
 #include "Math.hpp"
 #include <time.h>
 #include <stdlib.h>
-// #include <setjmp.h> // для setjmp() и longjmp()
+//
+#include <setjmp.h> // для реализации нелокального перехода в программе
+jmp_buf env_BypassMacro; // в env_BypassMacro сохраняется состояние в точке вызова setjmp
+short i_env_BypassMacro = -1; // что возвращает setjmp (вызов longjmp корректен только при i_env_BypassMacro >= 0)
+//
 #include <IniFiles.hpp>
 #include <sys\timeb.h>
 #include <SysUtils.hpp>
@@ -58,6 +63,9 @@ TParser parser; // перед TParser добавлено :: для обеспечения отдельной области 
 //
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define min(a, b) (((a) < (b)) ? (a) : (b))
+//
+#define DSTA(str) DelSpacesTabsAround(str) // убрать пробелы, Tab вокруг строки
+#define DAS(str)  DeleteAllSpaces(str) // убрать все пробелы в строке str
 //
 char // 3-х или 2-х адресная команда ( + поле предиката + комментарии )
 pattern[] = "[A-Z]{3}" // мнемоника команды (ровно 3 заглавных, латиница)
@@ -96,7 +104,7 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 #define ERR_ALTERNAT -13.4567 // признак деления на 0 при вычислении альтернативности
 //------------------------------------------------------------------------------
 #define REAL double // тип вещественных чисел при вычислениях
-#define INT  signed long // тип целых
+#define INT signed long // тип целых
 //
 #define ULI unsigned long int // длинное целое без знака
 #define UI  unsigned int // целое без знака
@@ -114,7 +122,7 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 #define  _8192  8192
 #define _16384 16384
 //------------------------------------------------------------------------------
-#define ACC_REAL 3 // число знаков после зап.при выводе "плавающих" по E-формату
+#define ACC_REAL 4 // число знаков после зап.при выводе "плавающих" по E-формату
 //==============================================================================
 #define _SET_LEN 4  // длина строки мнемоники инструкции (3 символа + "\0")
 #define _ID_LEN  33 // 33 // длина строки имени переменной (32 символа + "\0")
@@ -196,11 +204,11 @@ void   __fastcall Start_DataFlow_Process(int Mode); // начали счет (в заданном M
 int    __fastcall Get_CountOperandsByInstruction(char *Set); // возвращает число операндов инструкции Set
 char*  __fastcall GetSubString(char *Str, int n1, int n2); // вернуть подстроку из Str от n1 до n2 символов включительно
 char*  __fastcall Line_Set(INT i_Set, short int Rule, REAL Result); // возвращает текст инструкции из Mem_Instruction[i]
-void   __fastcall Add_toData(INT i_Set, char* aResult, REAL Data); // добавляет в Mem_Data[] число по адресу (строка!) Addr
-void   __fastcall Add_toBuffer(INT i_Set, int Rule); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set (Rule определяет точку вызова функции)
+void   __fastcall add_Data(INT i_Set, char* aResult, REAL Data); // добавляет в Mem_Data[] число по адресу (строка!) Addr
+void   __fastcall add_Buffer(INT i_Set, int Rule); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set (Rule определяет точку вызова функции)
 int    __fastcall Get_TicksByInstruction(char *Set); // возвращает из Set_Params->Time время выполнения инструкции Set(char *Set);
 int    __fastcall Get_Free_Proc(); // возвращает число свободных АИУ
-REAL   __fastcall Get_Data(char Addr[]); // возвращает из Mem_Data[] число по адресу (строка!) Addr
+REAL   __fastcall get_Data(char Addr[]); // возвращает из Mem_Data[] число по адресу (строка!) Addr
 void   __fastcall Display_Error(char *str); // информация об арифметической ошибке
 void   __fastcall Test_Visu_Buffer_Fill(); // тестирование индикация заполненности буфера
 int    __fastcall Select_Instruction_fromBuffer(); // возвращает номер инструкции из буфера по условию мах ПРИОРИТЕТА
@@ -243,6 +251,8 @@ void   __fastcall ReplaceEqualLengthSubstring( char *String, char *OldSubstring,
 int Delay_Buffer = 0; // ждать (в миллисек) для визуализации буфера
 //
 void   __fastcall DelSpacesTabsAround(char *str); // удаляет пробелы слева и справа строки str
+char*  __fastcall DeleteSymbolAll( char str[], char symb ); // убирает все symb в строке str
+char*  __fastcall DeleteAllSpaces( char *str ); // убирает все пробелы в строке str
 //
 void  __fastcall Save_Protocol_Master(); // сохранение ГЛАВНОГО-ПРОТОКОЛА выполнения задания (*.pro)
 void  __fastcall Save_Protocol_AIU(); // сохранение ПРОТОКОЛА_ИСПОЛЬЗОВАНИЯ_АИУ_ПО_ВРЕМЕНИ (*.tpr)
@@ -288,6 +298,14 @@ void  __fastcall Upload_Data( int Rule); // вЫгрузить файлы на сервер (в зависим
 #define MI_FOP1(i) ( Mem_Instruction[i].fOp1 ) // обращение к флагу готовности 1-го операнда i-той инструкции
 #define MI_FOP2(i) ( Mem_Instruction[i].fOp2 ) // ... 2-го операнда i-той инструкции
 //
+char
+pattern_01[] = "[=][0-9]{1,}[/][0-9]{1,}[:]" // =n1/n2: -name1 Val1 -name2 Val2 ...
+               "([ ][-][A-za-x0-9_]{1,}[ ][.,0-9]{1,}){0,}" // повтор всего до бесконечности
+               ;
+char
+pattern_02[] = "[=][0-9]{1,}[/][0-9]{1,}[:]" // =n1/n2: -name1 minVal1 maxval1 -name2 minVal2 maxVal2 ...
+               "([ ][-][A-za-x0-9_]{1,}[ ][.,0-9]{1,}[ ][.,0-9]{1,}){0,}" // повтор всего до бесконечности
+               ;
 //------------------------------------------------------------------------------
 //
 struct { // DrawColorTest (выделение ячеек цветом при тестировании без выполнения программы)
@@ -445,7 +463,7 @@ INT Really_Select = 0; // текущее значение
 #define MAX_DATA 1000000 // максимальный размер пула данных 10^6
 // описание структуры ячеек памяти данных
 struct md {
- char Addr[_ID_LEN]; // адрес ячейки (строка!)
+ char Addr[_ID_LEN+10]; // адрес ячейки (строка!)
  REAL Data; // содержимое ячейки
  INT i_Set; // номер инструкции, в результате котрой было вычислено это значеник
 } M_D, *Mem_Data=NULL;
@@ -561,15 +579,38 @@ bool flagAlarmData   = true,
 //
 int outGlobal; // тэг варианта меню, из которого вызвана функция выбора цвета
 //
-bool SpeculateExec   = false; // при true инструкция с flagPredicate_TRUE=false выполнить, но результат не сохранять
+bool SpeculateExec = false; // при true инструкция с flagPredicate_TRUE=false выполнить, но результат не сохранять
 //
 INT dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длиной 0 тиков
     pass_Counts = 0, // пропускаем pass_Counts выполненных инструкций при перемещении фокуса в SG_Set[][]
     count_Ops=0; // номер выполненной инструкции по очереди (идёт с накоплением)
 //
+////////////////////////////////////////////////////////////////////////////////
+// ----- данные обработки препроцессором ---------------------------------------
+ char  cI, cJ; // имя переменной цикла
+ INT   minI, maxI, dI, // начало, конец и шаг изменения переменно
+       minJ, maxJ, dJ,
+       startN, endN, // первая и последняя строки макроса в списке строк исходного кода
+       numbFor = -1; // номер псевдомассива в программе
+ char  str[_1024]="\0", // строка обрабатываемой инструкции
+       SetName[_128],Opd_1[_256],Opd_2[_256],Res[_256], // строки для мнемоники, 1-го и 2-го операндов, результата,
+       Predic[_128], Comm[_1024],  // предиката, комментариев
+       nameMass[_512], indexMass[_512], // подстрока  левее '[' и левее ']'
+       SymbDelim = ':', w[_1024], tmp[]="?\0", *p;
+ char  nameMass_1[_128]="\0", nameMass_2[_128]="\0", strIndex[_512]="\0"; // поля 'индекс в индексе'
+ char  err_01[]="\n-M- Имя массива '%s' недопустимо! -M-\n";
+ char* stdFunc[] = {"sin","cos","tg","ctg","arcsin","arccos","arctg","arcctg", // станд.тригоном.функции парсера/вычислителя (strstr)
+                    "sh", "ch", "th","cth","exp",   "lg",    "ln",   "sqrt"};
+ char replaceFmt[]="{$%d@}"; // формат при замене/восстановлении подстрок имён stdFunc
+ bool flagMacroTitle; // признак нахождения строки с заголовком макроса 1D-псевдомассивов
+ TStringList *mBody = new TStringList(), // создать набор строк - контейнер для макроса
+             *mExpand = new TStringList(), // создать набор строк - контейнер для расширений макроса макроса
+             *strToken = new TStringList(); // токены для уникальности переменных
+// ----- конец данных обработки препроцессором ---------------------------------
+////////////////////////////////////////////////////////////////////////////////
 #include "Finalize_XXX.cpp" // Finalize_Only_SET, Finalize_Except_SET
-#include "Macros.cpp"
-#include "FTP_GetPost_DF.cpp" // обмен с сервером vbakanov.ru по FTP (Indy 8.0.25)
+#include "Macros.cpp" // расширение макросов в псевдомассивы
+#include "FTP_GetPost_DF.cpp" // работа с Сетью
 //==============================================================================
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -653,11 +694,11 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
   Vizu_Instructions(); // визуализация инструкций в SG_Set из массива структур Mem_Instruction[]
  }
- else // не удалось прочитать
+ else // не удалось прочитать файл инструкций..!
  {
   BitBtn_Run->Enabled = false; // "выключили" кнопку ВЫПОЛНЕНИЕ
   SBM0->Text = " Выберите файл программы для выполнения..."; // вывод текста в StatusBarMain
-  MessageBeep( MB_ICONASTERISK ); // предупреждение...
+  MessageBeep( MB_ICONEXCLAMATION ); // предупреждение...
   Delay( 1000 ); // ждать 1000 мсек
  }
 //
@@ -739,6 +780,37 @@ void __fastcall ReplaceEqualLengthSubstring( char *String, char *OldSubstring, c
  while( p ) ;
 //
 } // --- конец функции ReplaceEqualLegthSubstring ------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+char* __fastcall DeleteAllSpaces( char *str )
+{ // удаляет ВСЕ пробелы в строке str
+//
+// для использования AnsiReplaceStr ytj,[jlbvj #include <vcl/StrUtils.hpp>
+// str = ( AnsiReplaceStr( str, " ", "" ) ).c_str(); // удаление всех пробелов
+//
+// нижеприведённое взято с http://www.quizful.net/interview/cpp/VbW07kq70NCY
+ for ( register INT i=0,j=0; str[i]; (str[j++]=str[i]!=' '?str[i]:(j--,str[j]),i++,(!str[i]?(str[j]=0):0)) );
+//
+ return str;
+//
+} // ------ конец DeleteAllSpaces ----------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+char* __fastcall DeleteSymbolAll( char str[], char symb )
+{ // удаляет все вхождения заданного символа
+ register INT i, j;
+//
+ for ( i=j=0; str[i]!='\0'; i++ )
+  if (str[i] != symb )
+   str[j++] = str[i];
+//
+ str[j] = '\0';
+//
+ return str;
+} // ----- конец DeleteSymbolAll -----------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1000,7 +1072,7 @@ Delay(long mSecs)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall Read_Config( int Rule)
+void __fastcall Read_Config( int Rule )
 {// восстанавливает данные из файла конфигурации
 // (при Rule=1 не восстанвливаютя положение и размер F1)
 //
@@ -1075,7 +1147,7 @@ void __fastcall Read_Config( int Rule)
  DCE.clReadyOperand     = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var2, RGB(255,153,255)); // цвет готовности операндов
  DCE.clTruePredicat     = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var3, RGB(128,255,  0)); // цвет состояния TRUE флага-предиката
  DCE.clExecSet          = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var4, RGB(255, 51,153)); // цвет выполнения  инструкции
- DCE.clSpeculateExec    = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var5, RGB(192,192,192)); // цвет ячейки результата СПЕКУЛЯТИВНО выполненной инструкции 
+ DCE.clSpeculateExec    = tINI->ReadInteger(RWC.Sect13, RWC.Sect13_Var5, RGB(192,192,192)); // цвет ячейки результата СПЕКУЛЯТИВНО выполненной инструкции
 //
  DCT.clOperandOperation = tINI->ReadInteger(RWC.Sect14, RWC.Sect14_Var1, RGB(255,185,185)); // связь ОПЕРАНДЫ<->ОПЕРАЦИИ
  DCT.clNonExecuted      = tINI->ReadInteger(RWC.Sect14, RWC.Sect14_Var2, RGB(255,185,255)); // неисполненные инструкции
@@ -1141,7 +1213,6 @@ void __fastcall Write_Config()  // сохраняет данные в файл конфигурации
  MessageBeep( MB_OK ); // звуковое предупреждение...
 //
 } // --- конец Write_Config ----------------------------------------------------
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1401,7 +1472,7 @@ StopCalculations( int Rule )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 REAL __fastcall // возвращает из Mem_Data[] число по адресу (имени) Addr
-Get_Data( char Addr[])
+get_Data( char Addr[])
 { // если строка 'Addr / Dаta' не существует - выдается предупреждение и результат = 1.0e0
  char tmp[_512]="\0";
 //
@@ -1424,7 +1495,7 @@ Get_Data( char Addr[])
 char* __fastcall // возвращает текст инструкции из Mem_Instruction[i]
 Line_Set( INT i_Set, short int Rule, REAL Result )
 { // при Rule = 0  содержимое aResult не выдается (выдается "?")
-  // при Rule = 1  содержимое aResult возвращается Get_Data()
+  // при Rule = 1  содержимое aResult возвращается get_Data()
   // при Rule = -1 величина Result берётся из формальных параметров (используется при
   // реализации спекулятивных вычислений, когда результат в Mem_Data[] не записываетсянет)
   // при Rule = 2 возвращается только строка инструкции
@@ -1449,7 +1520,7 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
 ////////////////////////////////////////////////////////////////////////////////
   case -1:
   case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL,
-                   Rule==1 ? Get_Data( Mem_Instruction[i_Set].aResult ) : Result ); // содержимое по адресу (строка!) aResult
+                   Rule==1 ? get_Data( Mem_Instruction[i_Set].aResult ) : Result ); // содержимое по адресу (строка!) aResult
 //
           if( is_SET( Set ) ) // это SET .......................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
@@ -1464,16 +1535,16 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
             case 1: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%s} ; %s",
                              Mem_Instruction[i_Set].Set,
                              Mem_Instruction[i_Set].aOp1,
-                             ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1 ),
+                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp1 ),
                              Mem_Instruction[i_Set].aResult, tmp1,
                              Mem_Instruction[i_Set].Comment);
                     break;
             case 2: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%.*g}, %s{%s} ; %s",
                              Mem_Instruction[i_Set].Set,
                              Mem_Instruction[i_Set].aOp1,
-                             ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp1 ),
+                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp1 ),
                              Mem_Instruction[i_Set].aOp2,
-                             ACC_REAL, Get_Data( Mem_Instruction[i_Set].aOp2 ),
+                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp2 ),
                              Mem_Instruction[i_Set].aResult, tmp1,
                              Mem_Instruction[i_Set].Comment);
                     break;
@@ -1521,7 +1592,7 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
- DelSpacesTabsAround( tmp ); // обрезаем пробелы спереди и сзади
+ DSTA( tmp ); // обрезаем Tabs и пробелы спереди и сзади
 //
  return tmp;
 //
@@ -1531,7 +1602,7 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // добавляет в Mem_Data[] число Data по адресу (имени) Addr
-Add_toData( INT i_Set, char* aResult, REAL Data )
+add_Data( INT i_Set, char* aResult, REAL Data )
 {
 // i_Set - номер инструкции, в результате котрой было вычислено это значениe
 // aResult - имя ячейки (переменной), Data - значение переменной
@@ -1547,7 +1618,7 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
 //
   if( !strcmp( Mem_Data[i].Addr, aResult ) ) // данные с адресом (именем) aResult в массиве Mem_Data[].Attr УЖЕ ЕСТЬ !!!
   {
-   if( !memcmp( aResult, attrVar, strlen(attrVar) ) ) // если первые символы aResult есть attVar - можно переписывать данные...
+   if( !memcmp( aResult, attrVar, strlen(attrVar) ) ) // если первые символы aResult есть attrVar - можно переписывать данные...
    {
     Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
     return;
@@ -1636,7 +1707,7 @@ Add_toData( INT i_Set, char* aResult, REAL Data )
  mD->Cells[0][Really_Data+1] = aResult;
 //
  Really_Data ++ ;
-} // ----- конец Add_toData ----------------------------------------------------
+} // ----- конец add_Data ------------------------------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2190,13 +2261,13 @@ ExecuteInstructions_Except_SET( INT i_Set )
  switch( Get_CountOperandsByInstruction(Set) ) // ... число входных операндов инструкции Set
  {
   case 1: strcpy( aOp1, Mem_Instruction[i_Set].aOp1 ); // адрес (строка!) ПЕРВОГО ОПЕРАНДА
-          Op1 = Get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
+          Op1 = get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
           break;
 //
   case 2: strcpy(aOp1, Mem_Instruction[i_Set].aOp1); // адрес (строка!) ПЕРВОГО ОПЕРАНДА
           strcpy(aOp2, Mem_Instruction[i_Set].aOp2); // ... ВТОРОГО ОПЕРАНДА
-          Op1 = Get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
-          Op2 = Get_Data( aOp2 ); // значение ВТОРОГО ОПЕРАНДА
+          Op1 = get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
+          Op2 = get_Data( aOp2 ); // значение ВТОРОГО ОПЕРАНДА
           break;
 //
  default: break;
@@ -2717,7 +2788,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void   __fastcall
-Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] строку номер i_Set с ГКВ-инструкцией
+add_Buffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] строку номер i_Set с ГКВ-инструкцией
 // добавляется не сама строка, а ее номер из Mem_Instruction[] в поле Mem_Buffer[].i_Set
 // в Mem_Buffer[]->(float)Param заносится ПАРАМЕТР "ПОЛЕЗНОСТИ" (для последующего ранжирования)
 // если команда уже добавленв буффер (установлен флаг Mem_Instruction[].fAddBuffer) - не добавляется
@@ -2787,7 +2858,7 @@ Add_toBuffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] стр
   return;
  }
 //
-} // ----- конец Add_toBuffer -------------------------------------------------
+} // ----- конец add_Buffer ----------------------------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3924,7 +3995,7 @@ void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
   max_Proc = StrToInt(F1->E_AIU->Text); // перевели в число (глобал)
   Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar -------------------
  }
-// 
+//
  else
 //
  if( !( isdigit( Key ) || Key == VK_BACK || Key == VK_ESCAPE ) )
@@ -3956,10 +4027,9 @@ void __fastcall Out_Data_SBM1()
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall strReplace( char* dest, int num, const char* source, const char* orig, const char* rep )
 { // dest  - new string (dest), num - sizeof(dest)-1
-//  source - source string for replace, orig - source substring, rep - dest substring
+//   source - source string for replace, orig - source substring, rep - dest substring
   const char* ptr;
-  size_t len1 = strlen(orig);
-  size_t len2 = strlen(rep);
+  size_t len1 = strlen(orig), len2 = strlen(rep);
   char*  tmp  = dest;
 //
   num -= 1;
@@ -4017,7 +4087,7 @@ Get_CountOperandsByInstruction(char *Set)
    return Set_Params[i].nInputOperands ;
 //
 // не нашли... информируем об этом !!! /////////////////////////////////////////
-  t_printf( "-E- %s() не нашёл в Set_Params[] значения для инструкции %s. Ошибка (-13) -E-",
+  t_printf( "-E- %s() не нашёл в Set_Params[] значения для инструкции '%s' Ошибка (-13) -E-",
                    __FUNC__, Set);
 //
   return (-13); // нет такой инструкции ...
@@ -4877,183 +4947,6 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
 
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-bool __fastcall Read_Instructions()
-{ // читаем инструкции из файла FileNameSets в массив структур Mem->Set[]
- FILE *fptr; // указатель на структуру ФАЙЛ
- char str[_1024]="\0", // строка для считывания и расшифровки инструкций
-      tmp[_512]="\0", // рабочая строка
-      Set[_SET_LEN]="\0", // мнемоника инструкции
-      *p, *p1,*p2;
- bool flagPredicate; // TRUE если в инструкции допустимо поле ПРЕДИКАТА
-//
-  RunPreProcessor(); // обработать препроцессором
-//
- if(!(fptr = fopen(FileNameSetPrP, "r"))) // файл ПОСЛЕ ПРЕПРОЦЕССОРА открыть не удалось...
- {
-  return false;
- }
-//
- snprintf( tmp,sizeof(tmp), " Загружен файл %s [*%s]", ExtractFileName(FileNameSet), ExtPrP ); // вывод в строку статуса
- SBM2->Text = tmp;
-//
-////////////////////////////////////////////////////////////////////////////////
-//
- for( INT i=0; i<max_Instruction; i++ ) // по строкам инструкций
-  {
-   if(fgets(str, sizeof(str), fptr) == NULL) // читаем строку из fptr
-    break; // если строки кончились, функция fgets возвращает NULL
-
-   if(str[strlen(str)-1] == 10) // если в конце символ новой строки (10) в десятичной)...
-    str[strlen(str)-1] = ' ';   // ... то заменим на пробел !
-//
-// ----- все Tab в строке str заменяем на пробелы ------------------------------
-   for( INT i=0; i<strlen(str); i++ ) // по всем символам строки...
-    if( str[i] == VK_TAB ) // если i-тый символ есть Tab (9/0x9)...
-     str[i] = VK_SPACE; // то заменяем его на пробел (32/0x20) !
-//
-   DelSpacesTabsAround( str ); // чистка строки str от лидирующих и терминирующих пробелов
-//
-   if( !strlen(str) || // если длина строки нулевая...
-       str[0]==startComments[0] || // или строка начинается с ";"...
-       str[0]==':' ) // частая описка...
-    {
-     i -- ; // строку пропускаем...!
-     continue;
-    }
-//
-// начали разборку (parsing) строки инструкции /////////////////////////////////
-//
-   if( !strpbrk(str,startComments) ) // если ";" в строке нет!
-    strcpy(Mem_Instruction[i].Comment, " "); // значит, комментарий пустой....
-   else
-   {
-    strcpy(Mem_Instruction[i].Comment, strstr(str,startComments)); // все что за ";" - суть комментарий
-    Mem_Instruction[i].Comment[0] = ' '; // заменяем ";" пробелом
-    DelSpacesTabsAround( Mem_Instruction[i].Comment ); // избавляемся от лидирующих и конечных пробелов
-   }
-//
-   strtok(str,startComments); // комментарий (вместе с ";") убрали !
-   DelSpacesTabsAround(str); // "справа" могли остаться пробелы...
-   strcat(str, " "); // добавили 1 пробел на всякий случай (для последующей разборки)
-//
-   p = strtok(str, " "); // "выкусываем" мнемонику команды
-//
-   strcpy(Set, AnsiUpperCase(p).c_str()); // запомнили мнемонику в Set (AnsiUpperCase работает с латиницей)
-   strcpy(Mem_Instruction[i].Set, Set); // запомнили мнемонику инструкции в Mem_Instruction[]
-//
-// ---- случаи !false, ~false, !true, ~true в поле предиката--------------------
-//
-////////////////////////////////////////////////////////////////////////////////
-   flagPredicate = !is_Predicat( Set ); // TRUE если в инструкции допустимо поле предиката
-////////////////////////////////////////////////////////////////////////////////
-//
-   switch( Get_CountOperandsByInstruction( Set ) ) // число входных операндов инструкции Set
-   {
-    case 1: p = strtok(NULL, ", "); // адрес единственного операнда aOp1.........
-//            strcpy(Mem_Instruction[i].aOp1, p);
-            p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aOp1);
-            strcpy(Mem_Instruction[i].aOp2, "\0"); // очистка ОБЯЗАТЕЛЬНА !!!
-
-            p = strtok(NULL, ", "); // адрес результата aResult ................
-//            strcpy(Mem_Instruction[i].aResult, p);
-            p ? strcpy(Mem_Instruction[i].aResult, p) : strcpy(Mem_Instruction[i].aResult, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aResult);
-//
-            if( flagPredicate ) // поле предиката возможно
-            {
-             p = strtok(NULL, " "); // адрес флага предиката aPredicate.........
-//
-             p ? strcpy(Mem_Instruction[i].aPredicat, p) : strcpy(Mem_Instruction[i].aPredicat, "true");
-// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
-             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 || Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
-             {
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
-               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
-//
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
-               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
-             }
-//
-// ---- конец  случаев !false, ~false, !true, ~true в поле предиката -----------
-//
-            if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase) )  strcpy(Mem_Instruction[i].aPredicat, trueLowerCase);
-            if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase) ) strcpy(Mem_Instruction[i].aPredicat, falseLowerCase);
-            }
-//
-             Mem_Instruction[i].fExecOut   = false;
-             Mem_Instruction[i].fAddBuffer = false;
-//
-             break;
-//
-    case 2: p = strtok(NULL, ", "); // адрес первого операнда aOp1...............
-//            strcpy(Mem_Instruction[i].aOp1, p);
-            p ? strcpy(Mem_Instruction[i].aOp1, p) : strcpy(Mem_Instruction[i].aOp1, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aOp1);
-//
-            p = strtok(NULL, ", "); // адрес второго операнда aOp2...............
-//            strcpy(Mem_Instruction[i].aOp2, p);
-            p ? strcpy(Mem_Instruction[i].aOp2, p) : strcpy(Mem_Instruction[i].aOp2, notDefined);
-            DelSpacesTabsAround(Mem_Instruction[i].aOp2);
-
-            p = strtok(NULL, ", "); // адрес результата aResult .................
-//            strcpy(Mem_Instruction[i].aResult, p);
-            p ? strcpy(Mem_Instruction[i].aResult, p) : strcpy(Mem_Instruction[i].aResult, notDefined);
-// предыдущая инструкция выбрасывает исключение в случае инструкции SUB y08(07), temp_02
-// вместо правильного SUB y08(07), temp_02, temp_03 ... ПРАВИТЬ!!! Ситуация - нет поля РЕЗУЛЬТАТ
-            DelSpacesTabsAround(Mem_Instruction[i].aResult);
-//
-            if( flagPredicate ) // поле предиката возможно
-            {
-             p = strtok(NULL, " "); // адрес флага предиката aPredicate..........
-//             if( p ) strcpy(Mem_Instruction[i].aPredicate, p);
-//             else    strcpy(Mem_Instruction[i].aPredicate, "true");
-             p ? strcpy(Mem_Instruction[i].aPredicat, p) : strcpy(Mem_Instruction[i].aPredicat, "true");
-//
-// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
-             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 || Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
-             {
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
-               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
-//
-              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
-               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
-             }
-//
-             if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase ) )  strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
-             if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase ) ) strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
-            }
-//
-             Mem_Instruction[i].fExecOut   = false;
-             Mem_Instruction[i].fAddBuffer = false;
-//
-             break;
-//
-   default: return true;
-
-   } // конец switch...
-//
-//..............................................................................
-//   if( !is_SET( Mem_Instruction[i].Set ) ) // если это НЕ инструкция SET
-//    bool flag = Test_aResult_Eq_aOperand(i); // тестирование на совпадение адреса результата с адресами операндов
-//..............................................................................
-//
-   Really_Set = i + 1 ; // реальное число инструкций (на 1 больше, ибо счет i с нуля)
-//
-  } // конец цикла по строкам в файле FileNameSets
-//
- fclose(fptr);
-//
- Vizu_Instructions(); // визуализировать пул инструкций
-//
- return true ;
-//
-} // конец Read_Instructions ---------------------------------------------------
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Make_Row_Current( INT Row )
@@ -5490,6 +5383,182 @@ Mixed_Instructions()
  do_Run // "включили" все кнопки Выполнение
 //
 } //-----  конец Mixed_Instructions  -------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+bool __fastcall Read_Instructions()
+{ // читаем инструкции из файла FileNameSetPrP в массив структур Mem->Set[]
+ FILE *fptr; // указатель на структуру ФАЙЛ
+ char str[_1024]="\0", // строка для считывания и расшифровки инструкций
+      tmp[_512]="\0", // рабочая строка
+      Set[_SET_LEN]="\0", // мнемоника инструкции
+      *p, *p1, *p2;
+ bool flagPredicate; // TRUE если в инструкции допустимо поле ПРЕДИКАТА
+//
+ Process_Macros(); // обработать препроцессором
+//
+ if(!(fptr = fopen(FileNameSetPrP, "r"))) // файл ПОСЛЕ ПРЕПРОЦЕССОРА открыть не удалось...
+  return false;
+//
+ snprintf( tmp,sizeof(tmp), " Загружен файл %s [*%s]", ExtractFileName(FileNameSetPrP), ExtPrP ); // вывод в строку статуса
+ SBM2->Text = tmp;
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+ for( INT i=0; i<max_Instruction; i++ ) // по строкам инструкций
+  {
+   if(fgets(str, sizeof(str), fptr) == NULL) // читаем строку из fptr
+    break; // если строки кончились, функция fgets возвращает NULL
+//
+   if(str[strlen(str)-1] == 10) // если в конце символ новой строки (10) в десятичной)...
+    str[strlen(str)-1] = ' ';   // ... то заменим на пробел !
+//
+// ----- все Tab в строке str заменяем на пробелы ------------------------------
+   for( INT i=0; i<strlen(str); i++ ) // по всем символам строки...
+    if( str[i] == VK_TAB ) // если i-тый символ есть Tab (9/0x9)...
+     str[i] = VK_SPACE; // то заменяем его на пробел (32/0x20) !
+//
+   DSTA( str ); // чистка строки str от лидирующих и терминирующих Tabs и  пробелов
+//
+   if( !strlen(str) || // если длина строки нулевая...
+       str[0]==startComments[0] || // или строка начинается с ";"...
+       str[0]==':' ) // частая описка...
+    {
+     i -- ; // строку пропускаем...!
+     continue;
+    }
+//
+// начали разборку (parsing) строки инструкции str /////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+   if( !strpbrk(str,startComments) ) // если ";" в строке нет!
+    strcpy(Mem_Instruction[i].Comment, " "); // значит, комментарий пустой....
+   else
+   {
+    strcpy(Mem_Instruction[i].Comment, strstr(str,startComments)); // все что за ";" - суть комментарий
+    Mem_Instruction[i].Comment[0] = ' '; // заменяем ";" пробелом
+    DSTA( Mem_Instruction[i].Comment ); // избавляемся от лидирующих и конечных пробелов
+   }
+//
+   strtok(str,startComments); // комментарий (вместе с ";") убрали !
+   DSTA( str ); // "справа" могли остаться пробелы...
+   strcat(str, " "); // добавили 1 пробел на всякий случай (для последующей разборки)
+//
+   p = strtok(str, " "); // "выкусываем" мнемонику команды
+//
+   strcpy(Set, AnsiUpperCase(p).c_str()); // запомнили мнемонику в Set (AnsiUpperCase работает с латиницей)
+   strcpy(Mem_Instruction[i].Set, Set); // запомнили мнемонику инструкции в Mem_Instruction[]
+//
+// ---- случаи !false, ~false, !true, ~true в поле предиката--------------------
+//
+////////////////////////////////////////////////////////////////////////////////
+   flagPredicate = !is_Predicat( Set ); // TRUE если в инструкции допустимо поле предиката
+////////////////////////////////////////////////////////////////////////////////
+//
+   switch( Get_CountOperandsByInstruction( Set ) ) // число входных операндов инструкции Set
+   {
+    case 1: p = strtok(NULL, ","); // адрес единственного операнда aOp1.........
+            p ? strcpy(Mem_Instruction[i].aOp1, p) :
+                strcpy(Mem_Instruction[i].aOp1, notDefined);
+            DSTA( Mem_Instruction[i].aOp1 );
+            strcpy(Mem_Instruction[i].aOp2, "\0"); // очистка ОБЯЗАТЕЛЬНА !!!
+//
+            p = strtok(NULL, ":,"); // адрес результата aResult ............... ':' или ','
+            p ? strcpy(Mem_Instruction[i].aResult, p) :
+                strcpy(Mem_Instruction[i].aResult, notDefined);
+            DSTA( Mem_Instruction[i].aResult );
+//
+            if( flagPredicate ) // поле предиката возможно
+            {
+             p = strtok(NULL, " "); // адрес флага предиката aPredicate.........
+//
+             p ? strcpy(Mem_Instruction[i].aPredicat, p) :
+                 strcpy(Mem_Instruction[i].aPredicat, "true");
+// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
+             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 ||
+                   Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
+             {
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
+               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
+//
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
+               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
+             }
+// ---- конец  случаев !false, ~false, !true, ~true в поле предиката -----------
+            if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase) )
+             strcpy(Mem_Instruction[i].aPredicat, trueLowerCase);
+            if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase) )
+             strcpy(Mem_Instruction[i].aPredicat, falseLowerCase);
+            }
+//
+             Mem_Instruction[i].fExecOut   = false;
+             Mem_Instruction[i].fAddBuffer = false;
+//
+             break;
+//
+    case 2: p = strtok(NULL, ","); // адрес первого операнда aOp1...............
+            p ? strcpy(Mem_Instruction[i].aOp1, p) :
+                strcpy(Mem_Instruction[i].aOp1, notDefined);
+            DSTA( Mem_Instruction[i].aOp1 );
+//
+            p = strtok(NULL, ","); // адрес второго операнда aOp2...............
+            p ? strcpy(Mem_Instruction[i].aOp2, p) :
+                strcpy(Mem_Instruction[i].aOp2, notDefined);
+            DSTA( Mem_Instruction[i].aOp2 );
+//
+            p = strtok(NULL, ":,"); // адрес результата aResult ............... ':' или ','
+            p ? strcpy(Mem_Instruction[i].aResult, p) :
+                strcpy(Mem_Instruction[i].aResult, notDefined);
+// предыдущая инструкция выбрасывает исключение в случае инструкции SUB y08(07), temp_02
+// вместо правильного SUB y08(07), temp_02, temp_03 ... ПРАВИТЬ!!! Ситуация - нет поля РЕЗУЛЬТАТ
+            DSTA( Mem_Instruction[i].aResult );
+//
+            if( flagPredicate ) // поле предиката возможно
+            {
+             p = strtok(NULL, " "); // адрес флага предиката aPredicate.........
+//
+             p ? strcpy(Mem_Instruction[i].aPredicat, p) :
+                 strcpy(Mem_Instruction[i].aPredicat, "true");
+// ---- начало случаев !false, ~false, !true, ~true в поле предиката -----------
+             if( ( Mem_Instruction[i].aPredicat[0] == symbolNot_1 ||
+                   Mem_Instruction[i].aPredicat[0] == symbolNot_2 ) ) // начинается с '!' или '~'
+             {
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),falseLowerCase ) ) // если начиная со второго символа "false"'
+               strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
+//
+              if( !strcmp( AnsiLowerCase(&Mem_Instruction[i].aPredicat[1]).c_str(),trueLowerCase ) )  // если начиная со второго символа "true"'
+               strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
+             }
+// ---- конец  случаев !false, ~false, !true, ~true в поле предиката -----------
+             if( !strcmp( AnsiLowerCase(p).c_str(), trueLowerCase ) )
+              strcpy( Mem_Instruction[i].aPredicat, trueLowerCase );
+             if( !strcmp( AnsiLowerCase(p).c_str(), falseLowerCase ) )
+              strcpy( Mem_Instruction[i].aPredicat, falseLowerCase );
+            }
+//
+             Mem_Instruction[i].fExecOut   = false;
+             Mem_Instruction[i].fAddBuffer = false;
+//
+             break;
+//
+   default: return true;
+
+   } // конец switch...
+//
+   Really_Set = i + 1 ; // реальное число инструкций (на 1 больше, ибо счет i с нуля)
+//
+  } // конец цикла по строкам в файле FileNameSets
+//
+ fclose(fptr);
+//
+ Vizu_Instructions(); // визуализировать пул инструкций
+//
+ return true ;
+//
+} // -------- конец Read_Instructions ------------------------------------------
+
 
 
 
