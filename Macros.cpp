@@ -10,18 +10,23 @@ void   __fastcall handOpd_asValue( char* Opd, INT i ); // // обработка поля-опер
 void   __fastcall handOpd_asMassiv( char* Opd, INT i ); // // обработка поля-операнда в виде псевдомассива
 void   __fastcall replace_Str( char s[], const char sOld[], const char sNew[] ); // замена cI на sNew в строке s
 void   __fastcall make1D_psMass( char str[], INT i ); // находит и обрабатывает (расширяет) макросы в 1D-псевдомассивы
-void   __fastcall tf_printf( char* str, FILE* fptr ); // вывод строки str во фрейм протокола и файл fptr
+void   __fastcall tf_printf( char* str ); // вывод строки str во фрейм протокола и файл fptrOut (global)
 //
 #define _tf_printf(str) t_printf("%s",str);fprintf(fptrOut,"%s\n",str); // макрос вывода строки str во фрейм протокола и файл fptr
 // ограничения на имена переменных: "длина>0" и "первый символ - буква" или "первый=attrvar"
-#define permissName(str) ( strlen(str)&&(isalpha(str[0])||str[0]==attrVar[0]) ) 
+#define permissName(str) ( strlen(str)&&(isalpha(str[0])||str[0]==attrVar[0]) )
+//
+// handOpd_asMassiv - обработчик поля операнда как массив (псевдомасстив)
+// handOpd_asValue  - -.-.-.- как простая переменная
+// handRes_asMassiv - обработчие поля результата как массив (псевдомассив)
+// handRes_asValue  - -.-.-.- как простая переменная
 //
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall tf_printf( char* str, FILE* fptr )
-{ // вывод строки str  во фрейм протокола + в файл fptr
+void __fastcall tf_printf( char* str )
+{ // вывод строки str  во фрейм протокола + в файл fptrOut (global)
  t_printf( "%s", str );
- fprintf( fptr, "%s\n", str );
+ fprintf( fptrOut, "%s\n", str );
 } // ----- конец tf_printf -----------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,10 +77,11 @@ bool __fastcall Process_Macros()
    goto label_BypassMacro;
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-   make1D_psMass( str, i ); // ищем заголовки макросов 1D-псевдо-массивов -------
+   make1D_psMass( str, i ); // если false, некорректность обработки for(...
+   if( !flagMacroTitle ) // заголовок псевдо массива не быд найден...
+    goto cont; // добавляем строку в fptOut
+   continue; // не сохранять строку в выходной файл fptrOut...
 //  make2D_psMass( str, i ); // ищем заголовки макросов 2D-псевдо-массивов -------
-//   goto cont; // сохранить строку в файле fptrOut
-   continue; // к следующей записи файла инструкций
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -83,11 +89,8 @@ bool __fastcall Process_Macros()
 label_BypassMacro: // сюда переходим по longjmp --------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //
-cont: // для прОпуска строки с возможностью копирования в файл FileNameSetPrP
+cont: // для прОпуска строки с возможностью копирования в файл FileNameSetPrP --
 // ----- добавляем строки в выходной файл FileNameSetPrP -----------------------
-
-// t_printf(  "4---%s-", strSave );
-
  fputs( strSave, fptrOut ); // сохраняем строку исходного файла
 //
  } // конец цикла i по строкам в файле FileNameSets
@@ -106,11 +109,10 @@ cont: // для прОпуска строки с возможностью копирования в файл FileNameSetPrP
 void __fastcall make1D_psMass( char str[], INT i )
 { // находит и обрабатывает (расширяет) макрос в 1D-псевдомассивы --------------
 //
-//  t_printf( "1---%d -%s-", i,str  );
-
-  if( !strncmp( str, "for[", 4 ) && // если в начале str находится"for[" (первые 4 символа) 'и'
+  if( !strncmp( str, "for[", 4 ) && // если в начале str находится 'for[' (первые 4 символа) 'и'
        sscanf( str, "for[%c]=%d,%d,%d{", &cI,&minI,&maxI,&dI ) == 4 ) // все 4 поля корректно прочитаны..!
-  {
+  { // начало if( !strncmp( str, "for[", 4 ) && ...
+//
    if( !dI || // неверен диапазон изменения переменных цикла (приводит к  беконечному повтору )
      (  maxI>=minI && dI<=0) || ( maxI<=minI && dI>=0) )
    {
@@ -118,14 +120,14 @@ void __fastcall make1D_psMass( char str[], INT i )
     return;
    }
 //
-   numbFor ++ ; // номер for в данной программе
+   numbFor ++ ; // номер for[... в данной программе
    flagMacroTitle = true; // нашли строку с заголовком 1D-макроса
    startN = i; // запомнили номер строки с заголоаком 1D-макроса
    mBody->Clear(); // очистили mBody типа TStringList
    mBody->Add( str ); // запомнили заголовок 1D-макроса
    mExpand->Clear(); // готовимся к заполнению строка расширения макроса !!!
    return; // переходим к следующей строке str файла инструкций
-  } // конец "нашли заголовок 1D-макроса
+  } // конец if( !strncmp( str, "for[", 4 ) && ...
 //
   if( flagMacroTitle && str[0] == '}' ) // после заголовка макроса в строке встретился "}"
   {
@@ -137,13 +139,13 @@ void __fastcall make1D_psMass( char str[], INT i )
    Select_Instruction_for_Macros_Expansion(); // выбор типа инструкции для расширения препроцессором
 ////////////////////////////////////////////////////////////////////////////////
    tf_printf( Format("; \n; начало расширения макроса: заголовок 'for[%s]=%d,%d,%d {'\n;", // cI -> %s !!!
-              OPENARRAY(TVarRec,(cI,int(minI),int(maxI),int(dI)))).c_str(), fptrOut );
+              OPENARRAY(TVarRec,(cI,int(minI),int(maxI),int(dI)))).c_str() );
    for( int j=0; j<mBody->Count; j++ )
-    tf_printf( Format("; %s", OPENARRAY(TVarRec, (mBody->Strings[j].c_str()) )).c_str(), fptrOut );
+    tf_printf( Format("; %s", OPENARRAY(TVarRec, (mBody->Strings[j].c_str()) )).c_str() );
    for( int j=0; j<mExpand->Count; j++ ) // добавление расширения на псевдо-массивы
-    tf_printf( Format("%s",  OPENARRAY(TVarRec, (mExpand->Strings[j].c_str()) )).c_str(), fptrOut );
+    tf_printf( Format("%s",  OPENARRAY(TVarRec, (mExpand->Strings[j].c_str()) )).c_str() );
    tf_printf( Format("; \n; конец расширения макроса: заголовок 'for[%s]=%d,%d,%d {'\n;", // cI -> %s !!!
-              OPENARRAY(TVarRec,(cI,int(minI),int(maxI),int(dI)))).c_str(), fptrOut );
+              OPENARRAY(TVarRec,(cI,int(minI),int(maxI),int(dI)))).c_str() );
 ////////////////////////////////////////////////////////////////////////////////
    return; // переходим к следующей строке str файла инструкций
   }
@@ -156,6 +158,67 @@ void __fastcall make1D_psMass( char str[], INT i )
 //
 } // ------ конец make1D_psMass ------------------------------------------------
 
+/*
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+bool __fastcall make1D_psMass( char str[], INT i )
+{ // находит и обрабатывает (расширяет) макрос в 1D-псевдомассивы --------------
+// при возврате true обрабатываемая строка НЕ ДОБАВЛЯЕТСЯ в файл fptrOut -------
+//
+  if( strncmp(str,"for[",4) || // если в начале str НЕ находится 'for[' (первые 4 символа) 'или'
+      sscanf(str,"for[%c]=%d,%d,%d{",&cI,&minI,&maxI,&dI)!= 4) // 4 поля НЕ корректно прочитаны..!
+   return false; // не обрабатываем эту строку...
+//
+  if( !dI || // неверен диапазон изменения переменных цикла (приводит к беконечному повтору )
+      (maxI>=minI && dI<=0) || (maxI<=minI && dI>=0) )
+  {
+   t_printf( "\n-M- Некорректен диапазон изменения [%d,%d,%d] переменной цикла '%c' -M-\n", minI,maxI,dI,cI );
+   return false; // не обрабатываем эту троку...
+  }
+//
+// ----- заголовок for[... 1D-макроса распОзнан успешно ------------------------
+  numbFor ++ ; // номер for в данной программе
+  flagMacroTitle = true; // нашли строку с заголовком 1D-макроса
+  startN = i; // запомнили номер строки с заголоаком 1D-макроса
+  mBody->Clear(); // очистили mBody типа TStringList
+  mBody->Add( str ); // запомнили заголовок 1D-макроса
+  mExpand->Clear(); // готовимся к заполнению строка расширения макроса !!!
+  return true; // переходим к следующей строке str файла инструкций fptrIn
+// конец "нашли заголовок 1D-макроса
+//
+  if( flagMacroTitle && str[0] != '}' ) // после заголовка макроса в строке НЕ встретился "}"
+  {
+   mBody->Add( str ); // добавляем в mBody строки макроса
+   return true; // переход к следующей строке str файла инструкций fptrIn
+  }
+//
+  if( flagMacroTitle && str[0] == '}' ) // после заголовка макроса в строке встретился "}"
+  {
+   flagMacroTitle = false; // признак того, что в строке встретился "}"
+   mBody->Add( str ); // добавляем в mBody строку "}"
+   endN = i; // запомним номер строки с последним символом макроса
+//
+////////////////////////////////////////////////////////////////////////////////
+   Select_Instruction_for_Macros_Expansion(); // выбор типа инструкции для расширения препроцессором
+////////////////////////////////////////////////////////////////////////////////
+   tf_printf( Format("; \n; начало расширения макроса: заголовок 'for[%s]=%d,%d,%d {'\n;", // cI -> %s !!!
+              OPENARRAY(TVarRec,(cI,int(minI),int(maxI),int(dI)))).c_str() );
+   for( int j=0; j<mBody->Count; j++ )
+    tf_printf( Format("; %s", OPENARRAY(TVarRec, (mBody->Strings[j].c_str()) )).c_str() );
+   for( int j=0; j<mExpand->Count; j++ ) // добавление расширения на псевдо-массивы
+    tf_printf( Format("%s",  OPENARRAY(TVarRec, (mExpand->Strings[j].c_str()) )).c_str() );
+   tf_printf( Format("; \n; конец расширения макроса: заголовок 'for[%s]=%d,%d,%d {'\n;", // cI -> %s !!!
+              OPENARRAY(TVarRec,(cI,int(minI),int(maxI),int(dI)))).c_str() );
+////////////////////////////////////////////////////////////////////////////////
+   return true; // переходим к следующей строке str файла инструкций fptrIn
+  }
+//  if( flagMacroTitle ) // пока не было "}" в строке имеем flagMacroTitle=true
+//  {
+//   mBody->Add( str ); // добавляем в mBody строки макроса
+//   return true; // переход к следующей строке str файла инструкций fptrIn
+//  }
+} // ------ конец make1D_psMass ------------------------------------------------
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

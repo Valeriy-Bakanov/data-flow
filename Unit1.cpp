@@ -3817,7 +3817,7 @@ StrToReal( char *str, INT i_Set )
  }
  catch (Exception* exception)
  {
-  snprintf(tmp,sizeof(tmp), "Ошибка конвертации строки ''%s'' в вещественное число в инструкции #%d (получено %.*g). \n\nРезультат преобразования",
+  snprintf(tmp,sizeof(tmp), "Ошибка конвертации строки '%s' в вещественное число в инструкции #%d (получено %.*g). \n\nРезультат преобразования",
                 str, i_Set, ACC_REAL, out);
   strcat(tmp, "  не определен, но ВЫ ПРЕДУПРЕЖДЕНЫ о возможности получения неожиданных данных при расчёте !..");
   MessageBox(0, tmp, "Предупреждение", MB_OK | MB_ICONWARNING | MB_TOPMOST);
