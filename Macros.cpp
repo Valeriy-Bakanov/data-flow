@@ -19,7 +19,7 @@ void   __fastcall tf_printf( char* str ); // вывод строки str во фрейм протокола
 // ограничения на имена переменных: "длина>0" и "первый символ - буква" или "первый=attrvar"
 #define permissName(str) ( strlen(str)&&(isalpha(str[0])||str[0]==attrVar[0]) )
 //
- bool Rule_TokenUse = false; // использовать операнда Opd токен вида ( "%s:%d:%d", Opd,numbFor,i-1 ) 
+ bool Rule_TokenUse = false; // использовать операнда Opd токен вида ( "%s:%d:%d", Opd,numbFor,i-1 )
 //
 // makeMassive_1D, makeMassive_2D - обработчик ("расширитель") макроса в 1D- и 2D-псевдомассивы
 // handOpd_asMassive_1D - обработчик поля операнда как 1D-массив (псевдомасстив)
@@ -266,10 +266,21 @@ void __fastcall SelectInstrForMacrosExpans()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall handRes_asValue( char *Res, INT i )
 { // обрабатываеи поле результата, если он в форме простой переменной ----------
-  if( Get_CountOperandsByInstruction( SetName ) == 1 ) // 1 операнд в инструкции
-   sprintf( w, "%s %s, %s%c%d%c%d ;%s", SetName,Opd_1,Res, SymbDelim,numbFor,SymbDelim,i, Comm );
-  else // 2 операнда в инструкции
-   sprintf( w, "%s %s, %s, %s%c%d%c%d ;%s", SetName,Opd_1,Opd_2,Res, SymbDelim,numbFor,SymbDelim,i, Comm );
+//
+  if( Rule_TokenUse ) // использовать токен для имени результата
+  {
+   if( Get_CountOperandsByInstruction( SetName ) == 1 ) // 1 операнд в инструкции
+    sprintf( w, "%s %s, %s%c%d%c%d ;%s", SetName,Opd_1,Res, SymbDelim,numbFor,SymbDelim,i, Comm );
+   else // 2 операнда в инструкции
+    sprintf( w, "%s %s, %s, %s%c%d%c%d ;%s", SetName,Opd_1,Opd_2,Res, SymbDelim,numbFor,SymbDelim,i, Comm );
+  }
+  else // возвращаем Res в w без токенотизации
+  {
+   if( Get_CountOperandsByInstruction( SetName ) == 1 ) // 1 операнд в инструкции
+    sprintf( w, "%s %s, %s ;%s", SetName,Opd_1,Res,Comm );
+   else // 2 операнда в инструкции
+    sprintf( w, "%s %s, %s, %s ;%s", SetName,Opd_1,Opd_2,Res,Comm );
+  }
 //
 } // ----- конец handRes_asValue -----------------------------------------------
 
