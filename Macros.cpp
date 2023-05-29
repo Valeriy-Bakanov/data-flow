@@ -267,18 +267,18 @@ void __fastcall SelectInstrForMacrosExpans()
 void __fastcall handRes_asValue( char *Res, INT i )
 { // обрабатываеи поле результата, если он в форме простой переменной ----------
 //
-  if( Rule_TokenUse ) // использовать токен для имени результата
+  if( Get_CountOperandsByInstruction( SetName ) == 1 ) // 1 операнд в инструкции
   {
-   if( Get_CountOperandsByInstruction( SetName ) == 1 ) // 1 операнд в инструкции
+   if( Rule_TokenUse ) // использовать токен для имени результата
     sprintf( w, "%s %s, %s%c%d%c%d ;%s", SetName,Opd_1,Res, SymbDelim,numbFor,SymbDelim,i, Comm );
-   else // 2 операнда в инструкции
-    sprintf( w, "%s %s, %s, %s%c%d%c%d ;%s", SetName,Opd_1,Opd_2,Res, SymbDelim,numbFor,SymbDelim,i, Comm );
-  }
-  else // возвращаем Res в w без токенотизации
-  {
-   if( Get_CountOperandsByInstruction( SetName ) == 1 ) // 1 операнд в инструкции
+   else
     sprintf( w, "%s %s, %s ;%s", SetName,Opd_1,Res,Comm );
-   else // 2 операнда в инструкции
+  }
+  else // два операнда в инструкции
+  {
+   if( Rule_TokenUse ) // использовать токен для имени результата
+    sprintf( w, "%s %s, %s, %s%c%d%c%d ;%s", SetName,Opd_1,Opd_2,Res, SymbDelim,numbFor,SymbDelim,i, Comm );
+   else
     sprintf( w, "%s %s, %s, %s ;%s", SetName,Opd_1,Opd_2,Res,Comm );
   }
 //
