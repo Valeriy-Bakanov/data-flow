@@ -8,11 +8,15 @@ void   __fastcall SelectInstrForMacrosExpans_2D(); // выбор типа инструкции для 
 double __fastcall pcExpression( char* Expression, double Value_1, double Value_2 ); // вычислить и вернуть double
 int    __fastcall testIndex(char* str, char chr ); // возвращает число не 'chr' символов
 //
-void   __fastcall handlXXX_asVariable_1D( char* Field, INT i );
-void   __fastcall handlXXX_asMassive_1D(  char* Field, INT i ); // обработка поле Field типа Opd_1,Opd_2,Res для 1D-псевдомассива
+void   __fastcall handOpd_asVariable_1D( char* Opd, INT i ); // // обработка поля-операнда в виде переменной (не псевдомассива)
+void   __fastcall handRes_asVariable_1D( char* Res, INT i ); // обработка поля-результата в виде переменной (не псевдомассива)
+void   __fastcall handOpd_asMassive_1D(  char* Opd, INT i ); // // обработка поля-операнда в виде 1D-псевдомассива
+void   __fastcall handRes_asMassive_1D(  char* Res, INT i ); // обработка поля-результата в форме 1D-псевдомассива
 //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-void   __fastcall handlXXX_asVariable_2D( char* Field, INT i, INT j );
-void   __fastcall handlXXX_asMassive_2D(  char* Res, INT i, INT j ); // обработка поле Field типа Opd_1,Opd_2,Res для 1D-псевдомассива
+void   __fastcall handOpd_asVariable_2D( char* Opd, INT i, INT j ); // // обработка поля-операнда в виде 2D-переменной (не псевдомассива)
+void   __fastcall handRes_asVariable_2D( char* Opd, INT i, INT j ); // // обработка поля-результата в виде 2D-переменной (не псевдомассива)
+void   __fastcall handOpd_asMassive_2D(  char* Opd, INT i, INT j ); // // обработка поля-операнда в виде 2D-псевдомассива
+void   __fastcall handRes_asMassive_2D(  char* Res, INT i, INT j ); // обработка поля-результата в форме 2D-псевдомассива
 //
 void   __fastcall replace_Str( char* s, const char* sOld, const char* sNew ); // замена cI на sNew в строке s
 bool   __fastcall makeMassive_1D( char* str, INT i ); // находит и обрабатывает (расширяет) макросы в 1D-псевдомассивы
@@ -23,16 +27,20 @@ void   __fastcall tf_printf( char* str ); // вывод строки str во фрейм протокола
 // ограничения на имена переменных: "длина>0" и "первый символ - буква" или "первый=attrvar"
 #define permissName(str) ( strlen(str)&&(isalpha(str[0])||!memcmp(str,attrVar,strlen(attrVar)) ) ) // длина>0 'и' (первая=буква 'или' первые!=attrVar)
 //
-#define test_isMassive_1D(s) \
-                   ( strchr(s,'[') && strchr(s,']') && /* символы '[' и ']' присутствуют в строке s */ \
+#define test_1D(s) ( strchr(s,'[') && strchr(s,']') && /* символы '[' и ']' присутствуют в строке s */ \
                (int)(strchr(s,'[')-s)>=1 && /* символ '[' не первый в строке s */ \
                (int)(strchr(s,']')-strchr(s,'['))>=1 ) // между '[' и ']' не менее одного символа
 //
-#define test_isMassive_2D(s) \
-                   ( strchr(s,'[') && strchr(s,':') && strchr(s,']') && /* символы '[', ':' и ']' присутствуют в строке s */ \
+#define test_2D(s) ( strchr(s,'[') && strchr(s,':') && strchr(s,']') && /* символы '[', ':' и ']' присутствуют в строке s */ \
                (int)(strchr(s,'[')-s)>=1 && /* символ '[' не первый в строке s */ \
                (int)(strchr(s,':')-strchr(s,'['))>=1 && /*  между '[' и '[' не менее одного символа */ \
                (int)(strchr(s,']')-strchr(s,':'))>=1 ) // между ';' и ']' не менее одного символа
+//
+// makeMassive_1D, makeMassive_2D - обработчик ("расширитель") макроса в 1D- и 2D-псевдомассивы
+// handOpd_asMassive_1D (2D) - обработчик поля операнда как 1D (2D) - массив (псевдомасстив)
+// handOpd_asVariable_1D (2D)  - -.-.-.- как простая переменная
+// handRes_asMassive_1D (2D) - обработчик поля результата как 1D (2D) - массив (псевдомассив)
+// handRes_asVariable_1D (2D)  - -.-.-.- как простая переменная
 //
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +183,7 @@ bool __fastcall makeMassive_1D( char* str, INT i )
 void __fastcall replace_Str( char* s, const char* sOld, const char* sNew )
 { // все вхождения sOld (кроме как в именах стандартных функций stdFunc) в s заменяются на sNew
 //
- string strTmp; // expr - глобальная !!!
+ string strTmp;
 //
 // ------ замена stdFunc[] -----------------------------------------------------
  for( int i=0; i<sizeof(stdFunc)/sizeof(stdFunc[0]); i++ ) // по названиям стандартных функций парсера
@@ -294,6 +302,48 @@ void __fastcall SelectInstrForMacrosExpans_2D()
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+void __fastcall handOpd_asVariable_1D( char* Opd, INT i )
+{ // обрабатываеи поле операнда, если он в форме простой переменной
+// результат (Opd_1 или Opd_2) помещается на то же место !
+//
+ if( TokenUse ) // использовать токен для имени операнда Opd
+ {
+  char tmp[_1024];
+  sprintf( tmp, "%s:%d:%d", Opd, for_ID, i ); // имя переменной + for_ID + i (токен)
+  strcpy( Opd, tmp );
+ }
+//
+} // ---------- конец handOpd_asVariable_1D ---------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall handOpd_asMassive_1D( char* Opd, INT i )
+{ // обрабатываеи поле результата, если он в форме 1D-псевдомассива
+// результат (Opd_1 или Opd_2) помещается на то же место !
+//
+  string strTmp;
+//
+  strcpy( nameMass,  p = strtok( Opd,  "[" ) ); // строка до '['
+  strcpy( indexMass, p = strtok( NULL, "]" ) ); // строка от '[' до ']' (собственно индекс)
+////////////////////////////////////////////////////////////////////////////////
+//
+  if( !permissName(nameMass) )
+  { // проверка на допустИмость имени массива (длина > 0 символов и начальный символ БУКВА)
+   t_printf( err_01, Opd );
+   longjmp( env_BypassMacro, 1 ); // нелокальный переход к точке setjmp !!!!!!!
+  }
+//
+////////////////////////////////////////////////////////////////////////////////
+  strReplace( expr, sizeof(expr)-1, indexMass, strTmp.assign(1,cI).c_str(), "X[0]" ); // замена строки cI на X[0]
+//
+  sprintf( Opd, "%s[%d]", nameMass, (INT)pcExpression( expr, (double)i,0.0 ), Comm );
+//
+} // ---------- конец handOpd_asMassive_1D -------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 bool __fastcall makeMassive_2D( char* str, INT i )
 { // находит и обрабатывает (расширяет) макрос в 2D-псевдомассивы --------------
 //
@@ -365,7 +415,7 @@ void __fastcall Expansion_SET_1D( char* s )
 //
  int out;
  string strTmp;
- char *p, tmp_1[_512], tmp_2[_512]; // локальные массивы
+ char tmp_1[_512], tmp_2[_512]; // локальные массивы
 //
 // ----- разбираем 1-й операнд SET'а -------------------------------------------
 //
@@ -391,10 +441,10 @@ void __fastcall Expansion_SET_1D( char* s )
 //
   sprintf( Opd_1, "%.*g", sizeof(Mem_Data[0].Addr)-1, pcExpression( expr, (double)i, 0.0 ) );
 // ------ обрабатываем поле Res (результат выполнения инструкции) --------------
-  if( test_isMassive_1D( Res ) )
-   handlXXX_asMassive_1D( Res, i ); // обрабатываем результат, если он 1D-псевдомассив
+  if( test_1D( Res ) )
+   handRes_asMassive_1D( Res, i ); // обрабатываем результат, если он 1D-псевдомассив
   else
-   handlXXX_asVariable_1D( Res, i ); // обрабатываем результат, если он простая переменная
+   handRes_asVariable_1D( Res, i ); // обрабатываем результат, если он простая переменная
 //
 // ---- собираем готовую строку инструкции из отдельных полей ------------------
 //
@@ -414,7 +464,7 @@ void __fastcall Expansion_SET_2D( char* s )
 //
  int out;
  string strTmp;
- char *p, tmp_1[_512], tmp_2[_512]; // локальные массивы
+ char tmp_1[_512], tmp_2[_512]; // локальные массивы
 //
 // ----- разбираем 1-й операнд SET'а -------------------------------------------
 //
@@ -442,10 +492,10 @@ void __fastcall Expansion_SET_2D( char* s )
 //
   sprintf( Opd_1, "%.*g", sizeof(Mem_Data[0].Addr)-1, pcExpression( expr, (double)i, double(j) ) ); // Оpd_1, w - глобал..1
 // ------ обрабатываем поле Res (результат выполнения инструкции) --------------
-  if( test_isMassive_2D( Res ) )
-   handlXXX_asMassive_2D( Res, i, j ); // обрабатываем результат, если он 2D-псевдомассив
+  if( test_2D( Res ) )
+   handRes_asMassive_2D( Res, i, j ); // обрабатываем результат, если он 2D-псевдомассив
   else
-   handlXXX_asVariable_2D( Res, i, j ); // обрабатываем результат, если он простая переменная
+   handRes_asVariable_2D( Res, i, j ); // обрабатываем результат, если он простая переменная
 //
 // ---- собираем готовую строку инструкции из отдельных полей ------------------
   sprintf( str, "%s %s, %s ; %s", SetName, Opd_1, Res, Comm ); // готовим преобразованную строку инструкции
@@ -456,6 +506,19 @@ void __fastcall Expansion_SET_2D( char* s )
 //
 } // ---------- конец Expansion_SET_2D -----------------------------------------
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall handRes_asVariable_2D( char* Res, INT i, INT j )
+{ // обрабатываем поле результата, если он в форме простой переменной ----------
+//
+  if( TokenUse ) // использовать токен для имени результата
+  {
+   char tmp[_1024];
+   sprintf( tmp, "%s:%d:%d:%d", Res, for_ID, i, j );
+   strcpy( Res, tmp ); // подготовили строку результата выполнения инструкции
+  }
+//
+} // ----- конец handRes_asVariable_2D --------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -464,7 +527,7 @@ void __fastcall Expansion_1_2_Opd_1D( char* s, int nOpd )
 // mExpand (TStringList) ; nOpd - число операндов
 // bool outCode = true; // удачное расширение SET
  int out;
- char *p, tmp_1[_512], tmp_2[_512], tmp_3[_512]; // локальные массивы
+ char tmp_1[_512], tmp_2[_512], tmp_3[_512]; // локальные массивы
 //
   strcpy( str, s ); // копируем, ибо при обработке strtok исходная строка s разрушается
 //
@@ -491,23 +554,24 @@ void __fastcall Expansion_1_2_Opd_1D( char* s, int nOpd )
   strcpy( Res,   tmp_3 );
 //
 // ------ обрабатываем поле Opd_1 (первый операнд инструкции) ------------------
-  if( test_isMassive_1D( Opd_1 ) )
-   handlXXX_asMassive_1D( Opd_1, i ); // обрабатываем результат, если он 1D-псевдомассив
+  if( test_1D( Opd_1 ) )
+   handOpd_asMassive_1D( Opd_1, i ); // обрабатываем результат, если он 1D-псевдомассив
   else
-   handlXXX_asVariable_1D( Opd_1, i ); // обрабатываем результат, если он простая переменная
+   handOpd_asVariable_1D( Opd_1, i ); // обрабатываем результат, если он простая переменная
 //
 // ------ обрабатываем поле Opd_2 (второй операнд инструкции) ------------------
+//
   if( nOpd == 2 ) // 2-й операнд
-   if( test_isMassive_1D( Opd_2 ) )
-    handlXXX_asMassive_1D( Opd_2, i ); // обрабатываем результат, если он 1D-псевдомассив
+   if( test_1D( Opd_1 ) )
+    handOpd_asMassive_1D( Opd_2, i ); // обрабатываем результат, если он 1D-псевдомассив
    else
-    handlXXX_asVariable_1D( Opd_2, i ); // обрабатываем результат, если он простая переменная
+    handOpd_asVariable_1D( Opd_2, i ); // обрабатываем результат, если он простая переменная
 //
 // ------ обрабатываем поле Res (результат выполнения инструкции) --------------
-  if( test_isMassive_1D( Res ) )
-   handlXXX_asMassive_1D( Res, i ); // обрабатываем результат, если он 1D-псевдомассив
+  if( test_1D( Res ) )
+   handRes_asMassive_1D( Res, i ); // обрабатываем результат, если он 1D-псевдомассив
   else
-   handlXXX_asVariable_1D( Res, i ); // обрабатываем результат, если он простая переменная
+   handRes_asVariable_1D( Res, i ); // обрабатываем результат, если он простая переменная
 //
 // ---- собираем готовую строку инструкции из отдельных полей ------------------
   if( nOpd == 1 ) // 1 операнд
@@ -525,12 +589,51 @@ void __fastcall Expansion_1_2_Opd_1D( char* s, int nOpd )
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+void __fastcall handRes_asMassive_1D( char* Res, INT i )
+{ // обрабатываеи поле результата, если он в форме 1D-псевдомассива ------------
+//
+  string strTmp;
+//
+  strcpy( nameMass,  p = strtok( Res,  "[" ) ); // строка до '['
+  strcpy( indexMass, p = strtok( NULL, "]" ) ); // строка от '[' до ']'
+////////////////////////////////////////////////////////////////////////////////
+//
+  if( !permissName(nameMass) )
+  { // проверка на допустИмость имени массива (длина > 0 символов и начальный символ БУКВА)
+   t_printf( err_01, Res );
+   longjmp( env_BypassMacro, 1 ); // нелокальный переход к точке setjmp !!!!!!!
+  }
+//
+////////////////////////////////////////////////////////////////////////////////
+  strReplace( expr, sizeof(expr)-1, indexMass, strTmp.assign(1,cI).c_str(), "X[0]" ); // замена строки cI на X[0]
+//
+  sprintf( Res, "%s[%d]", nameMass, (INT)pcExpression( expr, (double)i,0.0 ) );
+//
+} // ----- конец handRes_asMassive_1D ------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall handRes_asVariable_1D( char* Res, INT i )
+{ // обрабатываеи поле результата, если он в форме простой переменной ----------
+//
+  if( TokenUse ) // использовать токен для имени результата
+  {
+   char tmp[_1024];
+   sprintf( tmp, "%s:%d:%d", Res, for_ID, i );
+   strcpy( Res, tmp ); // готовая строка результата в форме простой переменной
+  }
+//
+} // ----- конец handRes_asVariable_1D -----------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
 { // расширяет макрос по инструкции c 1-2 операндами , добавляет расширение в
 // mExpand (TStringList) ; nOpd - число операндов
 // bool outCode = true; // удачное расширение SET
  int out;
- char *p, tmp_1[_512], tmp_2[_512], tmp_3[_512]; // локальные массивы
+ char tmp_1[_512], tmp_2[_512], tmp_3[_512]; // локальные массивы
 //
   strcpy( str, s ); // копируем, ибо при обработке strtok исходная строка s разрушается
 //
@@ -557,23 +660,24 @@ void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
   strcpy( Res,   tmp_3 );
 //
 // ------ обрабатываем поле Opd_1 (первый операнд инструкции) ------------------
-  if( test_isMassive_2D( Opd_1 ) )
-   handlXXX_asMassive_2D( Opd_1, i, j ); // обрабатываем результат, если он 1D-псевдомассив
+  if( test_2D( Opd_1 ) )
+   handOpd_asMassive_2D( Opd_1, i, j ); // обрабатываем результат, если он 1D-псевдомассив
   else
-   handlXXX_asVariable_2D( Opd_1, i, j ); // обрабатываем результат, если он простая переменная
+   handOpd_asVariable_2D( Opd_1, i, j ); // обрабатываем результат, если он простая переменная
 //
 // ------ обрабатываем поле Opd_2 (второй операнд инструкции) ------------------
+//
   if( nOpd == 2 ) // 2-й операнд
-   if( test_isMassive_2D( Opd_2 ) )
-    handlXXX_asMassive_2D( Opd_2, i, j ); // обрабатываем результат, если он 2D-псевдомассив
+   if( !strchr(Opd_2, '[') && !strchr(Opd_2,']') ) // в Opd_2 нет и '[' и ']' ---
+    handOpd_asVariable_2D( Opd_2, i, j ); // обрабатываем результат, если он простая переменная
    else
-    handlXXX_asVariable_2D( Opd_2, i, j ); // обрабатываем результат, если он простая переменная
+    handOpd_asMassive_2D( Opd_2, i, j ); // обрабатываем результат, если он 2D-псевдомассив
 ////////////////////////////////////////////////////////////////////////////////
 // ------ обрабатываем поле Res (результат выполнения инструкции) --------------
-  if( test_isMassive_2D( Res ) )
-   handlXXX_asMassive_2D( Res, i, j ); // обрабатываем результат, если он 2D-псевдомассив
+  if( test_2D( Res ) )
+   handRes_asMassive_2D( Res, i, j ); // обрабатываем результат, если он 2D-псевдомассив
   else
-   handlXXX_asVariable_2D( Res, i, j ); // обрабатываем результат, если он простая переменная
+   handRes_asVariable_2D( Res, i, j ); // обрабатываем результат, если он простая переменная
 //
 // ---- собираем готовую строку инструкции из отдельных полей ------------------
   if( nOpd == 1 ) // 1 операнд
@@ -587,83 +691,87 @@ void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
 //
 } // ---------- конец Expansion_1_2_Opd_2D -------------------------------------
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall handOpd_asVariable_2D( char* Opd, INT i, INT j )
+{ // обрабатываеи поле операнда, если он в форме простой переменной
+// результат (Opd_1 или Opd_2) помещается на то же место !
+//
+ if( TokenUse ) // использовать токен для имени операнда Opd
+ {
+  char tmp[_1024];
+  sprintf( tmp, "%s:%d:%d:%d", Opd, for_ID, i, j ); // имя переменной + for_ID + i + j (токен)
+  strcpy( Opd, tmp );
+ }
+//
+} // ---------- конец handOpd_asVariable_2D ---------------------------------------
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall handlXXX_asMassive_2D( char* Field, INT i, INT j )
-{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 2D-псевдомассивов --------
+void __fastcall handRes_asMassive_2D( char* Res, INT i, INT j )
+{ // обрабатываеи поле результата, если он в форме 2D-псевдомассива ------------
 //
   string strTmp;
-  char *p, tmp_1[_512],tmp_2[_512], expr_1[_512],expr_2[_512]; // локальные массивы
+  char tmp_1[_512], tmp_11[_512], tmp_2[_512], tmp_22[_512]; // локальные массивы
 //
-  strcpy( nameMass,    p = strtok( Field,  "[" ) ); // строка до '['
-  strcpy( indexMass_1, p = strtok( NULL,    ":" ) ); // строка от '[' до ':'
-  strcpy( indexMass_2, p = strtok( NULL,   "]" ) ); // строка от ':' до ']'
+  strcpy( nameMass,    p = strtok( Res,  "[" ) ); // строка до '['
+  strcpy( indexMass_1, p = strtok( NULL,  ":" ) ); // строка от '[' до ':'
+  strcpy( indexMass_2, p = strtok( NULL, "]" ) ); // строка от ':' до ']'
+////////////////////////////////////////////////////////////////////////////////
 //
   if( !permissName( nameMass ) )
   { // проверка на допустИмость имени массива (длина > 0 символов и начальный символ БУКВА)
-   t_printf( err_01, Field );
+   t_printf( err_01, Res );
    longjmp( env_BypassMacro, 1 ); // нелокальный переход к точке setjmp !!!!!!!
   }
+//
+////////////////////////////////////////////////////////////////////////////////
 //
   strReplace( tmp_1,  sizeof(tmp_1)-1,  indexMass_1, strTmp.assign(1,cI).c_str(), "X[0]" ); // замена в indexMass_1 строки cI на X[0]
-  strReplace( expr_1, sizeof(expr_1)-1, tmp_1,       strTmp.assign(1,cJ).c_str(), "X[1]" ); // замена строки cJ на X[1]
+  strReplace( tmp_11, sizeof(tmp_11)-1, tmp_1,       strTmp.assign(1,cJ).c_str(), "X[1]" ); // замена строки cJ на X[1]
 //
   strReplace( tmp_2,  sizeof(tmp_2)-1,  indexMass_2, strTmp.assign(1,cI).c_str(), "X[0]" ); // замена в indexMass_2 строки cI на X[0]
-  strReplace( expr_2, sizeof(expr_2)-1, tmp_2,      strTmp.assign(1,cJ).c_str(), "X[1]" ); // замена строки cJ на X[1]
+  strReplace( tmp_22, sizeof(tmp_22)-1, tmp_2,      strTmp.assign(1,cJ).c_str(), "X[1]" ); // замена строки cJ на X[1]
 //
-  sprintf( Field, "%s[%d:%d]", nameMass, (INT)pcExpression( expr_1, (double)i, (double)j ),
-                                         (INT)pcExpression( expr_2, (double)i, (double)j ) );
+  sprintf( Res, "%s[%d:%d]", nameMass, (INT)pcExpression( tmp_11, (double)i, (double)j ),
+                                       (INT)pcExpression( tmp_22, (double)i, (double)j ) );
 //
-} // ----- конец handlXXX_asMassive_2D -----------------------------------------
+} // ----- конец handRes_asMassive_2D ------------------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall handlXXX_asMassive_1D( char* Field, INT i )
-{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 1D-псевдомассивов ----
+void __fastcall handOpd_asMassive_2D( char* Opd, INT i, INT j )
+{ // обрабатываеи поле результата, если он в форме 2D-псевдомассива
+// результат (Opd_1 или Opd_2) помещается на то же место !
 //
   string strTmp;
-  char *p;
+  char tmp_1[_512], tmp_11[_512], tmp_2[_512], tmp_22[_512]; // локальные массивы
 //
-  strcpy( nameMass,  p = strtok( Field, "[" ) ); // строка до '['
-  strcpy( indexMass, p = strtok( NULL,  "]" ) ); // строка от '[' до ']'
+  strcpy( nameMass,    p = strtok( Opd,  "[" ) ); // строка до '['
+  strcpy( indexMass_1, p = strtok( NULL,  ":" ) ); // строка от '[' до ':'
+  strcpy( indexMass_2, p = strtok( NULL, "]" ) ); // строка от ':' до ']'
+////////////////////////////////////////////////////////////////////////////////
 //
-  if( !permissName(nameMass) )
+  if( !permissName( nameMass ) )
   { // проверка на допустИмость имени массива (длина > 0 символов и начальный символ БУКВА)
-   t_printf( err_01, Field );
+   t_printf( err_01, Res );
    longjmp( env_BypassMacro, 1 ); // нелокальный переход к точке setjmp !!!!!!!
   }
 //
-  strReplace( expr, sizeof(expr)-1, indexMass, strTmp.assign(1,cI).c_str(), "X[0]" ); // замена строки cI на X[0]
-//
-  sprintf( Field, "%s[%d]", nameMass, (INT)pcExpression( expr, (double)i, 0.0 ) );
-//
-} // ----- конец handlXXX_asMassive_1D -----------------------------------------
-
-
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall handlXXX_asVariable_1D( char* Field, INT i )
-{  // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 1D-псевдомассивов ----
-// обрабатываеи поле операнда, если он в форме простой переменной
 //
- if( TokenUse && (&Field==&Res) ) // использовать токен для имени поля результата
-  strcpy( Field, Format("%s:%d:%d",OPENARRAY(TVarRec,(Field,int(for_ID),int(i)) ) ).c_str() );
+  strReplace( tmp_1,  sizeof(tmp_1)-1,  indexMass_1, strTmp.assign(1,cI).c_str(), "X[0]" ); // замена в indexMass_1 строки cI на X[0]
+  strReplace( tmp_11, sizeof(tmp_11)-1, tmp_1,       strTmp.assign(1,cJ).c_str(), "X[1]" ); // замена строки cJ на X[1]
 //
-} // ---------- конец handlXXX_asVariable_1D -----------------------------------
-
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall handlXXX_asVariable_2D( char* Field, INT i, INT j )
-{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 2D-псевдомассивов ----
+  strReplace( tmp_2,  sizeof(tmp_2)-1, indexMass_2, strTmp.assign(1,cI).c_str(), "X[0]" ); // замена в indexMass_2 строки cI на X[0]
+  strReplace( tmp_22, sizeof(tmp_22)-1, tmp_2,      strTmp.assign(1,cJ).c_str(), "X[1]" ); // замена строки cJ на X[1]
 //
- if( TokenUse && (&Field==&Res) ) // использовать токен для имени поля результата
-  strcpy( Field, Format("%s:%d:%d:%d",OPENARRAY(TVarRec,(Field,int(for_ID),int(i),int(j)) ) ).c_str() );
+  sprintf( Opd, "%s[%d:%d]", nameMass, (INT)pcExpression( tmp_11, (double)i, (double)j ),
+                                       (INT)pcExpression( tmp_22, (double)i, (double)j ) );
 //
-} // ---------- конец handlOpd_asVariable_2D -----------------------------------
-
+} // ---------- конец handOpd_asMassive_2D -------------------------------------
 
 
 

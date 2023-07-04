@@ -88,8 +88,8 @@ The author of the software Valery Bakanov is not an ardent supporter of Object-O
 char trueLowerCase[]  = "true",        trueUpperCase[] ="TRUE",
      falseLowerCase[] = "false",       falseUpperCase[]="FALSE",
      trueOutput[]     = "1 | true",    falseOutput[] = "0 | false", // вывод результатавыполнения предикатных функций (\x00A6 - прерывистая вертикальная черта)
-     notDefined[]     ="? ? ?",
-     startComments[] = ";\0", // символ начала комментария в строке ";"
+     notDefined[]     = "? ? ?",
+     startComments[]  = ";\0", // символ начала комментария в строке ";"
      symbolNot_1 = '!',                symbolNot_2 = '~', // символы логического отрицания ! или ~
      SET[]       = "SET"; // имя инструкции SET
 //
@@ -125,7 +125,7 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 #define ACC_REAL 4 // число знаков после зап.при выводе "плавающих" по E-формату
 //==============================================================================
 #define _SET_LEN 4  // длина строки мнемоники инструкции (3 символа + "\0")
-#define _ID_LEN  33 // 33 // длина строки имени переменной (32 символа + "\0")
+#define _ID_LEN  53 // 53 // длина строки имени переменной (32 символа + 20 + "\0")
 //------------------------------------------------------------------------------
 #define do_Run \
 { F1->BitBtn_Run->Enabled = true; /* "включили" все кнопки режима ВЫПОЛНЕНИЕ */ \
@@ -346,7 +346,8 @@ struct { // Read-Write-Config (имена секций и значений файла конфигурации систем
       *Sect15, *Sect15_Var1,*Sect15_Var2,
       *Sect16, *Sect16_Var1,
       *Sect17, *Sect17_Var1,
-      *Sect18, *Sect18_Var1;
+      *Sect18, *Sect18_Var1,
+      *Sect19, *Sect19_Var1;
 } RWC = {
  "Max_Lengths", // [1] значения параметров
   "max_Instruction","max_Data","max_Proc","max_Buffer",
@@ -382,7 +383,9 @@ struct { // Read-Write-Config (имена секций и значений файла конфигурации систем
  "Vizu_Dynamic", // [17] число раз пропуска перемещения фокуса в SG_Set[][] вслед за исполнением программы
   "pass_Counts",
  "RuleSpeculateExec",  // [18] выполнять ли (без сохранения результата) инструкцию с Predicate_ЕКГУ=false
-  "SpeculateExec"
+  "SpeculateExec",
+ "RuleTokenUse", // [19] символ-разделитель для формирования токенов
+  "TokenUse"
  } ; // [Read-Write-Config] имена секций и значений файла конфигурации
 //
 //------------------------------------------------------------------------------
@@ -463,7 +466,7 @@ INT Really_Select = 0; // текущее значение
 #define MAX_DATA 1000000 // максимальный размер пула данных 10^6
 // описание структуры ячеек памяти данных
 struct md {
- char Addr[_ID_LEN+10]; // адрес ячейки (строка!)
+ char Addr[_ID_LEN]; // адрес ячейки (строка!)
  REAL Data; // содержимое ячейки
  INT i_Set; // номер инструкции, в результате котрой было вычислено это значеник
 } M_D, *Mem_Data=NULL;
@@ -590,20 +593,20 @@ INT dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длино
  char  cI, cJ; // имя переменной цикла
  INT   minI, maxI, dI, // начало, конец и шаг изменения переменно
        minJ, maxJ, dJ,
-       numbFor = -1; // номер псевдомассива в программе
- char  str[_1024]="\0", // строка обрабатываемой инструкции
-       SetName[_128],Opd_1[_256],Opd_2[_256],Res[_256], // строки для мнемоники, 1-го и 2-го операндов, результата,
+       for_ID = -1; // номер псевдомассива в программе
+ char  str[_1024], // строка обрабатываемой инструкции
+       SetName[_64], Opd_1[_512],Opd_2[_512], Res[_512], // строки для мнемоники, 1-го и 2-го операндов, результата,
        Predic[_128], Comm[_1024],  // предиката, комментариев
-       nameMass[_512], indexMass[_512], // подстрока  левее '[' и левее ']'
-       SymbDelim = ':', w[_1024], tmp[]="?\0", *p;
- char  nameMass_1[_128]="\0", nameMass_2[_128]="\0", strIndex[_512]="\0"; // поля 'индекс в индексе'
+       nameMass[_512], indexMass[_512], indexMass_1[_512], indexMass_2[_512], // подстроки частей массивов
+       expr[_1024], tmp[]="?\0";
+ char  nameMass_1[_128], nameMass_2[_128], strIndex[_512]; // поля 'индекс в индексе'
  char  err_01[]="\n-M- Имя массива '%s' недопустимо! -M-\n";
  char* stdFunc[] = {"sin","cos","tg","ctg","arcsin","arccos","arctg","arcctg", // станд.тригоном.функции парсера/вычислителя (strstr)
                     "sh", "ch", "th","cth","exp",   "lg",    "ln",   "sqrt"};
  char replaceFmt[]="{$%d@}"; // формат при замене/восстановлении подстрок имён stdFunc
- bool flagMacroTitle; // признак нахождения строки с заголовком макроса 1D-псевдомассивов
- TStringList *mBody = new TStringList(), // создать набор строк - контейнер для макроса
-             *mExpand = new TStringList(), // создать набор строк - контейнер для расширений макроса макроса
+ bool flagMacroTitle_1D, flagMacroTitle_2D, TokenUse = false; // признак нахождения строки с заголовком макроса 1D/2D-псевдомассивов
+ TStringList *mBody    = new TStringList(), // создать набор строк - контейнер для макроса
+             *mExpand  = new TStringList(), // создать набор строк - контейнер для расширений макроса макроса
              *strToken = new TStringList(); // токены для уникальности переменных
 // ----- конец данных обработки препроцессором ---------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -976,9 +979,9 @@ TF1::SG_Data_Info(TObject *Sender)
  char str[_128] = "\0";
 //
  if( is_ResultIsPredicat( Mem_Data[SG_Data->Row-1].Addr ) ) // это результат выполнения инструкции-ПРЕДИКАТА...
-  snprintf( str,sizeof(str), "     %s = %s", Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data ? trueOutput : falseOutput );
+  snprintf( str, sizeof(str), "     %s = %s",    Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data ? trueOutput : falseOutput );
  else
-  snprintf( str,sizeof(str), "     %s = %.10g", Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data );
+  snprintf( str, sizeof(str), "     %s = %.10g", Mem_Data[SG_Data->Row-1].Addr, Mem_Data[SG_Data->Row-1].Data );
 //
  MessageBox(0, str," Значение переменной в памяти данных", MB_OK | MB_ICONINFORMATION | MB_TOPMOST | MB_TASKMODAL ); // МОДаЛЬНОЕ окно ..!
 //
@@ -1162,6 +1165,8 @@ void __fastcall Read_Config( int Rule )
 //
  SpeculateExec = tINI->ReadInteger(RWC.Sect18, RWC.Sect18_Var1, 0); // при true инструкция с flagPredicate_TRUE=false выполнить, но результат не сохранять
 //
+ TokenUse      = tINI->ReadBool(RWC.Sect19, RWC.Sect19_Var1, 0); // использовать ли токенезацию в именах результата выполнения инструкций
+//
  delete tINI; // уничтожили объект - более не нужен !...
 //
  Out_Data_SBM1(); // вывод данных в среднюю часть StatusBar --------------------
@@ -1218,8 +1223,8 @@ void __fastcall Write_Config()  // сохраняет данные в файл конфигурации
 bool __fastcall // визуализация инструкций в SG_Set из массива структур Mem_Instruction[]
 Vizu_Instructions()
 {
- char Set[_SET_LEN]="\0", // мнемоника инструкции
-      tmp[_512]="\0";
+ char Set[_SET_LEN], // мнемоника инструкции
+      tmp[_512];
 //
  if( !Really_Set )
  {
@@ -1286,7 +1291,7 @@ Vizu_Instructions()
 void __fastcall // визуализация инструкций в SG_Data из массива структур Mem_Data[]
 Vizu_Data()
 {
- char tmp[_512]="\0";
+ char tmp[_512];
 //
 // mD->Cells->BeginUpdate(); // у TStringGrid НЕТУ BeginUpdate и EndUpdate
  mD->DoubleBuffered = true; // двойная буфферизация - чтобы не мигало..!
@@ -1321,10 +1326,10 @@ Vizu_Data()
 void __fastcall
 Vizu_Buffer() // визуализация данных в SG_Buffer из массива структур Mem_Buffer[]
 {
- char tmp[_512]="\0";
+ char tmp[_512];
 // mB->Cells->BeginUpdate(); // у TStringGrid НЕТУ BeginUpdate и EndUpdate
  mB->DoubleBuffered = true; // двойная буфферизация - чтобы не мигало..!
-
+//
  if(!Really_Buffer)
  {
   mB->RowCount = Really_Buffer + 2; // настроили число строк в визуализируемом объекте
@@ -1412,7 +1417,7 @@ StopCalculations( int Rule )
 { // при Rule==0 "Выполнение остановлено пользователем",
   // при Rule==1 "Программа завершена по выполнению всех ГКВ-инструкций"
   // при Rule==2 "Выполнение программы остановлено"
- char tmp[_512]="\0";
+ char tmp[_512];
  INT countSets = 0;
 //
  F1->Master_Timer->Enabled = false; // ещё раз на всякий случай..!
@@ -1441,7 +1446,7 @@ StopCalculations( int Rule )
     {
      do_Run // "включили" все кнопки режима ВЫПОЛНЕНИЕ
      return;
-    } 
+    }
 //
     break;
 //
@@ -1473,7 +1478,7 @@ StopCalculations( int Rule )
 REAL __fastcall // возвращает из Mem_Data[] число по адресу (имени) Addr
 get_Data( char Addr[])
 { // если строка 'Addr / Dаta' не существует - выдается предупреждение и результат = 1.0e0
- char tmp[_512]="\0";
+ char tmp[_512];
 //
  for( INT i=0; i<Really_Data; i++ ) // ищем путём простого последовательного перебора массива Mem_Data[]
   if( !strcmp(Mem_Data[i].Addr,Addr) )
@@ -1498,9 +1503,8 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
   // при Rule = -1 величина Result берётся из формальных параметров (используется при
   // реализации спекулятивных вычислений, когда результат в Mem_Data[] не записываетсянет)
   // при Rule = 2 возвращается только строка инструкции
- char Set[_SET_LEN]="\0",
-      tmp[_512]="\0",
-      tmp1[_512]="\0";
+ char Set[_SET_LEN],
+      tmp[_512], tmp1[_512];
 //
  strcpy(Set, Mem_Instruction[i_Set].Set); // мнемоника инструкции... далее такъ проще работать !
 //
@@ -1608,8 +1612,7 @@ add_Data( INT i_Set, char* aResult, REAL Data )
 // если строка 'Addr / ***' существует - переписывается поле Data, выдается
 // предупреждение и пул данных визуализируется; если не существует - добавим
 // данные Data и визуализируем
- char tmp[_512]="\0",
-      tmp1[_1024]="\0";
+ char tmp[_512], tmp1[_1024];
 //
 // не нарушен ли ПРИНЦИП ЕДИНОКРаТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором Addr ?)
 //
@@ -1939,10 +1942,10 @@ Calc_Stat_Proc()
 char* __fastcall // визуализация флагов инструкции Mem_Instruction[] номер i_Set
 Vizu_Flags( INT i_Set )
 {
- char Set[_SET_LEN]="\0",
+ char Set[_SET_LEN],
       Delimeter[] = "|", // символ разделителя битовых флагов
       Indiff[]    = "x", // символ 'безразлично'
-      tmp[_512]="\0";
+      tmp[_512];
 //
  strcpy(Set, Mem_Instruction[i_Set].Set); // запомнили мнемонику инструкции (так удобнее)
 //
@@ -2211,12 +2214,10 @@ void __fastcall // выполнение инструкции номер i_Set
 ExecuteInstructions_Except_SET( INT i_Set )
 { // кроме инструкции SET !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  REAL Op1, Op2, Result, Predicate;
- char Set[_SET_LEN]="\0",
-      aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicate[_ID_LEN]="\0",
-      tmp[_512]="\0";
+ char Set[_SET_LEN],
+      aOp1[_ID_LEN],    aOp2[_ID_LEN],
+      aResult[_ID_LEN], aPredicate[_ID_LEN],
+      tmp[_512];
  INT  i_Proc; // номер свободного АИУ
  __int64 Divident, Devider; // Quotient, Remainder; // числитель/знаменатель//частное/остаток (целые 64 бит)
 //
@@ -2794,7 +2795,7 @@ add_Buffer( INT i_Set, int Rule ) // добавляет в буфер команд Mem_Buffer[] строк
 // после добавления флаг Mem_Instruction[].fAddBuffer устанавливается
 // Rule определяет точку вызова функции
 {
- char tmp[_512]="\0";
+ char tmp[_512];
  static bool flagColor = true; // флаг предупреждения о переполнении Mem_Buffer[]
 //
  if(Really_Buffer >= max_Buffer) // буфер полон
@@ -3038,9 +3039,8 @@ bool __fastcall
 Test_aResult_Eq_aOperand( INT i_Set ) // не совпадает ли в инструкции i_Set
 { // адрес aResult с адресами входных операндов (попытка модификации -
   // нарушение ПРИНЦИПА ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ) ?
- char tmp[_512]="\0";
+ char tmp[_512];
 //
-// if( Mem_Instruction[i_Set].aResult[0] == attrVar[0] ) // если первый символ aResult суть attrVal,
  if( !memcmp( Mem_Instruction[i_Set].aResult,attrVar,strlen(attrVar) ) ) // сравнение по strlen(attrVar) символам
   return false; // на aResult не распространяется правило ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ
 //
@@ -3081,7 +3081,7 @@ char* __fastcall
 Get_Time_asLine() // вернуть вр емя (в тактах начиная с 0) в строке
 {
  static // чтобы данные не "забивались" другими на стэке
- char tmp[_512]="\0";
+ char tmp[_512];
 //
  snprintf(tmp,sizeof(tmp), "текущий момент: %d тактов", localTick);
  return tmp;
@@ -3135,7 +3135,7 @@ Calc_01_Param_Instruction( INT i_Set ) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set 
 { // ПОЛЕЗНОСТЬ равна числу иных инструкций, для которых результат данной является
 // ХОТЯ БЫ ОДНИМ из входных операндов (неважно, из скольких всего имеющихся)
 // при этом ФЛАГИ ГОТОВНОСТИ входных операндов не анализируются !
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
  float Param = 0; // значение полезности
 //
 // strcpy(Set, Mem_Instruction[i_Set].Set); // мнемонику i_Set запомнили в Set...
@@ -3172,7 +3172,7 @@ Calc_02_Param_Instruction(INT i_Set) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set по
 { // ПОЛЕЗНОСТЬ равна числу входных операндов иных инструкций, для которых результат
 // данной является входным операндом (неважно из скольких всего имеющихся)
 // при этом ФЛАГИ ГОТОВНОСТИ входных операндов не анализируются !
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
  float Param = 0; // значение полезности
 
 // strcpy(Set, Mem_Instruction[i_Set].Set); // мнемонику i_Set запомнили в Set...
@@ -3214,7 +3214,7 @@ Calc_03_Param_Instruction( INT i_Set ) // вычиcляет ПОЛЕЗНОСТЬ инструкции i_Set 
 // если у тестируемой инструкции N входных операндов, из которых M уже ГОТОВЫ и
 // результат выполнения данной инсрукции совпадает по адресу с К из (N-M) НЕГОТОВЫХ,
 // то ПОЛЕЗНОСТЬ равна K/(N-M) --- при K=(N-M) получаем вес ЕДИНИЧНЫЙ тестируемой инструкции
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
  float Param = 0; // значение полезности
 //
  strcpy(aResult, Mem_Instruction[i_Set].aResult); // адрес результата выполнения i_Set
@@ -3278,7 +3278,7 @@ TF1::Most_Wonderful(TObject *Sender)
 {
 // удивительное свойство DATA-FLOW вычислителей - результат вычислений не
 // зависит от последовательности расположения инструкций !!!
- char tmp[_1024]="\0";
+ char tmp[_1024];
 //
  strcpy(tmp, "... Самое удивительное в том, что для DATA-FLOW машины\n");
  strcat(tmp, "результат вычислений НЕ ЗАВИСИТ ОТ ПОСЛЕДОВАТЕЛЬНОСТИ\n");
@@ -3306,7 +3306,7 @@ void __fastcall
 TF1::On_Master_Timer(TObject *Sender)
 { // вызывается каждые Interval миллисекунд таймером Master_Timer
 //
- char tmp[_512]="\0";
+ char tmp[_512];
  INT i_Proc, i_Set, dt_ticks;
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -3418,7 +3418,7 @@ void __fastcall TF1::DrawNotExecuteSets(TObject *Sender)
 //
  mS->Repaint();
 //
- char tmp[_512]="\0";
+ char tmp[_512];
  snprintf(tmp,sizeof(tmp), " Выделено %d позиции/й...", Really_Select);
  SBM0->Text = tmp; // вывод текста в StatusBarMain
 //
@@ -3430,7 +3430,7 @@ void __fastcall TF1::DrawNotExecuteSets(TObject *Sender)
 void __fastcall TF1::DrawNotUsedResults(TObject *Sender)
 { // визуализизируются инструкции, результат выполнения которых
 // НЕ ИСПОЛЬЗУЕТСЯ никакими другими инструкциями в качестве входных операндов
- char aResult[_ID_LEN]="\0"; // мнемоника инструкции и имя результата
+ char aResult[_ID_LEN]; // мнемоника инструкции и имя результата
  INT n_Op;
 //
  Clear_AllTableInstructions(); // очистим цвета всех ячеек таблицы инструкций
@@ -3475,7 +3475,7 @@ end_i: // в конец цикла по i
 //
  mS->Repaint();
 //
- char tmp[_512]="\0";
+ char tmp[_512];
  snprintf(tmp,sizeof(tmp), " Выделено %d позиции/й...", Really_Select);
  SBM0->Text = tmp; // вывод текста в StatusBarMain
 //
@@ -3485,9 +3485,9 @@ end_i: // в конец цикла по i
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::DrawNotDetermineOperands(TObject *Sender)
 { // визуализируются операнды, НЕ ОПРЕДЕЛЕННЫЕ результатами вычислений
- char aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0"; // мнемоника инструкции и имя результата
+ char aOp1[_ID_LEN],
+      aOp2[_ID_LEN],
+      aResult[_ID_LEN]; // мнемоника инструкции и имя результата
  bool flag_1,   flag_2,
       flag_1_1, flag_1_2, flag_2_2;
  INT n_Op;
@@ -3554,7 +3554,7 @@ void __fastcall TF1::DrawNotDetermineOperands(TObject *Sender)
 //
  mS->Repaint();
 //
- char tmp[_512]="\0";
+ char tmp[_512];
  snprintf(tmp,sizeof(tmp), " Выделено %d позиции/й...", Really_Select);
  SBM0->Text = tmp; // вывод текста в StatusBarMain
 //
@@ -3662,7 +3662,7 @@ Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
 { // вычисляется ИНДЕКС СВяЗНОСТИ (усредненное кол-во инструкций, зависящих по операндам)
 // от результата выполнения предшествующего в ИНФОРМАЦИОННОМ ГРАФЕ алгоритма
 // число ребер, связанных с вершиной - СТЕПЕНЬ ВЕРШИНЫ
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
  int n_Op, // число входных операндов у инструкции
      n_EqResOp, i_EqResOp,  // число инструкций, зависящих (по схеме "aResult->aOpN") от данной
      n_Repeat,  i_Repeat; // сколько всего таких по заданному n_EqResOp
@@ -3670,7 +3670,7 @@ Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
      Sum_Repeat = 0, // общее число n_Repeat
      Sum_Repeat_1 = 0, // общее число n_Repeat при n_ResOp >= 2
      n_RepeatEq_1 = 0; // число повторов связей "1->1"
- char tmp[_512]="\0"; // рабочий массив
+ char tmp[_512]; // рабочий массив
 //
  TStringList *CI = new TStringList(); // создать набор строк CI для вычисления индекса связности
 //
@@ -3808,7 +3808,7 @@ REAL __fastcall
 StrToReal( char *str, INT i_Set )
 { // конвертирует строку в вещественное число с проверкой корректности конвертации
  REAL out;
- char tmp[_512]="\0";
+ char tmp[_512];
 //
  try
  {
@@ -3832,11 +3832,11 @@ bool __fastcall Test_All_Operands()
 { // тестирует все инструкции на потенциальную определённость операндов
 // путём поиска соответствия имен результатоы именем операндов
 // при нажатии ПРОДОЛЖИТЬ ВЫПОЛНЕНИЕ возвращается 1, при отмене выполнения - 7
- char Set[_SET_LEN]="\0", // мнемоника инструкции
-      aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0", // операнд 1, операнд 2, результат
-      str[_512]="\0",
+ char Set[_SET_LEN], // мнемоника инструкции
+      aOp1[_ID_LEN],
+      aOp2[_ID_LEN],
+      aResult[_ID_LEN], // операнд 1, операнд 2, результат
+      str[_512],
       fmt1[] = "-E- Test_All_Operands(): у инструкции #%d [%s %s, %s] операнд [%s] принципиально неразрешим -E-", // строка формата (1 операнд)
       fmt2[] = "-E- Test_All_Operands(): у инструкции #%d [%s %s, %s, %s] операнд #%d [%s] принципиально неразрешим -E-"; // строка формата (2 операнда)
  int nInputOperands; // число входных операндов инструкции
@@ -3949,7 +3949,7 @@ void __fastcall TF1::Show_Graph(TObject *Sender)
   return;
  }
 //
- char str[_512]="\0";
+ char str[_512];
 //
  F2->Chart_IC->Title->Text->Clear(); // очистка TSting перед новым заполнением
  F2->Chart_IC->Title->Text->Add( "Зависимость показывает число одновременно выполняющихся" );
@@ -4013,7 +4013,7 @@ void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Out_Data_SBM1()
 { // выводит данные в центральную часть StatusBar (все данные - ГЛОБАЛЫ) -------
- char tmp[_512]="\0";
+ char tmp[_512];
 //
  snprintf(tmp,sizeof(tmp), " АИУ/инстр./данн./буф./такт (страт.) = %d/%d/%d/%d/%d (%d|%d/%d)",
               max_Proc, max_Instruction, max_Data, max_Buffer, F1->Master_Timer->Interval,
@@ -4079,7 +4079,7 @@ bool __fastcall is_ResultIsPredicat( char* str )
 int __fastcall
 Get_CountOperandsByInstruction(char *Set)
 { // определяет число входных операндов в инструкции с мнемоникой Set
- char tmp[_256]="\0";
+ char tmp[_256];
 //
  for( INT i=0; i<Count_Sets; i++ ) // по списку инструкций ...
   if( !strcmp( Set_Params[i].Set, Set ) ) // это инструкция с мнемоникой Set
@@ -4099,7 +4099,7 @@ Get_CountOperandsByInstruction(char *Set)
 int __fastcall // определяет по Set_Params[] время выполнения инструкции с мнемоникой Set в тиках
 Get_TicksByInstruction(char *Set)
 { // если мнемоники не найдено, возвращается 100 (тиков) .......................
- char tmp[_1024]="\0";
+ char tmp[_1024];
 //
  for( INT i=0; i<Count_Sets; i++ ) // ищем путем простого последовательного перебора
  {
@@ -4306,10 +4306,10 @@ void __fastcall TF1::Save_Data(TObject *Sender)
 int __fastcall Work_TimeSets_Protocol_IC()
 { // вычисляется и возвращается max число ОДНОВРЕМЕННО работающих АИУ (процессоров)
 // и заполняется серия данных для постройки графика интенсивности вычислений
- char tmp[_512]="\0",
-      tmp1[_512]="\0",
-      tmp2[_512]="\0",
-      w[_512]="\0";
+ char tmp[_512],
+      tmp1[_512],
+      tmp2[_512],
+      w[_512];
  INT tick_End, // конец времени последней выполненной инструкции (в тактах)
      tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени
@@ -4388,7 +4388,7 @@ ended: /////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_Master()
 { // сохранение ГЛАВНОГО_ПРОТОКОЛА выполнения задания (*.pro)
- char FileNameProtocol[_512]="\0"; // файл протокола '*.pro'
+ char FileNameProtocol[_512]; // файл протокола '*.pro'
 //
 ////////////////////////////////////////////////////////////////////////////////
 // сохраняем ГЛАВНЫЙ_ПРОТОКОЛ (*.pro) //////////////////////////////////////////
@@ -4409,7 +4409,7 @@ void __fastcall Save_Protocol_Master()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_AIU()
 { // сохранение протокола использования АИУ (*.tpr)
- char FileNameTimeProc[_512]="\0"; // файл протокола использования АИУ '*.tpr'
+ char FileNameTimeProc[_512]; // файл протокола использования АИУ '*.tpr'
 //
  if( !mTpr || // если этот TStringList-список не существует...
      !mTpr->Count ) // если нет строк...
@@ -4429,8 +4429,8 @@ void __fastcall Save_Protocol_AIU()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_Data()
 { // сохранение файла рассчитанных данных (*.dat)
- char FileNameData[_512]="\0", // файл рассчитанных данных '*.dat'
-      tmp[_512]="\0";
+ char FileNameData[_512], // файл рассчитанных данных '*.dat'
+      tmp[_512];
 //
  FILE *fptr;
 ////////////////////////////////////////////////////////////////////////////////
@@ -4466,9 +4466,9 @@ void __fastcall Save_Protocol_Data()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_ExecInstructions()
 { // сохранение протокола выполнения инструкций по времени (*.tst)
- char FileNameTimeSets[_512]="\0", // файл протокола выполнений инструкций АИУ '*.tst'
-      tmp2[_512]="\0",
-      tmp3[_2048]="\0"; // при ГКВ=99 длина ~1200 символов
+ char FileNameTimeSets[_512], // файл протокола выполнений инструкций АИУ '*.tst'
+      tmp2[_512],
+      tmp3[_2048]; // при ГКВ=99 длина ~1200 символов
  INT tick_End, // конец времени последней выполненной инструкции (в тактах)
      tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени времени
@@ -4537,10 +4537,10 @@ void __fastcall Save_Protocol_ExecInstructions()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall Save_Protocol_ConnectedGraph()
 { // сохранение протокола свЯзности графа (*.coi)
- char tmp[_512]="\0",
-      tmp1[_512]="\0",
-      tmp2[_512]="\0",
-      tmp3[_2048]="\0"; // при ГКВ=99 длина ~1200 символов
+ char tmp[_512],
+      tmp1[_512],
+      tmp2[_512],
+      tmp3[_2048]; // при ГКВ=99 длина ~1200 символов
  ULI tick_End, // конец времени последней выполненной инструкции (в тактах)
      tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени времени
@@ -4611,7 +4611,7 @@ void __fastcall TF1::M1_CopyAll(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::M1_CopyToNotepad(TObject *Sender)
 { // копировать M1 в Notepad
- char FileName[_256]="\0";
+ char FileName[_256];
  strcpy( FileName, ChangeFileExt( FileNameSet, ".txt" ).c_str()); // имя проекта + "txt"
  M1->Lines->SaveToFile( FileName ); // выдать все строки из M1 в файл FileName
  ShellExecute( Handle, "open", FileName, NULL, NULL, SW_RESTORE ); // открыть файл FileName
@@ -4636,10 +4636,10 @@ void __fastcall Save_IGA()
 { // сохранить программу в виде списка дуг (формат *.GV)
  INT i,j, nArg, fromOp, iEdge = 0; // номер дуги в ИГА
  TStringList *sIGA = new TStringList(); // массив строк для запоминания ИГА
- char FileName[_256]="\0",
-      tmp[_2048]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0";
+ char FileName[_256],
+      tmp[_2048],
+      aResult[_ID_LEN],
+      aPredicat[_ID_LEN];
  bool flagNot, flagPredicat;
 //
 // сохраняем ИНФОРМАЦИОННЫЙ_ГРАФ_ПРОГРАММЫ (*.gv) //////////////////////////////
@@ -4734,7 +4734,7 @@ void __fastcall TF1::ExtendedSave_IGA_Click(TObject *Sender)
 void __fastcall Extended_Save_IGA()
 { // сохранить данные о времени выполнения инструкций (формат *.MVR)
  INT i; // номер инструкции
- char FileName[_256]="\0";
+ char FileName[_256];
  FILE *fptr;
 //
 // сохраняем ДАННЫЕ_О_ВРЕМЕНИ_ВЫПОЛНЕНИЯ_ИНСТРУКЕЦИЙ (*.mvr) ///////////////////
@@ -4776,7 +4776,7 @@ void __fastcall TF1::Show_AIU(TObject *Sender)
   return;
  }
 //
- char str[_512]="\0";
+ char str[_512];
 //
  F3->Chart_AIU->Title->Text->Clear(); // очистка TSting перед новым заполнением
  F3->Chart_AIU->Title->Text->Add( "Показывается нагруженность отдельных АИУ выполнением" );
@@ -4819,7 +4819,7 @@ int __fastcall Work_TimeSets_Protocol_AIU()
 // и заполняется серия данных для постройки графика интенсивности вычислений
  INT i_Op, n_Op, ii_Op, nn_Op,
      i_Proc, start, end, i_Set, ii_Set;
- char aResult[_ID_LEN]="\0";
+ char aResult[_ID_LEN];
 //
 ////////////////////////////////////////////////////////////////////////////////
  F3->Series1->Clear(); // очистим серию данных для графика нагруженности АИУ
@@ -4880,7 +4880,7 @@ ended: /////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 char* __fastcall PutDateTimeToString(INT flag)
 { // выдача текущих даты и времени в строку с форматированием
- char str[_512]="\0";
+ char str[_512];
 //
  if( flag == 0 ) // некорректное имя файла ( символ ':' недопустИм )
   strNcpy( str, TDateTime::CurrentDateTime().FormatString("dd.mm.yyyy'/'hh:nn:ss:zzz").c_str() );
@@ -4890,61 +4890,6 @@ char* __fastcall PutDateTimeToString(INT flag)
  return str ;
 } // конец PutDateTimeToString -------------------------------------------------
 
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall Save_All_Protocols_To_Out_Dir()
-{ // сохранение всех протоколов данного расчёта и перенос подкаталог Out!Data
- char tmp[_512]="\0",
-      cnst[_512]="\0";
-//
- do_Stop // "выключили" все кнопки Выполнение
-//
- snprintf( cnst, sizeof(cnst), "!%s!AIU=%d_Param=%d_Prior=%d!%s.txt", ExtractFileName(FileNameSet),
-                                max_Proc, how_Calc_Param, how_Calc_Prior, uniqueStr ); // постоянная часть имени файла
-//
- Save_Protocol_Master(); // сохраняем главный протокол (*.pro)
-  snprintf( tmp, sizeof(tmp), "%s\\pro%s", NameSubDirOutData, cnst );
-  MoveFile( ChangeFileExt( FileNameSet, ".pro").c_str(), tmp ); // перенос в подкаталог NameSubDirOutData (Out!Data)
-  strcpy( SF.savePRO, tmp ); // запомнили в глобале для использования в Upload_Data()
-//
- Save_Protocol_AIU(); // сохраняем протокол использвания АИУ по времени (*.tpr)
-  snprintf( tmp, sizeof(tmp), "%s\\tpr%s", NameSubDirOutData, cnst );
-  MoveFile( ChangeFileExt( FileNameSet, ".tpr").c_str(), tmp );
-//  strcpy( SF.saveTPR, tmp ); // запомнили в глобале для использования в Upload_Data()
-//
- Save_Protocol_Data(); // сохраняем протокол рассчитанных данных (*.dat)
-  snprintf( tmp, sizeof(tmp), "%s\\dat%s", NameSubDirOutData, cnst );
-  MoveFile( ChangeFileExt( FileNameSet, ".dat").c_str(), tmp );
-//  strcpy( SF.saveDAT, tmp );
-//
- Save_Protocol_ExecInstructions(); // сохраняем протокол выполнения инструкций (*.tst)
-  snprintf( tmp, sizeof(tmp), "%s\\tst%s", NameSubDirOutData, cnst );
-  MoveFile( ChangeFileExt( FileNameSet, ".tst").c_str(), tmp );
-//  strcpy( SF.saveTST, tmp );
-//
- Save_Protocol_ConnectedGraph(); // сохраняем протокол свЯзности в информ.графе (*.coi)
-  snprintf( tmp, sizeof(tmp), "%s\\coi%s", NameSubDirOutData, cnst );
-  MoveFile( ChangeFileExt( FileNameSet, ".coi").c_str(), tmp );
-//  strcpy( SF.saveCOI, tmp );
-//
- Save_IGA(); // // сохраняем файл списка дуг в информационномграфе (*.gv)
-  snprintf( tmp, sizeof(tmp), "%s\\gv%s", NameSubDirOutData, cnst );
-  MoveFile( ChangeFileExt( FileNameSet, ".gv").c_str(), tmp );
-//  strcpy( SF.saveGV, tmp );
-//
- Extended_Save_IGA(); // сохранить данные о времени выполнения инструкций (*.mvr)
-  snprintf( tmp, sizeof(tmp), "%s\\mvr%s", NameSubDirOutData, cnst );
-  MoveFile( ChangeFileExt( FileNameSet, ".mvr").c_str(), tmp );
-//  strcpy( SF.saveMVR, tmp );
-//
- SBM0->Text = " Все файлы протоколов сохранены...";
-//
- do_Run // "включили" все кнопки Выполнение
-//
- Upload_Data( 1 ); // вЫгрузить PRO (etc) - файлы на сервер ( Rule == 1 )
-//
-} // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -5070,10 +5015,10 @@ void __fastcall Run_Infinity()
 void __fastcall TF1::Result_toOperands(TObject *Sender)
 { // показывает цветом все входные операнды, зависимые от
 // результата выполнения данной (выделенной в SG; столбец 4) инструкции
- char Set[_SET_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0",
-      str[_2048]="\0", tmp[_1024]="\0"; // без очистки str были пробемы
+ char Set[_SET_LEN],
+      aResult[_ID_LEN],
+      aPredicat[_ID_LEN],
+      str[_2048], tmp[_1024]; // без очистки str были пробемы
  bool c1, c2; // флаги тестирования операндов
 //
  Clear_AllTableInstructions(); // очистим цвета всех ячеек таблицы инструкций
@@ -5197,12 +5142,12 @@ void __fastcall TF1::Operand_toResult(TObject *Sender)
 { // показывает цветом все результаты выполнения инструкций, от
 // которых зависит данный входной операнд
 //
- char Set[_SET_LEN]="\0",
-      aOp1[_ID_LEN]="\0",
-      aOp2[_ID_LEN]="\0",
-      aResult[_ID_LEN]="\0",
-      aPredicat[_ID_LEN]="\0";
-//      tmp[_512]="\0";
+ char Set[_SET_LEN],
+      aOp1[_ID_LEN],
+      aOp2[_ID_LEN],
+      aResult[_ID_LEN],
+      aPredicat[_ID_LEN];
+//      tmp[_512];
  INT Col, Row, n_Op,
      i_save, i_save_no = -1234567;
 //
@@ -5388,9 +5333,9 @@ Mixed_Instructions()
 bool __fastcall Read_Instructions()
 { // читаем инструкции из файла FileNameSetPrP в массив структур Mem->Set[]
  FILE *fptr; // указатель на структуру ФАЙЛ
- char str[_1024]="\0", // строка для считывания и расшифровки инструкций
-      tmp[_512]="\0", // рабочая строка
-      Set[_SET_LEN]="\0", // мнемоника инструкции
+ char str[_1024], // строка для считывания и расшифровки инструкций
+      tmp[_512], // рабочая строка
+      Set[_SET_LEN], // мнемоника инструкции
       *p, *p1, *p2;
  bool flagPredicate; // TRUE если в инструкции допустимо поле ПРЕДИКАТА
 //
@@ -5464,7 +5409,7 @@ bool __fastcall Read_Instructions()
             DSTA( Mem_Instruction[i].aOp1 );
             strcpy(Mem_Instruction[i].aOp2, "\0"); // очистка ОБЯЗАТЕЛЬНА !!!
 //
-            p = strtok(NULL, ":,"); // адрес результата aResult ............... ':' или ','
+            p = strtok(NULL, "?,"); // адрес результата aResult ... '?' или ','
             p ? strcpy(Mem_Instruction[i].aResult, p) :
                 strcpy(Mem_Instruction[i].aResult, notDefined);
             DSTA( Mem_Instruction[i].aResult );
@@ -5507,7 +5452,7 @@ bool __fastcall Read_Instructions()
                 strcpy(Mem_Instruction[i].aOp2, notDefined);
             DSTA( Mem_Instruction[i].aOp2 );
 //
-            p = strtok(NULL, ":,"); // адрес результата aResult ............... ':' или ','
+            p = strtok(NULL, "?,"); // адрес результата aResult ... '?' или ','
             p ? strcpy(Mem_Instruction[i].aResult, p) :
                 strcpy(Mem_Instruction[i].aResult, notDefined);
 // предыдущая инструкция выбрасывает исключение в случае инструкции SUB y08(07), temp_02
@@ -5558,6 +5503,62 @@ bool __fastcall Read_Instructions()
 //
 } // -------- конец Read_Instructions ------------------------------------------
 
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall Save_All_Protocols_To_Out_Dir()
+{ // сохранение всех протоколов данного расчёта в каталог с *.set и перенос в подкаталог Out!Data
+ char tmp[_512], cnst[_512];
+//
+ do_Stop // "выключили" все кнопки Выполнение
+//
+ snprintf( cnst, sizeof(cnst), "!%s!AIU=%d_Param=%d_Prior=%d!%s.txt", ExtractFileName(FileNameSet),
+                                 max_Proc, how_Calc_Param, how_Calc_Prior, uniqueStr ); // постоянная часть имени файла
+//
+ Save_Protocol_Master(); // сохраняем главный протокол (*.pro)
+//  snprintf( tmp, sizeof(tmp), "%s\\pro%s", NameSubDirOutData, cnst );
+  snprintf( tmp, sizeof(tmp), "%s%s\\pro%s", ExtractFilePath(ParamStr(0)), NameSubDirOutData, cnst );
+//
+  MoveFile( ChangeFileExt( FileNameSet, ".pro").c_str(), tmp ); // перенос в подкаталог NameSubDirOutData (Out!Data)
+  strcpy( SF.savePRO, tmp ); // запомнили в глобале для использования в Upload_Data()
+//
+ Save_Protocol_AIU(); // сохраняем протокол использвания АИУ по времени (*.tpr)
+  snprintf( tmp, sizeof(tmp), "%s%s\\tpr%s", ExtractFilePath(ParamStr(0)), NameSubDirOutData, cnst );
+  MoveFile( ChangeFileExt( FileNameSet, ".tpr").c_str(), tmp );
+//  strcpy( SF.saveTPR, tmp ); // запомнили в глобале для использования в Upload_Data()
+//
+ Save_Protocol_Data(); // сохраняем протокол рассчитанных данных (*.dat)
+  snprintf( tmp, sizeof(tmp), "%s%s\\dat%s", ExtractFilePath(ParamStr(0)), NameSubDirOutData, cnst );
+  MoveFile( ChangeFileExt( FileNameSet, ".dat").c_str(), tmp );
+//  strcpy( SF.saveDAT, tmp );
+//
+ Save_Protocol_ExecInstructions(); // сохраняем протокол выполнения инструкций (*.tst)
+  snprintf( tmp, sizeof(tmp), "%s%s\\tst%s", ExtractFilePath(ParamStr(0)), NameSubDirOutData, cnst );
+  MoveFile( ChangeFileExt( FileNameSet, ".tst").c_str(), tmp );
+//  strcpy( SF.saveTST, tmp );
+//
+ Save_Protocol_ConnectedGraph(); // сохраняем протокол свЯзности в информ.графе (*.coi)
+  snprintf( tmp, sizeof(tmp), "%s%s\\coi%s", ExtractFilePath(ParamStr(0)), NameSubDirOutData, cnst );
+  MoveFile( ChangeFileExt( FileNameSet, ".coi").c_str(), tmp );
+//  strcpy( SF.saveCOI, tmp );
+//
+ Save_IGA(); // // сохраняем файл списка дуг в информационномграфе (*.gv)
+  snprintf( tmp, sizeof(tmp), "%%s\\gv%s", ExtractFilePath(ParamStr(0)), NameSubDirOutData, cnst );
+  MoveFile( ChangeFileExt( FileNameSet, ".gv").c_str(), tmp );
+//  strcpy( SF.saveGV, tmp );
+//
+ Extended_Save_IGA(); // сохранить данные о времени выполнения инструкций (*.mvr)
+  snprintf( tmp, sizeof(tmp), "%s%s\\mvr%s", ExtractFilePath(ParamStr(0)), NameSubDirOutData, cnst );
+  MoveFile( ChangeFileExt( FileNameSet, ".mvr").c_str(), tmp );
+//  strcpy( SF.saveMVR, tmp );
+//
+ SBM0->Text = " Все файлы протоколов сохранены...";
+//
+ do_Run // "включили" все кнопки Выполнение
+//
+ Upload_Data( 1 ); // вЫгрузить PRO (etc) - файлы на сервер ( Rule == 1 )
+//
+} // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
 
 
 
