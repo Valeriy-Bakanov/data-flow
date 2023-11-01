@@ -1,4 +1,4 @@
-; Вычисление r = axb + a/c
+; Вычисление r = axb+a/c
 
 ;
 MUL A,B, AB ; AB <- AxB
