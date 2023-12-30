@@ -166,7 +166,7 @@ __published:	// IDE-managed Components
         void __fastcall OnClickGetInstall(TObject *Sender);
         void __fastcall EndedUploadFile(TObject *Sender);
         void __fastcall Show_Graph(TObject *Sender);
-        void __fastcall OnKeyPress_E_AIU(TObject *Sender, char &Key);
+        void __fastcall OnKeyPress_F1(TObject *Sender, char &Key);
         void __fastcall SelectColors(TObject *Sender);
         void __fastcall CD_1_Show(TObject *Sender);
         void __fastcall OnKeyUp_F1(TObject *Sender, WORD &Key, TShiftState Shift);

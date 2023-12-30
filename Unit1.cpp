@@ -3982,9 +3982,8 @@ void __fastcall TF1::Show_Graph(TObject *Sender)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::OnKeyPress_E_AIU(TObject *Sender, char &Key)
-{ // вызывается при нажатии клавиши в E_AIU (ввод числа АИУ)
-//
+void __fastcall TF1::OnKeyPress_F1(TObject *Sender, char &Key)
+{ // вызывается при нажатии клавиши в F1 (ввод числа АИУ)
 //
  if( Key == VK_RETURN ) // нажали Enter
  {
@@ -4249,6 +4248,13 @@ void __fastcall TF1::CD_1_Show(TObject *Sender)
 void __fastcall TF1::OnKeyUp_F1(TObject *Sender, WORD &Key,
                                 TShiftState Shift)
 { // вызывается при отпускании клавиш Ctrl+S на главной форме (останов счёта)
+//
+ if( Key == VK_F1 ) // нажали F1 (контекстная помощь)
+ {
+  WinExec( "hh.exe data_flow.chm::/main_form.html", SW_SHOWNORMAL );
+//  MessageBeep( MB_ICONASTERISK ); // Внимание..!
+ }
+ else
 //
  if( Shift.Contains(ssCtrl) && ( Key == 'X' || Key == 'x' ) )
   BitBtn_Stop->Click(); // программно нажать кнопку BitBtn_Stop

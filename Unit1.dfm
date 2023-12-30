@@ -1,8 +1,9 @@
 object F1: TF1
-  Left = 838
-  Top = 145
+  Left = 369
+  Top = 229
   Width = 1048
   Height = 619
+  HelpType = htKeyword
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   ActiveControl = BitBtn_Run
@@ -46,6 +47,8 @@ object F1: TF1
   Position = poDefault
   Scaled = False
   OnClose = OnClose_F1
+  OnKeyDown = OnKeyUp_F1
+  OnKeyPress = OnKeyPress_F1
   OnKeyUp = OnKeyUp_F1
   OnResize = OnResize_F1
   OnShow = OnShow_F1
@@ -289,7 +292,7 @@ object F1: TF1
     AutoSize = False
     MaxLength = 7
     TabOrder = 8
-    OnKeyPress = OnKeyPress_E_AIU
+    OnKeyPress = OnKeyPress_F1
   end
   object Main_Menu: TMainMenu
     Left = 155
