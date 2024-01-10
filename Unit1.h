@@ -49,7 +49,7 @@ __published:	// IDE-managed Components
         TMenuItem *N7;
         TMenuItem *N8;
         TMenuItem *Info;
-        TMenuItem *Info_AW;
+        TMenuItem *N46;
         TMenuItem *N15;
         TMenuItem *N16;
         TMenuItem *N17;
@@ -81,9 +81,9 @@ __published:	// IDE-managed Components
         TMenuItem *N34;
         TMenuItem *N35;
         TMenuItem *SaveIGA;
-        TMenuItem *SPFhome;
+        TMenuItem *N44;
         TMenuItem *N11;
-        TMenuItem *Rar1;
+        TMenuItem *N45;
         TMenuItem *N21;
         TMenuItem *N28;
         TMenuItem *N30;
@@ -119,6 +119,8 @@ __published:	// IDE-managed Components
         TIdFTP *FTP_Get;
         TIdAntiFreeze *IdAntiFreeze1;
         TIdIPWatch *IPWatch;
+        TMenuItem *N6;
+        TMenuItem *N47;
         
         void __fastcall Main_Form_OnCreate(TObject *Sender);
         void __fastcall OnClose_F1(TObject *Sender, TCloseAction &Action);
@@ -126,9 +128,7 @@ __published:	// IDE-managed Components
         void __fastcall Run_Calculations(TObject *Sender);
         void __fastcall SG_Instruction_DrawCell(TObject *Sender, int ACol, int ARow, TRect &Rect, TGridDrawState State);
         void __fastcall Save_All_Protocols(TObject *Sender);
-         void __fastcall About_Cluster(TObject *Sender);
         void __fastcall Load_Sets(TObject *Sender);
-        void __fastcall About_AW(TObject *Sender);
         void __fastcall On_Close_Main_Form(TObject *Sender);
          void __fastcall SG_Data_TopLeftChanged(TObject *Sender);
          void __fastcall SG_Buffer_TopLeftChanged(TObject *Sender);
@@ -137,7 +137,6 @@ __published:	// IDE-managed Components
         void __fastcall N12Click(TObject *Sender);
         void __fastcall SG_Instruction_Edit(TObject *Sender);
         void __fastcall INI_Edit(TObject *Sender);
-        void __fastcall About_Poems(TObject *Sender);
         void __fastcall Most_Wonderful(TObject *Sender);
 //
         void __fastcall On_Master_Timer(TObject *Sender);
@@ -149,9 +148,7 @@ __published:	// IDE-managed Components
         void __fastcall DrawNotUsedResults(TObject *Sender);
         void __fastcall DrawNotDetermineOperands(TObject *Sender);
         void __fastcall OnShow_F1(TObject *Sender);
-        void __fastcall About_Cuda(TObject *Sender);
         void __fastcall Save_IGA_Click(TObject *Sender);
-        void __fastcall About_SPF(TObject *Sender);
         void __fastcall OnResize_F1(TObject *Sender);
         void __fastcall FTP_Get_Connected(TObject *Sender);
         void __fastcall FTP_Get_Disconnected(TObject *Sender);
@@ -163,7 +160,7 @@ __published:	// IDE-managed Components
                         const int AWorkCountMax);
         void __fastcall FTP_Get_OnWorkEnd(TObject *Sender,
                         TWorkMode AWorkMode);
-        void __fastcall OnClickGetInstall(TObject *Sender);
+        void __fastcall GetInstall(TObject *Sender);
         void __fastcall EndedUploadFile(TObject *Sender);
         void __fastcall Show_Graph(TObject *Sender);
         void __fastcall OnKeyPress_F1(TObject *Sender, char &Key);
@@ -179,6 +176,7 @@ __published:	// IDE-managed Components
         void __fastcall SG_MouseUp(TObject *Sender, TMouseButton Button,
                         TShiftState Shift, int X, int Y);
         void __fastcall SG_Data_Info(TObject *Sender);
+        void __fastcall About_Common(TObject *Sender);
 //
 private:	// User declarations
 public:		// User declarations

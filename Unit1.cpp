@@ -79,11 +79,20 @@ pattern[] = "[A-Z]{3}" // мнемоника команды (ровно 3 заглавных, латиница)
 #define strcat(dest,src) (strncat(dest,src,sizeof(dest)-strlen(dest)-5)) // безопасное добавление src к dest
 // !!!!! здесь 5 - просто дополнительная защита ("на всякий случай") !!!!!!!!!!!
 //
-char Ident[] = "Bakanov Valery Mikhailovich, http://vbakanov.ru/left_1.htm , Moscow, Russia, 2009-2023\n \
+char Ident[] = "Bakanov Valery Mikhailovich, http://vbakanov.ru/left_1.htm , Moscow, Russia, 2009-2024\n \
 Автор программного продукта Валерий Баканов не является ярым сторонником Объектно-Ориентированного Программирования \
 (внутри автора точно сидит Линус Торвальдс!) и поэтому большая часть кода не использует ООП\n \
 The author of the software Valery Bakanov is not an ardent supporter of Object-Oriented Programming \
 (Linus Torvalds definitely sits inside the author!) and therefore most of the code does not use OOP";
+//
+char *Info_CommonStr[] = { // информационные вызовы посредством ShellExecute(...) 
+"Base.pdf", // [#0]
+"http://vbakanov.ru/dataflow", // [#1]
+"http://vbakanov.ru/spf@home", // [#2]
+"http://vbakanov.ru/poems_04.htm#dataflow", // [#3]
+"https://algowiki-project.org/ru/", // [#4]
+"https://www.litres.ru/book/v-m-bakanov/prakticheskiy-analiz-algoritmov-i-effektivnost-parallelnyh-vyc-70184365/" // книга автора на LitRes.ru [#5]
+} ;
 //
 char trueLowerCase[]  = "true",        trueUpperCase[] ="TRUE",
      falseLowerCase[] = "false",       falseUpperCase[]="FALSE",
@@ -987,40 +996,9 @@ TF1::SG_Data_Info(TObject *Sender)
 //
 } //----------------------------------------------------------------------------
 
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::About_Cluster(TObject *Sender)
-{ // информация об авторе
- ShellExecute(0, NULL, "http://vbakanov.ru/hist_clu/", NULL, NULL,SW_SHOWNORMAL);
-} //----------------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::About_Cuda(TObject *Sender)
-{  // информация об авторе
- ShellExecute(0, NULL, "http://vbakanov.ru/cuda/", NULL, NULL,SW_SHOWNORMAL);
-} //----------------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::About_Poems(TObject *Sender)
-{ // информация о cтихотворном творчестве автора
- ShellExecute(0, NULL, "http://vbakanov.ru/poems_04.htm#dataflow", NULL, NULL,SW_SHOWNORMAL);
-} //----------------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::About_AW(TObject *Sender)
-{ // о проекте Data-Flow
- ShellExecute(0, NULL, "http://vbakanov.ru/spf@home", NULL, NULL,SW_SHOWNORMAL);
-} //----------------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-void __fastcall TF1::About_SPF(TObject *Sender)
-{ // о проекте SPF@home
- ShellExecute(0, NULL, "http://vbakanov.ru/spf@home", NULL, NULL,SW_SHOWNORMAL);
+void __fastcall TF1::About_Common(TObject *Sender)
+{ // вызов ShellExecute по строке Info_CommonStr[ Info_Common->Tag ]
+ ShellExecute(0, NULL, Info_CommonStr[ ((TMenuItem*)Sender)->Tag ], NULL, NULL,SW_SHOWNORMAL);
 } //----------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4247,7 +4225,7 @@ void __fastcall TF1::CD_1_Show(TObject *Sender)
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall TF1::OnKeyUp_F1(TObject *Sender, WORD &Key,
                                 TShiftState Shift)
-{ // вызывается при отпускании клавиш Ctrl+S на главной форме (останов счёта)
+{ // вызывается при нажатии клавиш на главной форме
 //
  if( Key == VK_F1 ) // нажали F1 (контекстная помощь)
  {
@@ -5565,7 +5543,4 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  Upload_Data( 1 ); // вЫгрузить PRO (etc) - файлы на сервер ( Rule == 1 )
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
-
-
-
 

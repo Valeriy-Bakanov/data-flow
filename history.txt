@@ -102,6 +102,9 @@ Max_ -> max_  How_ -> how_
 28).ƒекабрь 2023 - задействована контекстна€ chm-помощь (пока 
 только дл€ главного окна программы).
 
+29).январь 2024 - в главном меню добавлена ссылка на книгу автора на 
+https://www.litres.ru/book/v-m-bakanov/prakticheskiy-analiz-algoritmov-i-effektivnost-parallelnyh-vyc-70184365/ .
+
 
 * –азмер выполн€емого модул€ 1217 кЅайт 
 (компил€ци€ Release, Pentium, Word).  

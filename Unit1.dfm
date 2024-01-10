@@ -1,7 +1,7 @@
 object F1: TF1
-  Left = 369
+  Left = 368
   Top = 229
-  Width = 1048
+  Width = 1049
   Height = 619
   HelpType = htKeyword
   HorzScrollBar.Visible = False
@@ -9,7 +9,7 @@ object F1: TF1
   ActiveControl = BitBtn_Run
   BorderIcons = [biSystemMenu, biMinimize]
   BorderWidth = 1
-  Caption = ' DATA-FLOW architecture computer simulator ver 4.6 (2009-2023)'
+  Caption = ' DATA-FLOW architecture computer simulator ver 4.6 (2009-2024)'
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
@@ -53,12 +53,12 @@ object F1: TF1
   OnResize = OnResize_F1
   OnShow = OnShow_F1
   DesignSize = (
-    1030
+    1031
     558)
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
-    Left = 687
+    Left = 688
     Top = 185
     Width = 54
     Height = 16
@@ -149,7 +149,7 @@ object F1: TF1
   object SB: TStatusBar
     Left = 0
     Top = 539
-    Width = 1030
+    Width = 1031
     Height = 19
     Hint = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1089#1086#1089#1090#1086#1103#1085#1080#1080' '#1089#1080#1089#1090#1077#1084#1099' '#1080' '#1074#1099#1087#1086#1083#1085#1103#1077#1084#1086#1084' '#1076#1077#1081#1089#1090#1074#1080#1080
     AutoHint = True
@@ -169,7 +169,7 @@ object F1: TF1
     SimplePanel = False
   end
   object SG_Data: TStringGrid
-    Left = 814
+    Left = 815
     Top = 217
     Width = 190
     Height = 308
@@ -191,7 +191,7 @@ object F1: TF1
   object SG_Instruction: TStringGrid
     Left = 235
     Top = 217
-    Width = 561
+    Width = 562
     Height = 308
     Hint = 
       #1054#1087#1077#1088#1072#1094#1080#1080' ('#1084#1072#1096#1080#1085#1085#1099#1077' '#1080#1085#1089#1090#1088#1091#1082#1094#1080#1080') '#1080' '#1080#1093' '#1086#1087#1077#1088#1072#1085#1076#1099' ('#1080#1089#1093#1086#1076#1085#1099#1077' '#1076#1072#1085#1085#1099#1077#13#10#1076 +
@@ -251,7 +251,7 @@ object F1: TF1
   object SG_Buffer: TStringGrid
     Left = 4
     Top = 217
-    Width = 201
+    Width = 202
     Height = 308
     Hint = #1041#1091#1092#1077#1088' '#1082#1086#1084#1072#1085#1076' ('#1085#1091#1084#1077#1088#1072#1094#1080#1103' '#1089' 1)'
     TabStop = False
@@ -416,47 +416,59 @@ object F1: TF1
           #1055#1086#1082#1072#1079#1072#1090#1100' '#1089#1093#1077#1084#1091',  '#1089#1087#1080#1089#1086#1082' '#1074#1099#1087#1086#1083#1085#1103#1077#1084#1099#1093' '#1082#1086#1084#1072#1085#1076' '#1080' '#1076#1086#1087#1086#1083#1085#1080#1090#1077#1083#1100#1085#1099#1077' '#1076#1072#1085#1085 +
           #1099#1077' '#1086' '#1089#1080#1084#1091#1083#1103#1090#1086#1088#1077
         ShortCut = 16496
-        OnClick = N12Click
+        OnClick = About_Common
       end
       object N19: TMenuItem
         Caption = '-'
       end
       object N26: TMenuItem
+        Tag = 1
         Caption = #1055#1088#1086#1077#1082#1090' DATA-FLOW'
         Hint = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086#1073' '#1072#1088#1093#1080#1090#1077#1082#1090#1091#1088#1077' '#1074#1099#1095#1080#1089#1083#1080#1090#1077#1083#1077#1081' Data-Flow'
-        OnClick = About_AW
+        OnClick = About_Common
       end
-      object SPFhome: TMenuItem
+      object N44: TMenuItem
+        Tag = 2
         Caption = #1048#1089#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1089#1082#1080#1081' '#1087#1088#1086#1077#1082#1090' SPF@home'
         Hint = #1053#1072#1091#1095#1085#1099#1077' '#1080#1085#1090#1077#1088#1077#1089#1099' '#1072#1074#1090#1086#1088#1072
-        OnClick = About_SPF
+        OnClick = About_Common
       end
       object N23: TMenuItem
+        Tag = 3
         Caption = #1057#1090#1080#1093#1086#1090#1074#1086#1088#1085#1099#1077' '#1087#1088#1086#1080#1079#1074#1077#1076#1077#1085#1080#1103' '#1087#1086' '#1090#1077#1084#1077
         Hint = #1053#1072#1091#1095#1085#1099#1077' '#1080#1085#1090#1077#1088#1077#1089#1099' '#1072#1074#1090#1086#1088#1072
-        OnClick = About_Poems
+        OnClick = About_Common
       end
       object N20: TMenuItem
         Caption = '-'
       end
-      object Rar1: TMenuItem
+      object N45: TMenuItem
         Caption = #1055#1086#1083#1091#1095#1080#1090#1100' '#1085#1086#1074#1091#1102' '#1074#1077#1088#1089#1080#1102' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
         Hint = #1042#1099#1075#1088#1091#1079#1082#1072' '#1074' '#1087#1086#1076#1082#1072#1090#1072#1083#1086#1075' In!Data'
-        OnClick = OnClickGetInstall
+        OnClick = GetInstall
       end
       object N21: TMenuItem
         Caption = #1055#1088#1077#1082#1088#1072#1090#1080#1090#1100' '#1074#1099#1075#1088#1091#1079#1082#1091
-        Hint = #1040#1074#1072#1088#1080#1081#1085#1086' '#1087#1088#1077#1088#1072#1090#1080#1090#1100' '#1074#1099#1075#1088#1091#1079#1082#1091
+        Hint = #1040#1074#1072#1088#1080#1081#1085#1086' '#1087#1088#1077#1082#1088#1072#1090#1080#1090#1100' '#1074#1099#1075#1088#1091#1079#1082#1091
         ShortCut = 16449
         OnClick = EndedUploadFile
       end
       object N11: TMenuItem
         Caption = '-'
       end
-      object Info_AW: TMenuItem
+      object N46: TMenuItem
+        Tag = 4
         Caption = 'WEB-'#1088#1077#1089#1091#1088#1089' AlgoWiki'
         Hint = #1055#1077#1088#1077#1093#1086#1076' '#1085#1072' '#1089#1072#1081#1090' AlgoWiki'
-        OnClick = About_AW
+        OnClick = About_Common
+      end
+      object N6: TMenuItem
+        Caption = '-'
+      end
+      object N47: TMenuItem
+        Tag = 5
+        Caption = #1050#1085#1080#1075#1072' '#1072#1074#1090#1086#1088#1072' '#1085#1072' LitRes.ru'
+        OnClick = About_Common
       end
     end
     object N27: TMenuItem
@@ -629,8 +641,8 @@ object F1: TF1
     Top = 80
   end
   object M1_PopUpMenu: TPopupMenu
-    Left = 616
-    Top = 80
+    Left = 448
+    Top = 16
     object N42: TMenuItem
       Caption = #1054#1095#1080#1089#1090#1080#1090#1100' '#1074#1089#1105
       Hint = #1055#1086#1083#1085#1086#1089#1090#1100#1102' '#1086#1095#1080#1089#1090#1080#1090#1100' '#1089#1086#1076#1077#1088#1078#1072#1085#1080#1077' '#1090#1077#1082#1089#1090#1072' '#1087#1088#1086#1090#1086#1082#1086#1083#1072' '#1088#1077#1096#1077#1085#1080#1103

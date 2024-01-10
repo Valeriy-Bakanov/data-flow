@@ -1,17 +1,20 @@
 Microsoft HTML Help Compiler 4.74.8702
 
-Compiling c:\_DataFlow\Help\data_flow.chm
+Compiling c:\_DataFlow\data_flow.chm
 
-link_01.html
-link_02.html
 main_form.html
 toc.hhc
 data_flow.hhk
 pict\fon_03.jpg
 jpg\df_interf.jpg
 styles.css
-HHC6000: Error: An internal file could not be created. Make certain there is enough disk space on the drive where you are compiling your file.
-HHC5007: Error: Fatal navigational compilation error. This is likely the result of an invalid contents (.hhc) file.
+
+Compile time: 0 minutes, 0 seconds
+4	Topics
+4	Local links
+6	Internet links
+2	Graphics
 
 
-The following files were not compiled:
+Created c:\_DataFlow\data_flow.chm, 594,625 bytes
+Compression decreased file by 82,216 bytes.
