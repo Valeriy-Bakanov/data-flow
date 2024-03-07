@@ -91,7 +91,8 @@ char *Info_CommonStr[] = { // информационные вызовы посредством ShellExecute(...
 "http://vbakanov.ru/spf@home", // [#2]
 "http://vbakanov.ru/poems_04.htm#dataflow", // [#3]
 "https://algowiki-project.org/ru/", // [#4]
-"https://www.litres.ru/book/v-m-bakanov/prakticheskiy-analiz-algoritmov-i-effektivnost-parallelnyh-vyc-70184365/" // книга автора на LitRes.ru [#5]
+"https://www.ispras.ru/dcouncil/docs/diss/2021/chernyh/chernyh.php?sphrase_id=5604670", // [#5]
+"https://www.litres.ru/book/v-m-bakanov/prakticheskiy-analiz-algoritmov-i-effektivnost-parallelnyh-vyc-70184365/" // книга автора на LitRes.ru [#6]
 } ;
 //
 char trueLowerCase[]  = "true",        trueUpperCase[] ="TRUE",
@@ -120,7 +121,8 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 //------------------------------------------------------------------------------
 #define sleep_for_vizu_buffer Delay_Vizu_Buffer(); // время для визуализации буфера
 //------------------------------------------------------------------------------
-#define   _32     32 // определение констант для всей программы
+#define   _16     16 // определение констант для всей программы
+#define   _32     32
 #define   _64     64
 #define   _128   128
 #define   _256   256
@@ -156,7 +158,8 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
   F1->Wonderful->Enabled  = false; \
   F1->Analize->Enabled    = false; }
 //
-int tick_ScanForGraph = 10; // время сканированияпри выводе графика интенсивности вычислений (тактов)
+INT tick_ScanForGraph = 10, // время сканированияпри выводе графика интенсивности вычислений (тиков/тактов)
+    d_APM = 1000; // каждые d_APM дать поработать Windows
 INT StartNumb = 100; // начальный номер инструкций для вывода в виде ИГА
 #define DEFAULT_RETURN_GET_DATA 0.123456789 // возвращаемое при ненахождении заданного числа в Mem_Data[]
 //
@@ -217,7 +220,7 @@ void   __fastcall add_Data(INT i_Set, char* aResult, REAL Data); // добавляет в 
 void   __fastcall add_Buffer(INT i_Set, int Rule); // добавляет в буфер команд строку с ГКВ-инструкцией i_Set (Rule определяет точку вызова функции)
 int    __fastcall Get_TicksByInstruction(char *Set); // возвращает из Set_Params->Time время выполнения инструкции Set(char *Set);
 int    __fastcall Get_Free_Proc(); // возвращает число свободных АИУ
-REAL   __fastcall get_Data(char Addr[]); // возвращает из Mem_Data[] число по адресу (строка!) Addr
+REAL   __fastcall get_Data(char Addr[], bool flagCountRead); // возвращает из Mem_Data[] число по адресу (строка!) Addr (при flagCountRead флаг Mem_Data[i].CountRead не изменяется)
 void   __fastcall Display_Error(char *str); // информация об арифметической ошибке
 void   __fastcall Test_Visu_Buffer_Fill(); // тестирование индикация заполненности буфера
 int    __fastcall Select_Instruction_fromBuffer(); // возвращает номер инструкции из буфера по условию мах ПРИОРИТЕТА
@@ -477,7 +480,8 @@ INT Really_Select = 0; // текущее значение
 struct md {
  char Addr[_ID_LEN]; // адрес ячейки (строка!)
  REAL Data; // содержимое ячейки
- INT i_Set; // номер инструкции, в результате котрой было вычислено это значеник
+ ULI CountRead; // число считываний данного
+ INT i_Set; // номер инструкции, в результате которой было вычислено это значение
 } M_D, *Mem_Data=NULL;
 INT max_Data = _128,  // первоначальный захват
     Really_Data = 0; // текущее значение
@@ -1453,14 +1457,18 @@ StopCalculations( int Rule )
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-REAL __fastcall // возвращает из Mem_Data[] число по адресу (имени) Addr
-get_Data( char Addr[])
+REAL __fastcall // возвращает из Mem_Data[] число по адресу (имени) "Addr"
+get_Data( char Addr[], bool flagCountRead ) // при flagCountRead стётчик Mem_Data[i].CountRead не инкрементируется
 { // если строка 'Addr / Dаta' не существует - выдается предупреждение и результат = 1.0e0
  char tmp[_512];
 //
  for( INT i=0; i<Really_Data; i++ ) // ищем путём простого последовательного перебора массива Mem_Data[]
-  if( !strcmp(Mem_Data[i].Addr,Addr) )
-   return Mem_Data[i].Data;
+  if( !strcmp(Mem_Data[i].Addr,Addr) ) // ...если нашли..!
+   {
+    if( flagCountRead ) // не изменяем Mem_Data[i].CountRead
+     Mem_Data[i].CountRead ++ ; // увеличиваем счётчик числа считываний на 1 ...
+    return Mem_Data[i].Data;
+   } // конец if( !strcmp(Mem_Data[i].Addr,Addr) )
 //
 // не нашли... информируем об этом !!! /////////////////////////////////////////
  t_printf( "\n-E- %s() не нашёл в Mem_Data[] значения по адресу %s. Принято %.9f -E-\n",
@@ -1501,7 +1509,7 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
 ////////////////////////////////////////////////////////////////////////////////
   case -1:
   case 1: snprintf(tmp1,sizeof(tmp1), "%.*g", ACC_REAL,
-                   Rule==1 ? get_Data( Mem_Instruction[i_Set].aResult ) : Result ); // содержимое по адресу (строка!) aResult
+                   Rule==1 ? get_Data( Mem_Instruction[i_Set].aResult, false ) : Result ); // содержимое по адресу (строка!) aResult
 //
           if( is_SET( Set ) ) // это SET .......................................
            snprintf(tmp,sizeof(tmp), "%s{%.*g}, %s{%s} %s",
@@ -1516,16 +1524,16 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
             case 1: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%s} ; %s",
                              Mem_Instruction[i_Set].Set,
                              Mem_Instruction[i_Set].aOp1,
-                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp1 ),
+                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp1, false ),
                              Mem_Instruction[i_Set].aResult, tmp1,
                              Mem_Instruction[i_Set].Comment);
                     break;
             case 2: snprintf(tmp,sizeof(tmp), "%s %s{%.*g}, %s{%.*g}, %s{%s} ; %s",
                              Mem_Instruction[i_Set].Set,
                              Mem_Instruction[i_Set].aOp1,
-                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp1 ),
+                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp1, false ),
                              Mem_Instruction[i_Set].aOp2,
-                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp2 ),
+                             ACC_REAL, get_Data( Mem_Instruction[i_Set].aOp2, false ),
                              Mem_Instruction[i_Set].aResult, tmp1,
                              Mem_Instruction[i_Set].Comment);
                     break;
@@ -1584,23 +1592,27 @@ Line_Set( INT i_Set, short int Rule, REAL Result )
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall // добавляет в Mem_Data[] число Data по адресу (имени) Addr
 add_Data( INT i_Set, char* aResult, REAL Data )
-{
-// i_Set - номер инструкции, в результате котрой было вычислено это значениe
-// aResult - имя ячейки (переменной), Data - значение переменной
-// если строка 'Addr / ***' существует - переписывается поле Data, выдается
-// предупреждение и пул данных визуализируется; если не существует - добавим
-// данные Data и визуализируем
- char tmp[_512], tmp1[_1024];
+{// i_Set - номер инструкции, в результате котрой было вычислено это значениe
+//  aResult - имя ячейки (переменной), Data - значение переменной
+//  если строка 'Addr / ***' существует - переписывается поле Data, выдается
+//  предупреждение и пул данных визуализируется; если не существует - добавим
+//  данные Data и визуализируем
+ char tmp[_512], tmp1[_1024],
+      fmt[]="Данные (%d)"; // для вывода в окно..,
 //
-// не нарушен ли ПРИНЦИП ЕДИНОКРаТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором Addr ?)
+// не нарушен ли ПРИНЦИП ЕДИНОКРаТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором "Addr" ?)
 //
- for( INT i=0; i<Really_Data; i++ ) // ищем путем тупого последовательного перебора
+ for( INT i=0; i<Really_Data; i++ ) // ...ищем путём тупого последовательного перебора, не существует ли такое..!
 //
   if( !strcmp( Mem_Data[i].Addr, aResult ) ) // данные с адресом (именем) aResult в массиве Mem_Data[].Attr УЖЕ ЕСТЬ !!!
   {
    if( !memcmp( aResult, attrVar, strlen(attrVar) ) ) // если первые символы aResult есть attrVar - можно переписывать данные...
    {
+    F1->Label_Data->Caption = Format(fmt, OPENARRAY(TVarRec, (int(i+1)) )); // вывод в окно...
+    F1->Label_Data->Repaint(); // перерисовать
+//
     Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
+    Mem_Data[i].CountRead = 0; // -.-.-.-.-
     return;
    } // конец if( !memcmp( Addr,attrVar,strlen(attrVar) )
 //
@@ -1627,7 +1639,12 @@ add_Data( INT i_Set, char* aResult, REAL Data )
                mD->Cells[1][i+1] = tmp; // вЫвели в ОКНО_ДАННЫХ
                t_printf( "-W- %s(): нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ: результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, но там уже находятся данные {%.*g}. Данные перезапИсаны... -W-",
                           __FUNC__, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data );
+//
+               F1->Label_Data->Caption = Format(fmt, OPENARRAY(TVarRec, (int(i+1)) )); // вывод в окно...
+               F1->Label_Data->Repaint(); // перерисовать
+//
                Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
+               Mem_Data[i].CountRead = 0; // -.-.-.-.-
                F1->Master_Timer->Enabled = true; // вновь включили таймер... а тамъ БУДЪ ЧТО БуДЕТ !..
                return;
 //
@@ -1666,16 +1683,18 @@ add_Data( INT i_Set, char* aResult, REAL Data )
 //
    flagAlarmData = false;
   } // после первого раза сообшения не выдаётся...
-//  
-//  StopCalculations( 2 ); // выполнение программы невозможно
 //
    return;
 //
  } // конец if( Really_Data >= Max_Data )
 //
+ F1->Label_Data->Caption = Format(fmt, OPENARRAY(TVarRec, (int(Really_Data+1)) )); // вывод в окно...
+ F1->Label_Data->Repaint(); // перерисовать
+//
  strcpy( Mem_Data[Really_Data].Addr, aResult ); // добавили в ПУЛ_ДАННЫХ имя переменной
  Mem_Data[Really_Data].Data  = Data; // значение переменной
- Mem_Data[Really_Data].i_Set = i_Set; // номер инструкции, которая это вычислила
+ Mem_Data[Really_Data].CountRead = 0; // -.-.-.-.-
+ Mem_Data[Really_Data].i_Set = i_Set; // номер инструкции, которая это выражение вычислила
 //
 // успешно добавлено ...........................................................
  t_printf( "-I- %s(): данные {%.*g} (результат выполнения инструкции #%d) по адресу %s успешно добавлены в память данных (%s) -I-",
@@ -1795,7 +1814,8 @@ Calc_Stat_Proc()
 // обрабатываем статистику загрузки АИУ по данным из Tpr -----------------------
  for( INT i=0; i<mTpr->Count; i++ )
  {
-  APM // дать поработать  Windows ----------------------------------------------
+  if( !(i % d_APM) ) // каждые d_APM раз
+   APM // дать поработать  Windows ---------------------------------------------
 //
   if( !(i % 100 ) ) // если i кратно 100
   {
@@ -1873,7 +1893,8 @@ Calc_Stat_Proc()
 //
   for( INT i=0; i<mTpr->Count; i++ ) // по списку Tpr
   {
-   APM // дать поработать  Windows ---------------------------------------------
+   if( !(i % d_APM) ) // каждые d_APM раз
+    APM // дать поработать  Windows --------------------------------------------
 //
    strcpy(tmp,  mTpr->Strings[i].c_str()); // запомнили строку из Tpr в tmp
    strcpy(tmp1, GetSubString(tmp, 41,50));  // номер инструкции в виде строки tmp1
@@ -2228,7 +2249,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  Free_Proc -- ; // число свободных АИУ уменьшили на единицу
 ////////////////////////////////////////////////////////////////////////////////
 //
- Mem_Instruction[i_Set].fExec  = true; // установили флаг 'выполнение' для данной инструкции
+ Mem_Instruction[i_Set].fExec = true; // установили флаг 'выполнение' для данной инструкции
  mS->Cells[6][i_Set+1] = Vizu_Flags(i_Set); // визуализировали ФЛАГИ данной инструкции
 //
 // обрабатываем параметры команды для выполнения на этоm АИУ ///////////////////
@@ -2239,13 +2260,13 @@ ExecuteInstructions_Except_SET( INT i_Set )
  switch( Get_CountOperandsByInstruction(Set) ) // ... число входных операндов инструкции Set
  {
   case 1: strcpy( aOp1, Mem_Instruction[i_Set].aOp1 ); // адрес (строка!) ПЕРВОГО ОПЕРАНДА
-          Op1 = get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
+          Op1 = get_Data( aOp1, true ); // значение ПЕРВОГО ОПЕРАНДА
           break;
 //
   case 2: strcpy(aOp1, Mem_Instruction[i_Set].aOp1); // адрес (строка!) ПЕРВОГО ОПЕРАНДА
           strcpy(aOp2, Mem_Instruction[i_Set].aOp2); // ... ВТОРОГО ОПЕРАНДА
-          Op1 = get_Data( aOp1 ); // значение ПЕРВОГО ОПЕРАНДА
-          Op2 = get_Data( aOp2 ); // значение ВТОРОГО ОПЕРАНДА
+          Op1 = get_Data( aOp1, true ); // значение ПЕРВОГО ОПЕРАНДА
+          Op2 = get_Data( aOp2, true ); // значение ВТОРОГО ОПЕРАНДА
           break;
 //
  default: break;
@@ -4260,7 +4281,7 @@ void __fastcall TF1::Save_All_Protocols(TObject *Sender)
  do_Stop // "выключили" все кнопки Выполнение 
 //
  Save_Protocol_Master(); // сохраняем главный протокол (*.pro)
- Save_Protocol_AIU(); // сохраняем протокол использвания АИУ по времени (*.aiuAIU)
+ Save_Protocol_AIU(); // сохраняем протокол использвания АИУ по времени (*.tpr)
  Save_Protocol_Data(); // сохраняем протокол рассчитанных данных (*.dat)
  Save_Protocol_ExecInstructions(); // сохраняем протокол выполнения инструкций (*.tst)
  Save_Protocol_ConnectedGraph(); // сохраняем протокол свЯзности в информ.графе (*.coi)
@@ -4315,12 +4336,13 @@ int __fastcall Work_TimeSets_Protocol_IC()
 //
  for( i_tick=0; i_tick<=tick_End; i_tick++ ) // по всем тактам программы
  {
-  APM // дать поработать Windows -----------------------------------------------
+  if( !(i_tick % d_APM) ) // каждые d_APM раз
+   APM // дать поработать Windows -----------------------------------------------
 //
   if( i_tick % tick_ScanForGraph ) // ВЫДАВАТЬ каждые tick_ScanForGraph (global) тактов
    continue;
 //
-  if( !(i_tick % 100 ) ) // если i кратно 100
+  if( !(i_tick % 100) ) // каждые d_APM раз...
   {
    sprintf( w, " Обработка данных для оценки работы АИУ (%.0f%%)...", 1e2*i_tick/tick_End);
    SBM0->Text = w;
@@ -4332,7 +4354,8 @@ int __fastcall Work_TimeSets_Protocol_IC()
 ////////////////////////////////////////////////////////////////////////////////
   for( INT i=0; i<mTpr->Count; i++ ) // по таблице выполненных инструкций в Tpr
   {
-   APM // дать поработать Windows -----------------------------------------------
+   if( (!i % d_APM) ) // каждые d_APM раз...
+    APM // дать поработать Windows ---------------------------------------------
 //
    n_proc = _atoi64(GetSubString(mTpr->Strings[i].c_str(),  1,10)); // номер АИУ, на котором инструкция выполнялась
    n_set  = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 41,50)); // номер выполненной инструкции
@@ -4415,7 +4438,6 @@ void __fastcall Save_Protocol_Data()
 { // сохранение файла рассчитанных данных (*.dat)
  char FileNameData[_512], // файл рассчитанных данных '*.dat'
       tmp[_512];
-//
  FILE *fptr;
 ////////////////////////////////////////////////////////////////////////////////
 // сохраняем ПРОТОКОЛ_ПАМЯТИ_ДАННЫХ (*.dat) ////////////////////////////////////
@@ -4435,9 +4457,11 @@ void __fastcall Save_Protocol_Data()
   snprintf( tmp,sizeof(tmp), "#%d [%s]", Mem_Data[i].i_Set, Line_Set(Mem_Data[i].i_Set, 2, 0.0) ); // в результате какой команды определилось данное значение..?
 //
   if( is_ResultIsPredicat( Mem_Data[i].Addr ) ) // это результат выполнения инструкции-ПРЕДИКАТА...
-   fprintf( fptr, "%20s%20s     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data ? trueOutput : falseOutput, tmp );
+   fprintf( fptr, "%20s%10s%10d     %s\n",   Mem_Data[i].Addr, Mem_Data[i].Data ? trueOutput : falseOutput,
+                   Mem_Data[i].CountRead, tmp );
   else
-   fprintf( fptr, "%20s%20.7g     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data, tmp );
+   fprintf( fptr, "%20s%10.7g%10d     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data, // это не предикат !..
+                   Mem_Data[i].CountRead, tmp );
 //
  } // конец цикла for( ULI i=0; i<Really_Data; i++ )
 //
@@ -4481,6 +4505,9 @@ void __fastcall Save_Protocol_ExecInstructions()
   {
    if( i_tick % tick_ScanForGraph ) // ВЫДАВАТЬ каждые tick_ScanForGraph тактов
     continue;
+//
+   if( !(i_tick % d_APM) ) // каждые d_APM раз...
+    APM // дать поработать Windows
 //
    n_i = 0; // число выполняемых инструкций в момент времени времени t_i
    strcpy(tmp3, "\0"); // очистили tmp3

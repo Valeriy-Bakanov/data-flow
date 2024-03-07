@@ -58,13 +58,14 @@ object F1: TF1
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
-    Left = 688
+    Left = 680
     Top = 185
-    Width = 54
+    Width = 62
     Height = 16
     Hint = #1042#1099#1095#1080#1089#1083#1077#1085#1085#1099#1077' '#1076#1072#1085#1085#1099#1077' ('#1079#1072#1087#1086#1083#1085#1077#1085#1085#1086#1089#1090#1100' '#1073#1091#1092#1077#1088#1072' '#1076#1072#1085#1085#1099#1093')'
+    Alignment = taRightJustify
     Anchors = [akBottom]
-    Caption = #1044#1072#1085#1085#1099#1077
+    Caption = #1044#1072#1085#1085#1099#1077'  '
     Color = clBtnFace
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clBlack
@@ -74,7 +75,6 @@ object F1: TF1
     ParentColor = False
     ParentFont = False
     Transparent = True
-    WordWrap = True
   end
   object Label_Set: TLabel
     Left = 877
@@ -92,7 +92,6 @@ object F1: TF1
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
-    WordWrap = True
   end
   object TLabel
     Left = 144
@@ -462,11 +461,19 @@ object F1: TF1
         Hint = #1055#1077#1088#1077#1093#1086#1076' '#1085#1072' '#1089#1072#1081#1090' AlgoWiki'
         OnClick = About_Common
       end
+      object N9: TMenuItem
+        Caption = '-'
+      end
       object N6: TMenuItem
+        Tag = 5
+        Caption = #1056#1072#1073#1086#1090#1072'  '#1063#1077#1088#1085#1099#1093' '#1040'.'#1053'. ('#1048#1057#1055' '#1056#1040#1053')'
+        OnClick = About_Common
+      end
+      object N48: TMenuItem
         Caption = '-'
       end
       object N47: TMenuItem
-        Tag = 5
+        Tag = 6
         Caption = #1050#1085#1080#1075#1072' '#1072#1074#1090#1086#1088#1072' '#1085#1072' LitRes.ru'
         OnClick = About_Common
       end

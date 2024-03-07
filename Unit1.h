@@ -121,6 +121,8 @@ __published:	// IDE-managed Components
         TIdIPWatch *IPWatch;
         TMenuItem *N6;
         TMenuItem *N47;
+        TMenuItem *N9;
+        TMenuItem *N48;
         
         void __fastcall Main_Form_OnCreate(TObject *Sender);
         void __fastcall OnClose_F1(TObject *Sender, TCloseAction &Action);
