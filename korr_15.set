@@ -1,4 +1,4 @@
-; Баканов В.М., e881e@mail.ru, http://vbakanov.ru/left_1.htm
+; Баканов В.М., e881e@mail.ru, http://vbakanov.ru/left_1.htm 
 ; Корреляционный анализ (парная корреляция x | y )
 ; Решение: коэфф. корр. R = 1.0
 ; R=(Sxy-(Sx*Sy)/N) ; ( sqrt(Sxx-Sx**2/N) * sqrt(Syy-Sy**2/N) ),
