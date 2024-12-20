@@ -1,7 +1,7 @@
 object F3: TF3
-  Left = 311
-  Top = 160
-  Width = 1039
+  Left = 373
+  Top = 167
+  Width = 861
   Height = 665
   BorderIcons = [biSystemMenu]
   Caption = ' '#1060#1091#1085#1082#1094#1080#1103' '#1080#1085#1090#1077#1085#1089#1080#1074#1085#1086#1089#1090#1080' '#1074#1099#1095#1080#1089#1083#1077#1085#1080#1081
@@ -18,7 +18,7 @@ object F3: TF3
   object Chart_AIU: TChart
     Left = 0
     Top = 0
-    Width = 1023
+    Width = 845
     Height = 626
     Hint = 
       #1044#1080#1072#1075#1086#1085#1072#1083#1100#1085#1099#1077' '#1076#1074#1080#1078#1077#1085#1080#1103' '#1084#1099#1096#1100#1102' '#1089' '#1085#1072#1078#1072#1090#1099#1084#1080' '#13#10#1082#1085#1086#1087#1082#1072#1084#1080'  '#1087#1086' '#1080#1079#1086#1073#1088#1072#1078#1077#1085#1080 +
@@ -72,18 +72,23 @@ object F3: TF3
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    object Series1: TGanttSeries
+    object Series_AIU: TGanttSeries
       ColorEachPoint = True
       Marks.Arrow.Color = clLime
       Marks.ArrowLength = 1
       Marks.BackColor = clWhite
       Marks.Clip = True
+      Marks.Font.Charset = RUSSIAN_CHARSET
+      Marks.Font.Color = clBlack
+      Marks.Font.Height = -11
+      Marks.Font.Name = 'System'
+      Marks.Font.Style = []
       Marks.Frame.Visible = False
       Marks.Style = smsValue
       Marks.Visible = True
       SeriesColor = clBlack
-      AfterDrawValues = Series1AfterDrawValues
-      OnGetMarkText = Series1GetMarkText
+      AfterDrawValues = Series_AIU_AfterDrawValues
+      OnGetMarkText = Series_AIU_GetMarkText
       Pointer.HorizSize = 1
       Pointer.InflateMargins = True
       Pointer.Style = psRectangle
@@ -102,7 +107,7 @@ object F3: TF3
       StartValues.Name = 'Start'
       StartValues.Multiplier = 1
       StartValues.Order = loAscending
-      EndValues.DateTime = True
+      EndValues.DateTime = False
       EndValues.Name = 'End'
       EndValues.Multiplier = 1
       EndValues.Order = loNone

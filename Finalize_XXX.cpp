@@ -119,7 +119,7 @@ Finalize_Only_SET( INT i_Set )
  char Set[_SET_LEN]="\0",
       aResult[_ID_LEN]="\0",
       aPredicat[_ID_LEN]="\0", // поле предиката
-      namePredicat[_ID_LEN] = "\0", // им€ пол€ предиката (без возможного флага отрицани€)
+//      namePredicat[_ID_LEN] = "\0", // им€ пол€ предиката (без возможного флага отрицани€)
       strInfoLine[_4096]="\0",
       tmp[_512]="\0";
  bool s_isPredicat, // TRUE, если –ќƒ»“≈Ћ№— јя (выполнивша€с€) инструкци€ есть ѕ–≈ƒ» ј“
@@ -242,7 +242,7 @@ Finalize_Only_SET( INT i_Set )
    mS->Cells[6][i+1] = Vizu_Flags(i); // визуализировали ‘Ћј√» данной инструкции
 //
   } // конец for( INT i=0; i<Really_Set; i++ ) ---------------------------------
-//  
+//
 ////////////////////////////////////////////////////////////////////////////////
 //
   Draw_AllTableInstructions(); // выделение €чеек цветом (будет вызыватьс€ при выполнении каждого SET'a )
@@ -271,7 +271,7 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
  char Set[_SET_LEN]="\0",
       aResult[_ID_LEN]="\0",
       aPredicat[_ID_LEN]="\0", // поле предиката
-      namePredicat[_ID_LEN] = "\0", // им€ пол€ предиката (без возможного флага отрицани€)
+//      namePredicat[_ID_LEN] = "\0", // им€ пол€ предиката (без возможного флага отрицани€)
       strInfoLine[_4096]="\0",
       tmp[_512]="\0";
  bool s_isPredicat, // TRUE, если –ќƒ»“≈Ћ№— јя (выполнивша€с€) инструкци€ есть ѕ–≈ƒ» ј“
@@ -313,14 +313,14 @@ Finalize_Except_SET( INT i_Proc ) // все операци кроме SET !!!!!!!!!!!!!!!!!!!!!
 // добавить запись в набор строк Tpr дл€ анализа загр”женности ј»”..............
 //
  snprintf( strInfoLine,sizeof(strInfoLine), "%10d%10d%10d%10d%10d [%s]",
-           i_Proc, Mem_Proc[i_Proc].tick_Start, localTick, localTick-Mem_Proc[i_Proc].tick_Start, i_Set,
+           i_Proc, Mem_Proc[i_Proc].tick_Start, localTick,
+           localTick-Mem_Proc[i_Proc].tick_Start, i_Set,
            Line_Set(i_Set, -1, Result ) ) ;
 //
  if( SpeculateExec && Mem_Instruction[i_Set].fSpeculateExec ) // спекул€тивное выполнение
   strcat( strInfoLine, SPECUL );
 //
  mTpr->Add( strInfoLine ); // добавили строку в список Tpr
-// t_printf( "\n=-=-=-=%s\n", strInfoLine );
 //
  strcpy(strInfoLine, "\0"); // очистим strInfoLine дл€ дальнейшего использовани€
 //

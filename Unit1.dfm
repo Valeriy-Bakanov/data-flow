@@ -9,7 +9,7 @@ object F1: TF1
   ActiveControl = BitBtn_Run
   BorderIcons = [biSystemMenu, biMinimize]
   BorderWidth = 1
-  Caption = ' DATA-FLOW architecture computer simulator ver 4.6 (2009-2024)'
+  Caption = ' DATA-FLOW architecture computer simulator ver 4.6 (2009-2025)'
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
@@ -58,8 +58,8 @@ object F1: TF1
   PixelsPerInch = 96
   TextHeight = 16
   object Label_Data: TLabel
-    Left = 680
-    Top = 185
+    Left = 920
+    Top = 187
     Width = 62
     Height = 16
     Hint = #1042#1099#1095#1080#1089#1083#1077#1085#1085#1099#1077' '#1076#1072#1085#1085#1099#1077' ('#1079#1072#1087#1086#1083#1085#1077#1085#1085#1086#1089#1090#1100' '#1073#1091#1092#1077#1088#1072' '#1076#1072#1085#1085#1099#1093')'
@@ -77,7 +77,7 @@ object F1: TF1
     Transparent = True
   end
   object Label_Set: TLabel
-    Left = 877
+    Left = 713
     Top = 185
     Width = 62
     Height = 16
@@ -131,12 +131,12 @@ object F1: TF1
   object Label_AIU: TLabel
     Left = 434
     Top = 181
-    Width = 70
+    Width = 177
     Height = 16
     Hint = 
       #1063#1080#1089#1083#1086' '#1040#1088#1080#1092#1084#1077#1090#1080#1095#1077#1089#1082#1080#1093' '#1048#1089#1087#1086#1083#1085#1103#1102#1097#1080#1093' '#1059#1089#1090#1088#1086#1081#1089#1090#1074' ('#1040#1048#1059', '#1087#1072#1088#1072#1083#1083#1077#1083#1100#1085#1099#1093'  '#1087 +
       #1088#1086#1094#1077#1089#1089#1086#1088#1086#1074')'
-    Caption = #1063#1080#1089#1083#1086' '#1040#1048#1059
+    Caption = #1063#1080#1089#1083#1086' '#1040#1048#1059' ('#1074#1099#1095#1080#1089#1083#1080#1090#1077#1083#1077#1081')'
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clBlack
     Font.Height = -13
@@ -168,8 +168,8 @@ object F1: TF1
     SimplePanel = False
   end
   object SG_Data: TStringGrid
-    Left = 815
-    Top = 217
+    Left = 817
+    Top = 219
     Width = 190
     Height = 308
     Hint = 
@@ -189,8 +189,8 @@ object F1: TF1
   end
   object SG_Instruction: TStringGrid
     Left = 235
-    Top = 217
-    Width = 562
+    Top = 219
+    Width = 564
     Height = 308
     Hint = 
       #1054#1087#1077#1088#1072#1094#1080#1080' ('#1084#1072#1096#1080#1085#1085#1099#1077' '#1080#1085#1089#1090#1088#1091#1082#1094#1080#1080') '#1080' '#1080#1093' '#1086#1087#1077#1088#1072#1085#1076#1099' ('#1080#1089#1093#1086#1076#1085#1099#1077' '#1076#1072#1085#1085#1099#1077#13#10#1076 +
@@ -249,8 +249,8 @@ object F1: TF1
   end
   object SG_Buffer: TStringGrid
     Left = 4
-    Top = 217
-    Width = 202
+    Top = 219
+    Width = 204
     Height = 308
     Hint = #1041#1091#1092#1077#1088' '#1082#1086#1084#1072#1085#1076' ('#1085#1091#1084#1077#1088#1072#1094#1080#1103' '#1089' 1)'
     TabStop = False
@@ -266,7 +266,7 @@ object F1: TF1
   end
   object PB_1: TProgressBar
     Left = 206
-    Top = 217
+    Top = 219
     Width = 17
     Height = 308
     Cursor = crCross

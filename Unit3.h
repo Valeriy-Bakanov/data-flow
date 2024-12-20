@@ -18,10 +18,10 @@ class TF3 : public TForm
 {
 __published:	// IDE-managed Components
         TChart *Chart_AIU;
-        TGanttSeries *Series1;
+        TGanttSeries *Series_AIU;
         void __fastcall On_Resize(TObject *Sender);
-        void __fastcall Series1GetMarkText(TChartSeries *Sender, int ValueIndex, AnsiString &MarkText);
-        void __fastcall Series1AfterDrawValues(TObject *Sender);
+        void __fastcall Series_AIU_GetMarkText(TChartSeries *Sender, int ValueIndex, AnsiString &MarkText);
+        void __fastcall Series_AIU_AfterDrawValues(TObject *Sender);
 private:	// User declarations
 public:		// User declarations
         __fastcall TF3(TComponent* Owner);

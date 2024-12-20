@@ -79,7 +79,7 @@ pattern[] = "[A-Z]{3}" // мнемоника команды (ровно 3 заглавных, латиница)
 #define strcat(dest,src) (strncat(dest,src,sizeof(dest)-strlen(dest)-5)) // безопасное добавление src к dest
 // !!!!! здесь 5 - просто дополнительная защита ("на всякий случай") !!!!!!!!!!!
 //
-char Ident[] = "Bakanov Valery Mikhailovich, http://vbakanov.ru/left_1.htm , Moscow, Russia, 2009-2024\n \
+char Ident[] = "Bakanov Valery Mikhailovich, http://vbakanov.ru/left_1.htm , Moscow, Russia, 2009-2025\n \
 Автор программного продукта Валерий Баканов не является ярым сторонником Объектно-Ориентированного Программирования \
 (внутри автора точно сидит Линус Торвальдс!) и поэтому большая часть кода не использует ООП\n \
 The author of the software Valery Bakanov is not an ardent supporter of Object-Oriented Programming \
@@ -168,8 +168,8 @@ void   ftime(struct timeb *buf);
 //
 INT all_maxProcs, // всего участвующих в вычислениях АИУ
     simult_maxProcs, // max число ОДНОВРЕМЕННО участвующих в вычислениях АИУ
-    serial_Ticks,   // сумма времен работы АИУ (фактически время ПОСЛЕДОВАТЕЛЬНОГО выполнения, такты)
-    parallel_Ticks; // время выполнения параллельной программы, такты
+    serial_Ticks,    // сумма времен работы АИУ (фактически время ПОСЛЕДОВАТЕЛЬНОГО выполнения, такты)
+    parallel_Ticks;  // время выполнения параллельной программы, такты
 //
 //------------------------------------------------------------------------------
 char uniqueStr[_512] = "\0"; // уникальная строка для имен файлов ( дата + время до мсек )
@@ -703,7 +703,7 @@ __fastcall TF1::TF1(TComponent* Owner) : TForm(Owner)
 //
  if( Read_Instructions() ) // читает инструкции из файла FileNameSet в массив структур Mem_Instruction[]
  {
-  SBM0->Text = " Начните работу с нажатия кнопки ВЫПОЛНЕНИЕ..."; // вывод текста в StatusBarMain
+  SBM0->Text = " Начните работу с нажатия кнопки ВЫПОЛНЕНИЕ / F9 ..."; // вывод текста в StatusBarMain
 //
   Install_All_Flags(); // очистить все флаги инструкций
 //
@@ -1598,7 +1598,7 @@ add_Data( INT i_Set, char* aResult, REAL Data )
 //  предупреждение и пул данных визуализируется; если не существует - добавим
 //  данные Data и визуализируем
  char tmp[_512], tmp1[_1024],
-      fmt[]="Данные (%d)"; // для вывода в окно..,
+      fmt[]="Данные (%d)"; // для вывода во фрейм...
 //
 // не нарушен ли ПРИНЦИП ЕДИНОКРаТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором "Addr" ?)
 //
@@ -1608,7 +1608,7 @@ add_Data( INT i_Set, char* aResult, REAL Data )
   {
    if( !memcmp( aResult, attrVar, strlen(attrVar) ) ) // если первые символы aResult есть attrVar - можно переписывать данные...
    {
-    F1->Label_Data->Caption = Format(fmt, OPENARRAY(TVarRec, (int(i+1)) )); // вывод в окно...
+    F1->Label_Data->Caption = Format(fmt, OPENARRAY(TVarRec, (int(i+1)) )); // вывод во фрейм...
     F1->Label_Data->Repaint(); // перерисовать
 //
     Mem_Data[i].Data = Data; // переписАли данные по заданному адресу...
@@ -1819,27 +1819,27 @@ Calc_Stat_Proc()
 //
   if( !(i % 100 ) ) // если i кратно 100
   {
-   sprintf( w, " Предварительная обработка данных (%.0f%%)...", 1e2*i/mTpr->Count);
+   sprintf( w, " Предварительная обработка данных (%.0f%%)...", 1e2*i / mTpr->Count);
    SBM0->Text = w;
   }
 //
-  strcpy(tmp, mTpr->Strings[i].c_str()); // запомнили строку из Tpr в tmp
+  strcpy(tmp, mTpr->Strings[i].c_str()); // запомнили строку из mTpr в tmp
 //
-  serial_Ticks += atoi(GetSubString(tmp, 31,40)); // суммируем по всем исполненным инструкциям
+  serial_Ticks += _atoi64(GetSubString(tmp, 31,40)); // суммируем по всем исполненным инструкциям
 //
   strcpy(tmp1, GetSubString(tmp, 1,10)); // номер задействованныого АИУ
-  if( atoi(tmp1) > all_maxProcs ) // ищем максимальное значение номера АИУ
-   all_maxProcs = atoi(tmp1);
+  if( _atoi64(tmp1) > all_maxProcs ) // ищем максимальное значение номера АИУ
+   all_maxProcs = _atoi64(tmp1);
  } // конец по строкам в Tpr
 //
  all_maxProcs ++ ; // ибо счет с нуля !
 //
 ////////////////////////////////////////////////////////////////////////////////
  strcpy(tmp, mTpr->Strings[0].c_str()); // момент начала выполнения первой инструкции
- parallel_Ticks = atoi(GetSubString(tmp, 11,20));
+ parallel_Ticks = _atoi64(GetSubString(tmp, 11,20));
 //..............................................................................
  strcpy(tmp, mTpr->Strings[mTpr->Count-1].c_str()); // момент конца выполнения последней инструкции
- parallel_Ticks = atoi(GetSubString(tmp, 21,30)) - parallel_Ticks; // получили разницу в абсолютном времени
+ parallel_Ticks = _atoi64(GetSubString(tmp, 21,30)) - parallel_Ticks; // получили разницу в абсолютном времени
 //
 // ----- проверка parallel_Ticks на "больше нуля" (ибо на неё делми) -----------
  if( parallel_Ticks <= 0 )
@@ -1884,7 +1884,7 @@ Calc_Stat_Proc()
 // теперь вычисляем вес каждой из выполненных инструкций .......................
  for(int j=0; j<Count_Sets; j++) // по списку инструкций
  {
-   sprintf( w, " Окончательная обработка данных (%.0f%%)...", 1e2*j/ Count_Sets);
+   sprintf( w, " Окончательная обработка данных (%.0f%%)...", 1e2*j / Count_Sets);
    SBM0->Text = w;
 //
   strcpy(Set, Set_Params[j].Set); // запомнили для удобства работы
@@ -1897,7 +1897,7 @@ Calc_Stat_Proc()
     APM // дать поработать  Windows --------------------------------------------
 //
    strcpy(tmp,  mTpr->Strings[i].c_str()); // запомнили строку из Tpr в tmp
-   strcpy(tmp1, GetSubString(tmp, 41,50));  // номер инструкции в виде строки tmp1
+   strcpy(tmp1, GetSubString(tmp, 41,50)); // номер инструкции в виде строки tmp1
 //
    if(!strcmp(Set, Mem_Instruction[atoi(tmp1)].Set)) // если совпадение ...
     n_Sets ++ ;
@@ -1905,7 +1905,7 @@ Calc_Stat_Proc()
 //
   if( n_Sets ) // только если выполнилась хотя бы раз...
    t_printf( "инструкция %s выполнилась %d раз (%.3g%% )",
-              Set, n_Sets, 100.0 * n_Sets / mTpr->Count);
+              Set, n_Sets, 1e2 * n_Sets / mTpr->Count);
 //
  } // конец цикла по списку инструкций в Set_Params[]
 //
@@ -1919,15 +1919,15 @@ Calc_Stat_Proc()
    strcpy(tmp,  mTpr->Strings[j].c_str()); // запомнили строку из Tpr в tmp
    strcpy(tmp1, GetSubString(tmp, 1,10)); // номер АИУ в виде строки tmp1
 //
-   if(i == atoi(tmp1)) // нашли в Tpr номер АИУ i
+   if(i == _atoi64(tmp1)) // нашли в Tpr номер АИУ i
    {
     strcpy(tmp1, GetSubString(tmp, 31,40)); // время выполнения любой инструкции на i-том АИУ
-    sum_tProc += atoi(tmp1);
+    sum_tProc += _atoi64(tmp1);
    }
   } // конец цикла по списку инструкций
 //
  t_printf( "арифм.исполн.у-во (АИУ) номер %d работало %ld тактов (%.3g%% )",
-            i, sum_tProc, 100.0 * sum_tProc / parallel_Ticks);
+            i, sum_tProc, 1e2 * sum_tProc / parallel_Ticks);
 //
  } // конец цикла про АИУ
 //
@@ -2770,7 +2770,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
    Mem_Proc[i_Proc].Op2    = Op2; // запомнили ВТОРОЙ операнд
    Mem_Proc[i_Proc].Result = Result; // запомнили результат операции
 //
-   snprintf( tmp, sizeof(tmp),"-I- %s(): инструкция #%d [%s] была выполнена на АИУ #%d -I-",
+   snprintf( tmp, sizeof(tmp),"-I- %s(): инструкция #%d [%s] начала выполняться на АИУ #%d -I-",
               __FUNC__, i_Set, Line_Set(i_Set, 2, 0.0), i_Proc );
    if( SpeculateExec && Mem_Instruction[i_Proc].fSpeculateExec ) // спекулятивное выполнение
     strcat( tmp, SPECUL );
@@ -3798,7 +3798,7 @@ Calc_ConnectedIndex (int Rule ) // при Rule # 0 данные выдаются в файл протоколa
 //
   return index;
 //
-} // ----- конец подпрограммы --------------------------------------------------
+} // ----- конец подпрограммы Calc_ConnectedIndex ------------------------------
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4316,7 +4316,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
       tmp2[_512],
       w[_512];
  INT tick_End, // конец времени последней выполненной инструкции (в тактах)
-     tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
+     start, end, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени
      n_proc, // номер АИУ
      n_set,  // номер инструкции
@@ -4332,7 +4332,7 @@ int __fastcall Work_TimeSets_Protocol_IC()
 //
  strcpy(tmp,  mTpr->Strings[mTpr->Count-1].c_str()); // последняя строка таблицы в Tpr
  strcpy(tmp1, GetSubString(tmp, 21,30)); // время конца выполнения последней инструкции
- tick_End = atoi ( tmp1 ); // конец всех вычислений ( в тактах )
+ tick_End = _atoi64( tmp1 ); // конец всех вычислений ( в тактах )
 //
  for( i_tick=0; i_tick<=tick_End; i_tick++ ) // по всем тактам программы
  {
@@ -4357,17 +4357,17 @@ int __fastcall Work_TimeSets_Protocol_IC()
    if( (!i % d_APM) ) // каждые d_APM раз...
     APM // дать поработать Windows ---------------------------------------------
 //
-   n_proc = _atoi64(GetSubString(mTpr->Strings[i].c_str(),  1,10)); // номер АИУ, на котором инструкция выполнялась
-   n_set  = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 41,50)); // номер выполненной инструкции
-   tick_1 = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 11,20)); // время НАЧАЛА выполнения инструкции (в тактах)
-   tick_2 = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 21,30)); // время КОНЦА выполнения инструкции (в тактах)
+   n_proc = _atoi64( GetSubString(mTpr->Strings[i].c_str(),  1,10) ); // номер АИУ, на котором инструкция выполнялась
+   n_set  = _atoi64( GetSubString(mTpr->Strings[i].c_str(), 41,50) ); // номер выполненной инструкции
+   start  = _atoi64( GetSubString(mTpr->Strings[i].c_str(), 11,20) ); // время НАЧАЛА выполнения инструкции (в тактах)
+   end    = _atoi64( GetSubString(mTpr->Strings[i].c_str(), 21,30) ); // время КОНЦА выполнения инструкции (в тактах)
 //
-// анализируем число работающих АИУ в промежутке [ (tick_1) - (tick_2) ] .......
-   if( (i_tick >= tick_1) && (i_tick < tick_2) ) // момент (i_tick) находится между (tick_1) и (tick_2)
+// анализируем число работающих АИУ в промежутке [ (start) - (end) ] .......
+   if( (i_tick >= start) && (i_tick < end) ) // момент (i_tick) находится между (start) и (end)
    {
     n_i ++ ; // число выполняемых инструкций в момент времени времени tick_i
     simult_max_Proc = max( simult_max_Proc, n_i ); // максимальное ОДНОВРЕМЕННО работающее число АИУ
-   } // конец  if( (i_tick >= tick_1) && (i_tick < tick_2) )
+   } // конец  if( (i_tick >= start) && (i_tick < end) )
 //
   } // конец цикла по строкам Tpr
 ////////////////////////////////////////////////////////////////////////////////
@@ -4478,7 +4478,7 @@ void __fastcall Save_Protocol_ExecInstructions()
       tmp2[_512],
       tmp3[_2048]; // при ГКВ=99 длина ~1200 символов
  INT tick_End, // конец времени последней выполненной инструкции (в тактах)
-     tick_1, tick_2, // начало и конец выполнения данной инструкции (в тактах)
+     start, end, // начало и конец выполнения данной инструкции (в тактах)
      n_i, // число выполняемых инструкций в момент времени времени
      n_proc, // номер АИУ
      n_set;  // номер инструкции
@@ -4516,13 +4516,13 @@ void __fastcall Save_Protocol_ExecInstructions()
 ////////////////////////////////////////////////////////////////////////////////
    for( INT i=0; i<mTpr->Count; i++ ) // по строкам выполненных инструкций в Tpr
    {
-    n_proc = _atoi64(GetSubString(mTpr->Strings[i].c_str(),  1,10)); // номер АИУ, на котором инструкция выполнялась
-    n_set =  _atoi64(GetSubString(mTpr->Strings[i].c_str(), 41,50));  // номер выполненной инструкции
-    tick_1 = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 11,20) ); // время НАЧАЛА выполнения инструкции (в тактах)
-    tick_2 = _atoi64(GetSubString(mTpr->Strings[i].c_str(), 21,30)); // время КОНЦА выполнения инструкции (в тактах)
+    n_proc = _atoi64( GetSubString(mTpr->Strings[i].c_str(),  1,10) ); // номер АИУ, на котором инструкция выполнялась
+    n_set  =  _atoi64( GetSubString(mTpr->Strings[i].c_str(), 41,50) ); // номер выполненной инструкции
+    start  = _atoi64( GetSubString(mTpr->Strings[i].c_str(), 11,20) ); // время НАЧАЛА выполнения инструкции (в тактах)
+    end    = _atoi64( GetSubString(mTpr->Strings[i].c_str(), 21,30) ); // время КОНЦА выполнения инструкции (в тактах)
 //
-// анализируем число работающих АИУ в промежутке [ (tick_1) - (tick_2) ] .......
-    if( (i_tick >= tick_1) && (i_tick < tick_2) ) // момент (i_tick) находится между (tick_1) и (tick_2)
+// анализируем число работающих АИУ в промежутке [ (start) - (end) ] .......
+    if( (i_tick >= start) && (i_tick < end) ) // момент (i_tick) находится между (start) и (end)
     {
      n_i ++ ; // число выполняемых инструкций в момент времени времени tick_i
 //
@@ -4706,8 +4706,9 @@ void __fastcall Save_IGA()
        !is_Predicat( Mem_Instruction[j].Set ) &&
        !strcmp( aPredicat, aResult ) ) ) // зависимость от флага предиктора
     {
-     snprintf(tmp,sizeof(tmp), "%d -> %d ; [[%d]%s %s,%s,%s,%s; %s] -> [[%d]%s %s,%s,%s,%s; %s]",
+     snprintf(tmp,sizeof(tmp), "%d -> %d ; -Ticks %d/%d [[%d]%s %s,%s,%s,%s; %s] -> [[%d]%s %s,%s,%s,%s; %s]",
               i+StartNumb, j+StartNumb,
+              Get_TicksByInstruction(Mem_Instruction[i].Set), Get_TicksByInstruction(Mem_Instruction[j].Set), // время выполн.операторов "откуда/куда" (по "стрелке ->")
               i+StartNumb, Mem_Instruction[i].Set,Mem_Instruction[i].aOp1,Mem_Instruction[i].aOp2,Mem_Instruction[i].aResult,Mem_Instruction[i].aPredicat,Mem_Instruction[i].Comment,
               j+StartNumb, Mem_Instruction[j].Set,Mem_Instruction[j].aOp1,Mem_Instruction[j].aOp2,Mem_Instruction[j].aResult,Mem_Instruction[j].aPredicat,Mem_Instruction[j].Comment);
 //     snprintf(tmp,sizeof(tmp), "%d -> %d ;", i+StartNumb,j+StartNumb); // краткий вариант... ежели необходимо!..
@@ -4829,58 +4830,65 @@ int __fastcall Work_TimeSets_Protocol_AIU()
 { // вычисляется и возвращается max число ОДНОВРЕМЕННО работающих АИУ (процессоров)
 // и заполняется серия данных для постройки графика интенсивности вычислений
  INT i_Op, n_Op, ii_Op, nn_Op,
-     i_Proc, start, end, i_Set, ii_Set;
+     i_Proc, start, end, dur, i_Set, ii_Set;
  char aResult[_ID_LEN];
 //
 ////////////////////////////////////////////////////////////////////////////////
- F3->Series1->Clear(); // очистим серию данных для графика нагруженности АИУ
+ F3->Series_AIU->Clear(); // очистим серию данных для графика нагруженности АИУ
 ////////////////////////////////////////////////////////////////////////////////
  if( !mTpr || // если этот TStringList-список не существует... "ИЛИ"
      !mTpr->Count ) // если число строк = 0 ...
-//  goto ended;
- return 1;
+  return 1;
 //
- F3->Chart_AIU->BottomAxis->SetMinMax( 0, parallel_Ticks ); // показываем только первый год
- F3->Chart_AIU->LeftAxis->SetMinMax(   0, all_maxProcs+1 ); // показываем только первый год
+ F3->Chart_AIU->BottomAxis->SetMinMax( 0, parallel_Ticks ); // ось абсцисс
+ F3->Chart_AIU->LeftAxis->SetMinMax(   0, all_maxProcs+1 ); // ось ординат
 //
- F3->Series1->Pointer->VertSize = 3; // вертикальный размер прямоугольников
- F3->Series1->Marks->Font->Size = 7; // размер символов текста на прямоугольниках
+// F3->Series1->Pointer->VertSize = 3; // вертикальный размер прямоугольников
+// F3->Series1->Marks->Font->Size = 12; // размер символов текста на прямоугольниках
+// F3->Series1->Marks->Style = talMark; // тип фонта
+// (talAuto, talNone, talValue, talMark, talText, talPointValue)
+//
+ F3->Series_AIU->Pointer->VertSize = 3; // вертикальный размер прямоугольников
+ F3->Series_AIU->Marks->Font->Size = 7; // размер символов текста на прямоугольниках
 //
  if( all_maxProcs <= 10 || Really_Set+1 <= 100 ) // АИУ <= 100 или число инструкций <= 100
  {
-  F3->Series1->Pointer->VertSize = 8; // вертикальный размер прямоугольников
+  F3->Series_AIU->Pointer->VertSize = 8; // вертикальный размер прямоугольников
  }
 //
- for( i_Op=0; i_Op < mTpr->Count; i_Op++ ) // по строкам выполненных инструкций в Tpr
+ for( i_Op=0; i_Op<mTpr->Count; i_Op++ ) // по строкам выполненных инструкций в mTpr
  {
   i_Proc = _atoi64( GetSubString(mTpr->Strings[i_Op].c_str(), 1,10) ); // номер АИУ
   start  = _atoi64( GetSubString(mTpr->Strings[i_Op].c_str(),11,20) ); // момент начала выполнения инструкции
   end    = _atoi64( GetSubString(mTpr->Strings[i_Op].c_str(),21,30) ); // момент окончания выполнения инструкции
+  dur    = _atoi64( GetSubString(mTpr->Strings[i_Op].c_str(),31,40) ); // полная длительность инструкции
   i_Set  = _atoi64( GetSubString(mTpr->Strings[i_Op].c_str(),41,50) ); // номер выполняющегося на данном АИУ оператора
+
+//  t_printf( "%03d %010d %010d %010d %010d %010d [%s %s,%s->%s] %s",
+//            i_Op,
+//            i_Proc, start, end, dur, i_Set,
+//            Mem_Instruction[i_Set].Set, Mem_Instruction[i_Set].aOp1, Mem_Instruction[i_Set].aOp2, Mem_Instruction[i_Set].aResult, // имя инструкции
+//            "АИУ #" + AnsiString(i_Proc) );
+
+// оцифровка оси ординат на графике Ганта
+  F3->Series_AIU->AddGantt( start, end, i_Proc+1, "АИУ #" + AnsiString(i_Proc) );
 //
-  F3->Series1->AddGantt( start, end, i_Proc+1, "АИУ #" + AnsiString( GetSubString(F1->Tpr->Strings[i_Op].c_str(), 1,10) ).TrimLeft() );
+  strcpy( aResult, Mem_Instruction[i_Set].aResult ); // рез.выполн. инструкции i_Set ( aResult используется в MI_AOP1/MI_AOP2 )
 //
-  strcpy( aResult, Mem_Instruction[i_Set].aResult ); // результат выполнения инструкции i_Set
-//
-  for( ii_Op=0; ii_Op < mTpr->Count; ii_Op++ ) // по строкам выполненных инструкций в Tpr
+  for( ii_Op=0; ii_Op<mTpr->Count; ii_Op++ ) // по строкам выполненных инструкций в Tpr
   {
-   if( ii_Op == i_Op ) // строки (инструкции) сами с собой не сравниваем..!
+   if( i_Op == ii_Op ) // строки (инструкции) сами с собой не сравниваем..!
     continue;
 //
-   ii_Set  = atoi( GetSubString(mTpr->Strings[ii_Op].c_str(),41,50) ); // номер выполняющегося на данном АИУ оператора
+   ii_Set = atoi( GetSubString(mTpr->Strings[ii_Op].c_str(),41,50) ); // номер выполняющегося на данном АИУ оператора
 //
-   if( ( Get_CountOperandsByInstruction(Mem_Instruction[ii_Set].Set) == 1 && // всего один операнд...
-         MI_AOP1(ii_Set) ) ||
-       ( Get_CountOperandsByInstruction(Mem_Instruction[ii_Set].Set) == 2 && // два операнда...
-        (MI_AOP1(ii_Set) ||
-         MI_AOP2(ii_Set) ) ) )
-    F3->Series1->NextTask->Value[i_Op] = ii_Op ; // ниточка связи бАров "i_Op <-> ii_Op"
+   if( ( Get_CountOperandsByInstruction(Mem_Instruction[ii_Set].Set)==1 &&  MI_AOP1(ii_Set) ) || // всего один операнд...
+       ( Get_CountOperandsByInstruction(Mem_Instruction[ii_Set].Set)==2 && (MI_AOP1(ii_Set) || MI_AOP2(ii_Set)) ) ) // два операнда...
+    F3->Series_AIU->NextTask->Value[i_Op] = ii_Op ; // ниточка связи бАров "i_Op <-> ii_Op"
 //
   }  // конец  for( ii_Op=0; ii_Op < mTpr->Count; ii_Op++ )
 //
  } // конец  for( i_Op=0; i_Op < mTpr->Count; i_Op++ )
-//
-ended: /////////////////////////////////////////////////////////////////////////
 //
  return 0 ; // максимальное ОДНОВРЕМЕННО работающее число АИУ
 //
@@ -5347,7 +5355,8 @@ bool __fastcall Read_Instructions()
  char str[_1024], // строка для считывания и расшифровки инструкций
       tmp[_512], // рабочая строка
       Set[_SET_LEN], // мнемоника инструкции
-      *p, *p1, *p2;
+      *p, *p1, *p2,
+      fmt[]="Команды (%d)"; // для вывода во фрейм...
  bool flagPredicate; // TRUE если в инструкции допустимо поле ПРЕДИКАТА
 //
  Process_Macros(); // обработать препроцессором
@@ -5504,6 +5513,9 @@ bool __fastcall Read_Instructions()
 //
    Really_Set = i + 1 ; // реальное число инструкций (на 1 больше, ибо счет i с нуля)
 //
+   F1->Label_Set->Caption = Format(fmt, OPENARRAY(TVarRec, (int(i+1)) )); // вывод во фрейм
+   F1->Label_Set->Repaint(); // перерисовать
+//
   } // конец цикла по строкам в файле FileNameSets
 //
  fclose(fptr);
@@ -5570,4 +5582,27 @@ void __fastcall Save_All_Protocols_To_Out_Dir()
  Upload_Data( 1 ); // вЫгрузить PRO (etc) - файлы на сервер ( Rule == 1 )
 //
 } // --- конец Save_All_Protocols_To_Out_Dir------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall TF3::Series_AIU_GetMarkText(TChartSeries *Sender, int ValueIndex, AnsiString &MarkText)
+{ // изменение текста меток на "бАрах" (номеров операторов)
+//
+ MarkText = "$" + AnsiString( GetSubString(mTpr->Strings[ValueIndex].c_str(), 1,10) ).TrimLeft()
+             + "/"
+            "#" + AnsiString( GetSubString(mTpr->Strings[ValueIndex].c_str(),41,50) ).TrimLeft()
+            + "/"
+            + Mem_Instruction[atoi( GetSubString(mTpr->Strings[ValueIndex].c_str(),41,50) )].Set ;
+//            + "/"
+//            + AnsiString( GetSubString(F1->Tpr->Strings[ValueIndex].c_str(),31,40) ).TrimLeft()
+//            + "/"
+//            + AnsiString( ValueIndex ) ;
+//
+} //----------------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+void __fastcall TF3::Series_AIU_AfterDrawValues(TObject *Sender)
+{ // установить максимальную высоту "бАров"
+ Series_AIU->Pointer->VertSize = Chart_AIU->LeftAxis->CalcSizeValue(0.3);
+} //----------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 [Max_Lengths]
 max_Instruction=100000
 max_Data=100000
-max_Proc=1000
+max_Proc=1
 max_Buffer=10000
 
 [Strategy]
@@ -15,7 +15,7 @@ NeedAutoGraph=1
 SpeculateExec=0
 
 [LastFileNameSet]
-FileNameSet=m_matr_band_100-0.set
+FileNameSet=m_matr_5.set
 
 [Editor_File]
 File=notepad.exe
@@ -37,16 +37,16 @@ Interval=10
 SET=0
 ADD=100 
 SUB=100
-MUL=100
-DIV=100
+MUL=415
+DIV=415
 DQU=100
 DRE=100
-SQR=100
+SQR=835
 SIN=100
 COS=100
 TAN=100
 LOG=100
-POW=100
+POW=835
 ASN=100
 ACN=100
 ATN=100
@@ -73,7 +73,7 @@ PIM=2
 PEV=2
 
 [WaitNextInstruction]
-WaitTicks=200
+WaitTicks=1000
 
 [StartNumbOps]
 StartNumb = 100
@@ -85,10 +85,10 @@ attrVar=$
 TokenUse=0
 
 [Pos_F1]
-Top=84
-Left=283
-Width=1195
-Height=731
+Top=95
+Left=146
+Width=1097
+Height=600
 
 [DrawColorTest]
 clOperandOperation=12171775
