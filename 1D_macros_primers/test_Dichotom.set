@@ -1,0 +1,51 @@
+; Баканов В.М., e881e@mail.ru, vbakanov@hse.ru
+; НИУ ВШЭ, Москва, Россия
+; пример использования мАкроса для дихотомии (она ж бисекция)
+; ПРОГРАММА - численной решение Y=X^2-1
+; решение в XI[*] 
+;
+SET 0, XN[1] ; начало интервала поиска корня
+SET 5, XK[1] ; конец интервала поиска корня
+;
+SET 2.0, TWO ; константа ДВА
+SET 1.0, ONE ; константа ЕДИНИЦА
+SET 0.0, ZERO ; константа НУЛЬ
+SET 2.0, DEGREE ; степень XI^DEGREE-1
+;
+POW XN[1], DEGREE, W1[1] ; XN^2 
+SUB W1[1], ONE,    FN[1] ; FN=XN^2-1 | вычисление FI в левой точке XN
+;
+POW XK[1], DEGREE, W2[1] ; XK^2 
+SUB W2[1], ONE,    FK[1] ; FK=XK^2-1 | вычисление FI в правой точке XK
+;
+ADD XN[1], XK[1],  W3 ; сумма левой и правой границ
+DIV W3,    TWO,    XI[1] ; полусумма ...
+POW XI[1], DEGREE, W4 ; XI^2  
+SUB W4,    ONE,    FI[1] ; FI=XI^2-1 | вычисление FI в центре между XN и XK
+;
+; ============================================================
+;
+for[i]=1,20,1 { ; цикл по переменной i от i=1 до i=5 с шагом 1
+;
+MUL FK[i], FI[i],   W5[i] ; анализ знака FK[i]хFI[i]  
+PGT W5[i], ZERO,    FLAG_1[i] ; FLAG_1==true при FK[i]хFI[i]>0 
+CPY XI[i], XK[i+1], FLAG_1[i] ; XK[i+1] <- XI[i]
+CPY FI[i], FK[i+1], FLAG_1[i] ; FK[i+1] <- FI[i]
+CPY XN[i], XN[i+1], FLAG_1[i] ; XN[i+1] <- XN[i] - копируем без изменения
+CPY FN[i], FN[i+1], FLAG_1[i] ; FN[i+1] <- FN[i] - -.-.-
+;
+MUL FN[i], FI[i],   W6[i] ; анализ знака FN[i]хFI[i]  
+PGT W6[i], ZERO,    FLAG_2[i] ; FLAG_2==true при FN[i]хFI[i]>0
+CPY XI[i], XN[i+1], FLAG_2[i] ; XN[i+1] <- XI[i] 
+CPY FI[i], FN[i+1], FLAG_2[i] ; FN[i+1] <- XI[i]
+CPY XK[i], XK[i+1], FLAG_2[i] ; XK[i+1] <- XK[i] - копируем без изменения
+CPY FK[i], FK[i+1], FLAG_2[i] ; FK[i+1] <- FK[i] - -.-.-
+;
+ADD XN[i],   XK[i],  W7[i] ; сумма абсцисс начала и конца отрезка
+DIV W7[i],   TWO,    XI[i+1] ; полусумма | для следующей итерации
+POW XI[i+1], DEGREE, W8[i] ; XI^2 | вычисление FI в центре между XN и XK
+SUB W8[i],   ONE,    FI[i+1] ; FI=XI^2-1 | для следующей итерации
+;
+} ; конец цикла по i
+;
+

@@ -26,6 +26,7 @@
 #include "Math.hpp"
 #include <time.h>
 #include <stdlib.h>
+#include <locale>
 //
 #include <setjmp.h> // для реализации нелокального перехода в программе
 jmp_buf env_BypassMacro; // в env_BypassMacro сохраняется состояние в точке вызова setjmp
@@ -64,7 +65,7 @@ TParser parser; // перед TParser добавлено :: для обеспечения отдельной области 
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 //
-#define DSTA(str) DelSpacesTabsAround(str) // убрать пробелы, Tab вокруг строки
+#define DSTA(str) DelSpacesTabsAround(str) // убрать пробелы и Tab вокруг строки
 #define DAS(str)  DeleteAllSpaces(str) // убрать все пробелы в строке str
 //
 char // 3-х или 2-х адресная команда ( + поле предиката + комментарии )
@@ -85,7 +86,7 @@ char Ident[] = "Bakanov Valery Mikhailovich, http://vbakanov.ru/left_1.htm , Mos
 The author of the software Valery Bakanov is not an ardent supporter of Object-Oriented Programming \
 (Linus Torvalds definitely sits inside the author!) and therefore most of the code does not use OOP";
 //
-char *Info_CommonStr[] = { // информационные вызовы посредством ShellExecute(...) 
+char *Info_CommonStr[] = { // информационные вызовы посредством ShellExecute(...)
 "Base.pdf", // [#0]
 "http://vbakanov.ru/dataflow", // [#1]
 "http://vbakanov.ru/spf@home", // [#2]
@@ -104,7 +105,7 @@ char trueLowerCase[]  = "true",        trueUpperCase[] ="TRUE",
      SET[]       = "SET"; // имя инструкции SET
 //
 #define is_SET(Set) ( !strcmp( Set, SET ) ) // это инструкция SET
-#define is_PredicatOrSET(Set) ( is_Predicat( Set ) || !strcmp( Set, SET ) ) // это ПРЕДИКАТ или DET
+#define is_PredicatOrSET(Set) ( is_Predicat( Set ) || !strcmp( Set, SET ) ) // это ПРЕДИКАТ или SET
 char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 //
 #define strNcpy(d,s) strncpy(d,s,sizeof(d)) // безопасный вариант
@@ -136,7 +137,7 @@ char SPECUL[] = " [specul]"; // признак спекулятивного выполненя инструкции
 #define ACC_REAL 4 // число знаков после зап.при выводе "плавающих" по E-формату
 //==============================================================================
 #define _SET_LEN 4  // длина строки мнемоники инструкции (3 символа + "\0")
-#define _ID_LEN  53 // 53 // длина строки имени переменной (32 символа + 20 + "\0")
+#define _ID_LEN  53 // 53 - длина строки имени переменной (32 символа + 20 + "\0")
 //------------------------------------------------------------------------------
 #define do_Run \
 { F1->BitBtn_Run->Enabled = true; /* "включили" все кнопки режима ВЫПОЛНЕНИЕ */ \
@@ -608,7 +609,7 @@ INT dummy_Ticks = 1 , // число пропущенных тиков для выполнения инструкции длино
        minJ, maxJ, dJ,
        for_ID = -1; // номер псевдомассива в программе
  char  str[_1024], // строка обрабатываемой инструкции
-       SetName[_64], Opd_1[_512],Opd_2[_512], Res[_512], // строки для мнемоники, 1-го и 2-го операндов, результата,
+       SetName[_64], Opd_1[_512],Opd_2[_512], Res[_512], Pred[_512], // строки для мнемоники, 1/2-го операндов, предикатa, результата
        Predic[_128], Comm[_1024],  // предиката, комментариев
        nameMass[_512], indexMass[_512], indexMass_1[_512], indexMass_2[_512], // подстроки частей массивов
        expr[_1024], tmp[]="?\0";
@@ -755,21 +756,20 @@ DelSpacesTabsAround(char *str)
 // удаляем пробелы и Tabs с начала строки
  int i=0, j;
 //
- while((str[i] == ' ') || (str[i] == '\t'))
+ while( (str[i] == ' ') || (str[i] == '\t') )
   i++;
 //
  if(i>0)
  {
-  for(j=0;j<strlen(str);j++)
+  for(j=0; j<strlen(str); j++)
    str[j]=str[j+i];
-//
- str[j]='\0';
+  str[j]='\0';
  }
 //
 // удаляем пробелы и Tabs с конца строки
  i=strlen(str)-1;
 //
- while((str[i] == ' ') || (str[i] == '\t'))
+ while( (str[i] == ' ') || (str[i] == '\t') )
   i--;
 //
  if(i<(strlen(str)-1))
@@ -805,7 +805,13 @@ char* __fastcall DeleteAllSpaces( char *str )
 // str = ( AnsiReplaceStr( str, " ", "" ) ).c_str(); // удаление всех пробелов
 //
 // нижеприведённое взято с http://www.quizful.net/interview/cpp/VbW07kq70NCY
- for ( register INT i=0,j=0; str[i]; (str[j++]=str[i]!=' '?str[i]:(j--,str[j]),i++,(!str[i]?(str[j]=0):0)) );
+ for ( register INT i=0,j=0; str[i];
+  (str[j++] = str[i]!=' ' ?
+  str[i] :
+  (j--, str[j]), i++,
+  (!str[i] ?
+  (str[j]=0) :
+  0)) );
 //
  return str;
 //
@@ -1597,8 +1603,10 @@ add_Data( INT i_Set, char* aResult, REAL Data )
 //  если строка 'Addr / ***' существует - переписывается поле Data, выдается
 //  предупреждение и пул данных визуализируется; если не существует - добавим
 //  данные Data и визуализируем
- char tmp[_512], tmp1[_1024],
-      fmt[]="Данные (%d)"; // для вывода во фрейм...
+ char tmp[_1024], tmp1[_1024],
+      fmt[]="Данные (%d)", // для вывода во фрейм...
+      fmt1[] = "\n-W- add_Data(): у инструкции #%d [%s %s, %s] результат [%s] при добавлении в ПАМЯТЬ ДАННЫХ нарушает ПРИНЦИП ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ -W-\n", // строка формата (1 операнд)
+      fmt2[] = "\n-W- add_Data(): у инструкции #%d [%s %s, %s, %s] результат [%s] при добавлении в ПАМЯТЬ ДАННЫХ нарушает ПРИНЦИП ЕДИНОКРАТНОГО ПРИСВАИВАНИЯ -W-\n"; // строка формата (2 операнда)
 //
 // не нарушен ли ПРИНЦИП ЕДИНОКРаТНОГО ПРИСВАИВАНИЯ (т.е. нет ли данных с идентификатором "Addr" ?)
 //
@@ -1625,9 +1633,24 @@ add_Data( INT i_Set, char* aResult, REAL Data )
 //
    F1->Master_Timer->Enabled = false; // выключили таймер
 //
-   strcpy(tmp, "Результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, однако там уже находятся данные {%.*g}. ");
-   strcat(tmp, "Налицо явное нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ, вследствие чего КОНЕЧНЫЙ результат выполнения программы может быть непредсказуем !");
-   strcat(tmp, "\n\nПереписать данные / оставить прежние значения / завершить выполнение программы ?\n");
+   int nInputOperands = Get_CountOperandsByInstruction( Mem_Instruction[i].Set ); // реальное число операндов инструкции
+//
+   switch( nInputOperands ) // число входных операндов инструкции Set
+   {
+    case 1: t_printf( fmt1, i_Set, Mem_Instruction[i_Set].Set,Mem_Instruction[i_Set].aOp1,
+                                   Mem_Instruction[i_Set].aResult, Mem_Instruction[i_Set].aResult );
+            break;
+//
+    case 2: t_printf( fmt2, i_Set, Mem_Instruction[i_Set].Set,Mem_Instruction[i_Set].aOp1,Mem_Instruction[i_Set].aOp2,
+                                   Mem_Instruction[i_Set].aResult, Mem_Instruction[i_Set].aResult );
+            break;
+//
+    default: break;
+   }
+//
+strcpy(tmp, "Результат {%.*g} выполнения инструкция #%d должен быть записан по адресу %s, однако там уже находятся данные {%.*g}. \
+Налицо явное нарушение ПРИНЦИПА ОДНОКРАТНОГО ПРИСВАИВАНИЯ, вследствие чего КОНЕЧНЫЙ результат выполнения программы может быть непредсказуем ! \
+\n\nПереписать данные / оставить прежние значения / завершить выполнение программы ?\n");
    snprintf(tmp1,sizeof(tmp1), tmp, ACC_REAL, Data, i_Set, aResult, ACC_REAL, Mem_Data[i].Data);
 //
    int out = MessageDlg(tmp1, mtWarning, TMsgDlgButtons() << mbOK << mbCancel << mbAbort, 0); // выдали окно выбора дальнейших действий
@@ -2441,17 +2464,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  else
  if(!strcmp(Set, "LOG")) // это инструкция LOG
  {
-  if( Op1 < EPS ) // ошибка вычисления логарифма...
-  {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументеа {%.*g}. Выборка инструкций остановлена... -E-",
-                 __FUNC__, Set, i_Set, ACC_REAL, Op1);
-   AddLineToProtocol(tmp);
-   Display_Error(tmp);
-   Code_Error = -5; // индикация ошибки вычисления логарифма ---
-   return;
-  }
-  else
-   Result = log ( Op1 );
+  Result = log( Op1 );
  }
 // конец выполнения инструкции LOG .............................................
 //
@@ -2459,95 +2472,7 @@ ExecuteInstructions_Except_SET( INT i_Set )
  else
  if(!strcmp(Set, "POW")) // это инструкция POW
  {
-  int int_L,int_R,int_Op2; // целые для (возможного) округления Op2
-  bool f_Op2 = false; // при TRUE величина Op2 очень близка к целому и принимается i_Op2
-//
-// насколько Op2 близко к целому ? .............................................
-  int_L = Floor( Op2 ); // округление до целого 'вниз'
-  int_R = Ceil ( Op2 ); // округление до целого 'вверх'
-//
-  if( fabs ( (REAL)int_L - Op2 ) < EPS )
-  {
-   int_Op2 = int_L; // это целое Op2
-   f_Op2 = true;
-  }
-  else
-  if( fabs ( (REAL)int_R - Op2 ) < EPS )
-  {
-   int_Op2 = int_R; // это целое Op2
-   f_Op2 = true;
-  }
-// итак, при f_Op2=TRUE можно считать Op2 целым и вместо него использовать iOp2
-// при f_Op2=FALSE величину Op2 следует считать вещественной ...................
-//
-// обработка случая Op1 < 0.0 ..................................................
-  if( Op1 < 0.0 )
-   if( f_Op2 ) // величина Op2 - целое
-   {
-    if( int_Op2 > 0 ) // Op2 - целое и положительное
-    {
-     Result = 1.0;
-     for(int i=1; i<=int_Op2; i++)
-     Result *= Op1;
-    }
-    else
-    if( int_Op2 < 0 ) // Op2 - целое и отрицательное
-    {
-     Result = 1.0;
-     for(int i=1; i<=int_Op2; i++)
-     Result /= Op1;
-    }
-    else
-     Result = 1.0 ; // int_op2 = Op2 = 0
-   } // конец if( f_Op2 )
-   else // величина Op2 - нецелое
-   {
-    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена. Отрицательное число {%.*g} не может быть возведено в нецелую степень {%.*g}. Выборка инструкций остановлена... -E-",
-                  __FUNC__, Set, i_Set, ACC_REAL, Op1, ACC_REAL, Op2);
-    AddLineToProtocol(tmp);
-    Display_Error(tmp);
-    Code_Error = -4; // индикация ошибки вычисления (x**y) ---
-    return;
-   }
-// конец обработки случая Op1 < 0.0 ............................................
-//
-//.............................................................................
-// обработка случая Op1 = 0.0 'и' Op2 = 0.0 ....................................
-   if( ( Op1 == 0.0 ) && ( Op2 == 0.0 ) ) // ноль в степени ноль - не определено
-   {
-    snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена. Ноль {%.*g} невозможно возвести в нулевую степень {%.*g}. Выборка инструкций остановлена... -E-",
-                  __FUNC__, Set, i_Set, ACC_REAL, Op1, ACC_REAL, Op2);
-    AddLineToProtocol(tmp);
-    Display_Error(tmp);
-    Code_Error = -4; // индикация ошибки вычисления (x**y) ---
-    return;
-   }
-//
-//..............................................................................
-// обработка случая Op1 == 0.0 'и' Op2 # 0.0 ...................................
-   if( ( Op1 == 0.0 ) && ( Op2 != 0.0 ) ) // ноль в любой степени равно нулю
-    Result = 0.0 ;
-//
-//..............................................................................
-// обработка случая Op1 # 0.0 'и' Op2 == 0.0 ...................................
-   if( ( Op1 != 0.0 ) && ( Op2 == 0.0 ) ) // любое число в нулевой степени = 1
-    Result = 1.0 ;
-//
-//..............................................................................
-// обработка случая Op1 > 0.0 ..................................................
-  if ( fabs ( Op1 ) > EPS ) // чтобы под логарифмом не было <= 0.0 ...
-   Result = pow ( Op1, Op2 );   // = exp ( Op2 * log ( Op1 ) );
-//..............................................................................
-  else
-  {
-   snprintf(tmp,sizeof(tmp), "-E- %s(): инструкция %s (#%d) не может быть выполнена при аргументах {%.*g} / {%.*g}. Выборка инструкций остановлена... -E-",
-                 __FUNC__, Set, i_Set, ACC_REAL, Op1, ACC_REAL, Op2);
-   AddLineToProtocol(tmp);
-   Display_Error(tmp);
-   Code_Error = -4; // индикация ошибки вычисления (x**y) ---
-   return;
-  }
-//
+  Result = pow( Op1, Op2 ) ;
  }
 // конец выполнения инструкции POW .............................................
 //
@@ -3836,8 +3761,8 @@ bool __fastcall Test_All_Operands()
       aOp2[_ID_LEN],
       aResult[_ID_LEN], // операнд 1, операнд 2, результат
       str[_512],
-      fmt1[] = "-E- Test_All_Operands(): у инструкции #%d [%s %s, %s] операнд [%s] принципиально неразрешим -E-", // строка формата (1 операнд)
-      fmt2[] = "-E- Test_All_Operands(): у инструкции #%d [%s %s, %s, %s] операнд #%d [%s] принципиально неразрешим -E-"; // строка формата (2 операнда)
+      fmt1[] = "\n-E- Test_All_Operands(): у инструкции #%d [%s %s, %s] операнд [%s] принципиально неразрешим -E-\n", // строка формата (1 операнд)
+      fmt2[] = "\n-E- Test_All_Operands(): у инструкции #%d [%s %s, %s, %s] операнд #%d [%s] принципиально неразрешим -E-\n"; // строка формата (2 операнда)
  int nInputOperands; // число входных операндов инструкции
  bool flagOp1,flagOp2, flagAll=true; // флаги разрешимости операндов
 //
@@ -3874,8 +3799,7 @@ bool __fastcall Test_All_Operands()
              flagOp2 = true;  // операнд 2 разрешён
      break;
 //
-    default:
-    break;
+    default: break;
 //
    } // конец switch( nInputOperands )
 //==============================================================================
@@ -4460,7 +4384,7 @@ void __fastcall Save_Protocol_Data()
    fprintf( fptr, "%20s%10s%10d     %s\n",   Mem_Data[i].Addr, Mem_Data[i].Data ? trueOutput : falseOutput,
                    Mem_Data[i].CountRead, tmp );
   else
-   fprintf( fptr, "%20s%10.7g%10d     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data, // это не предикат !..
+   fprintf( fptr, "%20s%10.4g%10d     %s\n", Mem_Data[i].Addr, Mem_Data[i].Data, // это не предикат !.. %10.4g !!! 
                    Mem_Data[i].CountRead, tmp );
 //
  } // конец цикла for( ULI i=0; i<Really_Data; i++ )

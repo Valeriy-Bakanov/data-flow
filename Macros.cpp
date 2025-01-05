@@ -19,9 +19,10 @@ bool   __fastcall makeMassive_1D( char* str, INT i ); // находит и обрабатывает 
 bool   __fastcall makeMassive_2D( char* str, INT i ); // ...2D-псевдомассивы
 void   __fastcall tf_printf( char* str ); // вывод строки str во фрейм протокола и файл fptrOut (global)
 //
-#define _tf_printf(str) t_printf("%s",str);fprintf(fptrOut,"%s\n",str); // макрос вывода строки str во фрейм протокола и файл fptr
-// ограничения на имена переменных: "длина>0" и "первый символ - буква" или "первый=attrvar"
-#define permissName(str) ( strlen(str)&&(isalpha(str[0])||!memcmp(str,attrVar,strlen(attrVar)) ) ) // длина>0 'и' (первая=буква 'или' первые!=attrVar)
+// ограничения на имена переменных: "длина>0" И "первый символ - буква" ИЛИ "первые=attrvar"
+#define permissName(str) ( strlen(str) && /* длина>0 'И' */ \
+                         ( isalpha(str[0]) || /* первая=буква 'ИЛИ' */ \
+                           !memcmp(str,attrVar,strlen(attrVar)) ) ) // первые!=attrVar)
 //
 #define test_isMassive_1D(s) \
                    ( strchr(s,'[') && strchr(s,']') && /* символы '[' и ']' присутствуют в строке s */ \
@@ -45,7 +46,7 @@ void __fastcall tf_printf( char* str )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 bool __fastcall Process_Macros()
-{ // читаем инструкции из файла FileNameSet, ищем заголвки макросов, запоминаем
+{ // читаем инструкции из файла FileNameSet, ищем заголОвки макросов, запоминаем
 // тела макросов в mBody (тип TStringList), вызываем обработчик макросов и создаём
 // новый файл с полным текстом (расщирения макросов)
  char str[_1024]="\0", strSave[_1024]="\0"; // строка для считывания и расшифровки инструкций + сохранение исходной строки
@@ -63,7 +64,6 @@ bool __fastcall Process_Macros()
 //
  for( INT i=0; i<max_Instruction; i++ ) // по строкам инструкций
   {
-//
    if(fgets(str, sizeof(str), fptrIn) == NULL) // читаем строку из fptr
     break; // если строки кончились, функция fgets возвращает NULL
 //
@@ -77,7 +77,7 @@ bool __fastcall Process_Macros()
     if( str[i] == VK_TAB ) // если i-тый символ есть Tab (9/0x9)...
      str[i] = VK_SPACE; // то заменяем его на пробел (32/0x20) !
 //
-   DSTA( str ); // чистка строки str от лидирующих и терминирующих Tabs и  пробелов
+   DSTA( str ); // чистка строки str от лидирующих и терминирующих Tabs и пробелов
 //
    if( !strlen(str) || // если длина строки нулевая...
        str[0]==startComments[0] || // или строка начинается с ";"...
@@ -91,7 +91,7 @@ bool __fastcall Process_Macros()
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
    if( !makeMassive_1D( str, i ) ||  // расширение макроса в 1D-псевдомассив
-//    continue; // строка str в выходной файл fptrOut добавляться не будет
+// continue; // строка str в выходной файл fptrOut добавляться не будет
        !makeMassive_2D( str, i ) ) // ...в 2D-псевдомассив
     continue; // строка str в выходной файл fptrOut добавляться не будет
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ bool __fastcall makeMassive_1D( char* str, INT i )
   { // начало if( !strncmp( str, "for[", 4 ) && ...
 //
    if( !dI || // неверен диапазон изменения переменных цикла (приводит к  беконечному повтору )
-     (  maxI>=minI && dI<=0) || ( maxI<=minI && dI>=0) )
+     (maxI>minI && dI<=0) || (maxI<minI && dI>=0) )
    {
     t_printf( "\n-M- Некорректен диапазон изменения [%d,%d,%d] переменной цикла '%c' -M-\n", minI,maxI,dI,cI );
     return false; // строка str в выходной файл fptrOut добавляться не будет
@@ -134,9 +134,11 @@ bool __fastcall makeMassive_1D( char* str, INT i )
 //
    for_ID ++ ; // номер for[... в данной программе
    flagMacroTitle_1D = true; // нашли строку с заголовком 1D-макроса
-   mBody->Clear(); // очистили mBody типа TStringList
+//
+   mBody->Clear(); // строки самого макроса
    mBody->Add( str ); // запомнили заголовок 1D-макроса
-   mExpand->Clear(); // готовимся к заполнению строка расширения макроса !!!
+//
+   mExpand->Clear(); // строки расширение макроса
    return false; // строка str в выходной файл fptrOut добавляться не будет
   } // конец if( !strncmp( str, "for[", 4 ) && ...
 //
@@ -150,17 +152,22 @@ bool __fastcall makeMassive_1D( char* str, INT i )
   {
    flagMacroTitle_1D = false; // в строке встретился "}"
    mBody->Add( str ); // добавляем в mBody строку "}"
-//   endN = i; // запомним номер строки с последним символом макроса
+// endN = i; // запомним номер строки с последним символом макроса
 //
 ////////////////////////////////////////////////////////////////////////////////
    SelectInstrForMacrosExpans_1D(); // выбор типа инструкции для расширения препроцессором
 ////////////////////////////////////////////////////////////////////////////////
    tf_printf( Format("; \n; начало расширения макроса: заголовок 'for[%s]=%d,%d,%d {'\n; for_ID: %d", // cI -> %s !!!
               OPENARRAY(TVarRec,(cI, int(minI), int(maxI),int(dI), int(for_ID)))).c_str() );
-   for( int j=0; j<mBody->Count; j++ )
+//
+   for( int j=0; j<mBody->Count; j++ ) // исходный текст
     tf_printf( Format("; %s", OPENARRAY(TVarRec, (mBody->Strings[j].c_str()) )).c_str() );
+//
+   tf_printf( ";\n; начало расширение макроса на 1D псевдо-массивы" ); // добавим разделитель ";" и текст
+//
    for( int j=0; j<mExpand->Count; j++ ) // добавление расширения на псевдо-массивы
     tf_printf( Format("%s",  OPENARRAY(TVarRec, (mExpand->Strings[j].c_str()) )).c_str() );
+//
    tf_printf( Format("; \n; конец расширения макроса: заголовок 'for[%s]=%d,%d,%d {'\n;", // cI -> %s !!!
               OPENARRAY(TVarRec,(cI, int(minI),int(maxI),int(dI)))).c_str() );
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,8 +262,6 @@ int __fastcall testIndex(char* str, char chr )
 void __fastcall SelectInstrForMacrosExpans_1D()
 { // выбор типа инструкции макроса для расширения препроцессором
 //
-// char Set[4]; // имя мнемоники инструкции
-//
  for( int j=1; j<mBody->Count-1; j++ ) // цикл по строкам содержания макроса (кроме заголовка и последней)
  {
   strncpy( SetName, mBody->Strings[j].c_str(), 3 ); // запомнили мнемонику инструкции (3 первых символа)
@@ -275,8 +280,6 @@ void __fastcall SelectInstrForMacrosExpans_1D()
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall SelectInstrForMacrosExpans_2D()
 { // выбор типа инструкции макроса для расширения препроцессором
-//
-// char Set[4]; // имя мнемоники инструкции
 //
  for( int j=1; j<mBody->Count-1; j++ ) // цикл по строкам содержания макроса (кроме заголовка и последней)
  {
@@ -303,7 +306,7 @@ bool __fastcall makeMassive_2D( char* str, INT i )
   { // начало if( !strncmp( str, "for[", 4 ) && ...
 //
    if( !dI || // неверен диапазон изменения переменных цикла I (приводит к беконечному повтору )
-     (  maxI>=minI && dI<=0) || ( maxI<=minI && dI>=0) )
+     (maxI>minI && dI<=0) || (maxI<minI && dI>=0) )
    {
     t_printf( "\n-M- Некорректен диапазон изменения [%d,%d,%d] переменной цикла '%c' -M-\n", minI,maxI,dI,cI );
     return false; // строка str в выходной файл fptrOut добавляться не будет
@@ -324,9 +327,11 @@ bool __fastcall makeMassive_2D( char* str, INT i )
 //
    for_ID ++ ; // номер for[... в данной программе
    flagMacroTitle_2D = true; // нашли строку с заголовком 1D-макроса
-   mBody->Clear(); // очистили mBody типа TStringList
-   mBody->Add( str ); // запомнили заголовок 1D-макроса
-   mExpand->Clear(); // готовимся к заполнению строка расширения макроса !!!
+//
+   mBody->Clear(); // строки исходного макроса
+   mBody->Add( str ); // запомнили заголовок 2D-макроса
+//
+   mExpand->Clear(); // строки расширения макроса
    return false;  // строка str в выходной файл fptrOut добавляться не будет
   } // конец if( !strncmp( str, "for[", 4 ) && ...
 //
@@ -346,10 +351,15 @@ bool __fastcall makeMassive_2D( char* str, INT i )
 ////////////////////////////////////////////////////////////////////////////////
    tf_printf( Format("; \n; начало расширения макроса: заголовок 'for[%s:%s]=%d,%d,%d:%d,%d,%d {'\n; for_ID: %d", // cI -> %s !!!
               OPENARRAY(TVarRec,(cI,cJ, int(minI),int(maxI),int(dI), int(minJ),int(maxJ),int(dJ), int(for_ID)))).c_str() );
-   for( int j=0; j<mBody->Count; j++ )
+//
+   for( int j=0; j<mBody->Count; j++ ) // исходный текст
     tf_printf( Format("; %s", OPENARRAY(TVarRec, (mBody->Strings[j].c_str()) )).c_str() );
+//
+   tf_printf( ";\n; начало расширение макроса на 2D псевдо-массивы" ); // добавим разделитель ";" и текст
+//
    for( int j=0; j<mExpand->Count; j++ ) // добавление расширения на псевдо-массивы
     tf_printf( Format("%s",  OPENARRAY(TVarRec, (mExpand->Strings[j].c_str()) )).c_str() );
+//
    tf_printf( Format("; \n; конец расширения макроса: заголовок 'for[%s:%s]=%d,%d,%d:%d,%d,%d {'\n;", // cI -> %s !!!
               OPENARRAY(TVarRec,(cI,cJ, int(minI),int(maxI),int(dI),  int(minJ),int(maxJ),int(dJ) ))).c_str() );
 ////////////////////////////////////////////////////////////////////////////////
@@ -376,7 +386,7 @@ void __fastcall Expansion_SET_1D( char* s )
   strcpy( Opd_1,   DAS( p = strtok( NULL, "," ) ) ); // 1-й операнд
   strcpy( Res,     DAS( p = strtok( NULL, ";" ) ) ); // результат
 //
-  strcpy( tmp_1,  Opd_1 ); // запомниди Opd_1
+  strcpy( tmp_1,  Opd_1 ); // запомнили Opd_1
   strcpy( tmp_2,  Res ); // запомнили Res
 //
   if( strchr(s,';') ) // если в строке есть ';'
@@ -463,32 +473,64 @@ void __fastcall Expansion_1_2_Opd_1D( char* s, int nOpd )
 { // расширяет макрос по инструкции c 1-2 операндами , добавляет расширение в
 // mExpand (TStringList) ; nOpd - число операндов
 // bool outCode = true; // удачное расширение SET
- int out;
- char *p, tmp_1[_512], tmp_2[_512], tmp_3[_512]; // локальные массивы
+ boolean isPred; // есть ли в не P-операторе предикат
+ char *p, *n, *ps, *pe, tmp[_512],
+      tmp_1[_512], tmp_2[_512], tmp_3[_512], tmp_4[_512]; // локальные массивы для компонентов машинной инструкции
 //
   strcpy( str, s ); // копируем, ибо при обработке strtok исходная строка s разрушается
 //
   Opd_2[0] = Comm[0] = '\0'; // обнуление...
 //
-  strcpy( SetName,      p = strtok( str,  " " ) ); // мнемоника
-  strcpy( Opd_1,   DAS( p = strtok( NULL, "," ) ) ); // 1-й операнд
+  strcpy( SetName,    p = strtok( str,  " " ) ); // мнемоника
+  strcpy( Opd_1, DAS( p = strtok( NULL, "," ) ) ); // 1-й операнд
+//
   if( nOpd == 2 )
-   strcpy( Opd_2,  DAS( p = strtok( NULL, "," ) ) ) ; // 2-й операнд
-  strcpy( Res,     DAS( p = strtok( NULL, ";" ) ) ); // результат
+   strcpy( Opd_2, DAS( p = strtok( NULL, "," ) ) ) ; // 2-й операнд
+//
+// ----- ищем разницу при использовании поля предиката в P- и не-P-инстукциях---
+  if( is_Predicat( SetName ) ) // оператор SetName = P-инструкция)
+   strcpy( Res, DAS( p = strtok( NULL, ";" ) ) ); // результат (используемый в будущем как предикат)
+  else // не P-инструкция
+  {
+   strcpy( Res,  DAS( p = strtok( NULL, ",;" ) ) ); // результат инструкции
+   strcpy( str, s ); // восстановили, ибо при обработке strtok исходная строка s разрушается
+   n = strstr( str, Res ); // начало p в str
+   n += strlen(Res); // первый символ после Res в str
+//
+   strcpy( tmp, str+(n-str) ); // tmp<-str (str начиная с n и до конца str) ; tmp - для упрощения
+//
+   if( ps=strchr( tmp, ',') ) // символ ',' в temp найден - значит, предикат имеется..!
+   {
+    isPred = true;
+    pe=strchr( tmp, ';'); // найден ';'
+    strncpy( Pred, tmp+1, pe-tmp-1 ); // Pred<-tmp (tmp начиная с 1 и до pe-tmp-1)
+    DAS( Pred );
+   } // конец if( ps=strchr( tmp, ',') )
+//
+   else
+   if( strchr( tmp, ';') ) // символ ';' в temp найден - значит, поля предиката нет..!
+   {
+    isPred = false;
+    Pred[0] = '\0';
+   }
+//
+  } // конец else if( is_Predicat( SetName ) )
 //
   if( strchr(s,';') ) // если в строке есть ';'
    strcpy( Comm, &s[strchr(s,';')-s+1] ); // копируем в Comm всё, правее ';'
 //
-  strcpy( tmp_1, Opd_1 ); // сохраняем строки
+  strcpy( tmp_1, Opd_1 ); // сохраняем компоненты машинной инструкции
   strcpy( tmp_2, Opd_2 );
   strcpy( tmp_3, Res );
+  strcpy( tmp_4, Pred );
 //
  for( INT i=minI; i<=maxI; i+=dI ) // по заданному i-диапазону расширения 1D-макроса
  {
 // ----- разбираем операнды не SET'а -------------------------------------------
-  strcpy( Opd_1, tmp_1 ); // востанавливаем строки
+  strcpy( Opd_1, tmp_1 ); // востанавливаем компоненты машинной инструкции
   strcpy( Opd_2, tmp_2 );
   strcpy( Res,   tmp_3 );
+  strcpy( Pred,  tmp_4 );
 //
 // ------ обрабатываем поле Opd_1 (первый операнд инструкции) ------------------
   if( test_isMassive_1D( Opd_1 ) )
@@ -503,6 +545,13 @@ void __fastcall Expansion_1_2_Opd_1D( char* s, int nOpd )
    else
     handlXXX_asVariable_1D( Opd_2, i ); // обрабатываем результат, если он простая переменная
 //
+// ------ обрабатываем поле Pred (предикат) ------------------------------------
+  if( strlen( Pred ) ) // если предикат присутствует...
+   if( test_isMassive_1D( Pred ) )
+    handlXXX_asMassive_1D( Pred, i ); // обрабатываем результат, если он 1D-псевдомассив
+   else
+    handlXXX_asVariable_1D( Pred, i ); // обрабатываем результат, если он простая переменная
+//
 // ------ обрабатываем поле Res (результат выполнения инструкции) --------------
   if( test_isMassive_1D( Res ) )
    handlXXX_asMassive_1D( Res, i ); // обрабатываем результат, если он 1D-псевдомассив
@@ -510,13 +559,15 @@ void __fastcall Expansion_1_2_Opd_1D( char* s, int nOpd )
    handlXXX_asVariable_1D( Res, i ); // обрабатываем результат, если он простая переменная
 //
 // ---- собираем готовую строку инструкции из отдельных полей ------------------
-  if( nOpd == 1 ) // 1 операнд
-   sprintf( str, "%s %s, %s ; %s", SetName, Opd_1, Res, Comm ); // готовим преобразованную строку инструкции
-  else
-   sprintf( str, "%s %s, %s, %s ; %s", SetName, Opd_1,Opd_2, Res, Comm );
+  if( nOpd == 1 ) // 1 операнд в инструкции
+   isPred ? sprintf( str, "%s %s, %s, %s ; %s", SetName, Opd_1, Res, Pred, Comm )
+          : sprintf( str, "%s %s, %s ; %s",     SetName, Opd_1, Res,       Comm ) ;
+  else // 2 операнда в инструкции
+   isPred ? sprintf( str, "%s %s, %s, %s, %s ; %s", SetName, Opd_1, Opd_2, Res, Pred, Comm )
+          : sprintf( str, "%s %s, %s, %s ; %s",     SetName, Opd_1, Opd_2, Res,       Comm ) ;
 ////////////////////////////////////////////////////////////////////////////////
 //
-  mExpand->Add( str ); // добавим готовую строку расширения для сохранения
+  mExpand->Add( str ); // добавим готовую строку расширения для сохранения в nExpand
 //
  } // конец цикла по i
 //
@@ -529,8 +580,9 @@ void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
 { // расширяет макрос по инструкции c 1-2 операндами , добавляет расширение в
 // mExpand (TStringList) ; nOpd - число операндов
 // bool outCode = true; // удачное расширение SET
- int out;
- char *p, tmp_1[_512], tmp_2[_512], tmp_3[_512]; // локальные массивы
+ boolean isPred; // есть ли в не P-операторе предикат
+ char *p, *n, *ps, *pe, tmp[_512],
+      tmp_1[_512], tmp_2[_512], tmp_3[_512], tmp_4[_512]; // локальные массивы для компонентов машинной инструкции
 //
   strcpy( str, s ); // копируем, ибо при обработке strtok исходная строка s разрушается
 //
@@ -538,23 +590,54 @@ void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
 //
   strcpy( SetName,      p = strtok( str,  " " ) ); // мнемоника
   strcpy( Opd_1,   DAS( p = strtok( NULL, "," ) ) ); // 1-й операнд
+//
   if( nOpd == 2 )
    strcpy( Opd_2,  DAS( p = strtok( NULL, "," ) ) ) ; // 2-й операнд
-  strcpy( Res,     DAS( p = strtok( NULL, ";" ) ) ); // результат
+//
+// ----- ищем разницу при использовании поля предиката в P- и не-P-инстукциях---
+  if( is_Predicat( SetName ) ) // оператор SetName = P-инструкция)
+   strcpy( Res, DAS( p = strtok( NULL, ";" ) ) ); // результат (используемый в будущем как предикат)
+  else // не P-инструкция
+  {
+   strcpy( Res,  DAS( p = strtok( NULL, ",;" ) ) ); // результат инструкции
+   strcpy( str, s ); // восстановили, ибо при обработке strtok исходная строка s разрушается
+   n = strstr( str, Res ); // начало p в str
+   n += strlen(Res); // первый символ после Res в str
+//
+   strcpy( tmp, str+(n-str) ); // tmp<-str (str начиная с n и до конца str) ; tmp - для упрощения
+//
+   if( ps=strchr( tmp, ',') ) // символ ',' в temp найден - значит, предикат имеется..!
+   {
+    isPred = true;
+    pe=strchr( tmp, ';'); // найден ';'
+    strncpy( Pred, tmp+1, pe-tmp-1 ); // Pred<-tmp (tmp начиная с 1 и до pe-tmp-1)
+    DAS( Pred );
+   } // конец if( ps=strchr( tmp, ',') )
+//
+   else
+   if( strchr( tmp, ';') ) // символ ';' в temp найден - значит, поля предиката нет..!
+   {
+    isPred = false;
+    Pred[0] = '\0';
+   }
+//
+  } // конец else if( is_Predicat( SetName ) )
 //
   if( strchr(s,';') ) // если в строке есть ';'
    strcpy( Comm, &s[strchr(s,';')-s+1] ); // копируем в Comm всё, правее ';'
 //
-  strcpy( tmp_1, Opd_1 ); // сохраняем строки
+  strcpy( tmp_1, Opd_1 ); // сохраняем компоненты машинной инструкции
   strcpy( tmp_2, Opd_2 );
   strcpy( tmp_3, Res );
+  strcpy( tmp_4, Pred );
 //
  for( INT i=minI; i<=maxI; i+=dI ) // по заданному i-диапазону расширения 2D-макроса
  for( INT j=minJ; j<=maxJ; j+=dJ ) // по заданному j-диапазону расширения 2D-макроса
  {
-  strcpy( Opd_1, tmp_1 ); // сохраняем строки
+  strcpy( Opd_1, tmp_1 );  //восстанавливаем компоненты машинной инструкции
   strcpy( Opd_2, tmp_2 );
   strcpy( Res,   tmp_3 );
+  strcpy( Pred,  tmp_4 );
 //
 // ------ обрабатываем поле Opd_1 (первый операнд инструкции) ------------------
   if( test_isMassive_2D( Opd_1 ) )
@@ -568,6 +651,14 @@ void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
     handlXXX_asMassive_2D( Opd_2, i, j ); // обрабатываем результат, если он 2D-псевдомассив
    else
     handlXXX_asVariable_2D( Opd_2, i, j ); // обрабатываем результат, если он простая переменная
+//
+// ------ обрабатываем поле Pred (предикат) ------------------------------------
+  if( strlen( Pred ) ) // если предикат присутствует
+   if( test_isMassive_1D( Pred ) )
+    handlXXX_asMassive_1D( Pred, i ); // обрабатываем результат, если он 1D-псевдомассив
+   else
+    handlXXX_asVariable_1D( Pred, i ); // обрабатываем результат, если он простая переменная
+//
 ////////////////////////////////////////////////////////////////////////////////
 // ------ обрабатываем поле Res (результат выполнения инструкции) --------------
   if( test_isMassive_2D( Res ) )
@@ -576,10 +667,13 @@ void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
    handlXXX_asVariable_2D( Res, i, j ); // обрабатываем результат, если он простая переменная
 //
 // ---- собираем готовую строку инструкции из отдельных полей ------------------
-  if( nOpd == 1 ) // 1 операнд
-   sprintf( str, "%s %s, %s ; %s", SetName, Opd_1, Res, Comm ); // готовим преобразованную строку инструкции
-  else
-   sprintf( str, "%s %s, %s, %s ; %s", SetName, Opd_1, Opd_2, Res, Comm );
+// ---- собираем готовую строку инструкции из отдельных полей ------------------
+  if( nOpd == 1 ) // 1 операнд в инструкции
+   isPred ? sprintf( str, "%s %s, %s, %s ; %s", SetName, Opd_1, Res, Pred, Comm )
+          : sprintf( str, "%s %s, %s ; %s",     SetName, Opd_1, Res,       Comm ) ;
+  else // 2 операнда в инструкции
+   isPred ? sprintf( str, "%s %s, %s, %s, %s ; %s", SetName, Opd_1, Opd_2, Res, Pred, Comm )
+          : sprintf( str, "%s %s, %s, %s ; %s",     SetName, Opd_1, Opd_2, Res,       Comm ) ;
 ////////////////////////////////////////////////////////////////////////////////
   mExpand->Add( str ); // добавим готовую строку расширения для сохранения
 //
@@ -591,7 +685,7 @@ void __fastcall Expansion_1_2_Opd_2D( char* s, int nOpd )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall handlXXX_asMassive_2D( char* Field, INT i, INT j )
-{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 2D-псевдомассивов --------
+{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 2D-псевдомассивов ----
 //
   string strTmp;
   char *p, tmp_1[_512],tmp_2[_512], expr_1[_512],expr_2[_512]; // локальные массивы
@@ -621,7 +715,7 @@ void __fastcall handlXXX_asMassive_2D( char* Field, INT i, INT j )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall handlXXX_asMassive_1D( char* Field, INT i )
-{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 1D-псевдомассивов ----
+{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Pred,Res для 1D-псевдомассивов
 //
   string strTmp;
   char *p;
@@ -645,7 +739,7 @@ void __fastcall handlXXX_asMassive_1D( char* Field, INT i )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall handlXXX_asVariable_1D( char* Field, INT i )
-{  // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 1D-псевдомассивов ----
+{  // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Pred,Res для 1D-псевдомассивов
 // обрабатываеи поле операнда, если он в форме простой переменной
 //
  if( TokenUse && (&Field==&Res) ) // использовать токен для имени поля результата
@@ -657,7 +751,7 @@ void __fastcall handlXXX_asVariable_1D( char* Field, INT i )
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void __fastcall handlXXX_asVariable_2D( char* Field, INT i, INT j )
-{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Res для 2D-псевдомассивов ----
+{ // обрабатываем поле XXX=Field типа Opd_1,Opd_2,Pred,Res для 2D-псевдомассивов
 //
  if( TokenUse && (&Field==&Res) ) // использовать токен для имени поля результата
   strcpy( Field, Format("%s:%d:%d:%d",OPENARRAY(TVarRec,(Field,int(for_ID),int(i),int(j)) ) ).c_str() );

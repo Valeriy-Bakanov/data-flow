@@ -1,0 +1,379 @@
+; Баканов В.М., e881e@mail.ru, vbakanov@hse.ru
+; НИУ ВШЭ, Москва, Россия
+; пример использования мАкроса для дихотомии (она ж бисекция)
+; ПРОГРАММА - численной решение Y=X^2-1
+; решение в XI[*] 
+;
+SET 0, XN[1] ; начало интервала поиска корня
+SET 5, XK[1] ; конец интервала поиска корня
+;
+SET 2.0, TWO ; константа ДВА
+SET 1.0, ONE ; константа ЕДИНИЦА
+SET 0.0, ZERO ; константа НУЛЬ
+SET 2.0, DEGREE ; степень XI^DEGREE-1
+;
+POW XN[1], DEGREE, W1[1] ; XN^2 
+SUB W1[1], ONE,    FN[1] ; FN=XN^2-1 | вычисление FI в левой точке XN
+;
+POW XK[1], DEGREE, W2[1] ; XK^2 
+SUB W2[1], ONE,    FK[1] ; FK=XK^2-1 | вычисление FI в правой точке XK
+;
+ADD XN[1], XK[1],  W3 ; сумма левой и правой границ
+DIV W3,    TWO,    XI[1] ; полусумма ...
+POW XI[1], DEGREE, W4 ; XI^2  
+SUB W4,    ONE,    FI[1] ; FI=XI^2-1 | вычисление FI в центре между XN и XK
+;
+; ============================================================
+;
+;
+;
+;
+;
+; 
+; начало расширения макроса: заголовок 'for[i]=1,20,1 {'
+; for_ID: 0
+; for[i]=1,20,1 { ; цикл по переменной i от i=1 до i=5 с шагом 1
+; MUL FK[i], FI[i],   W5[i] ; анализ знака FK[i]хFI[i]
+; PGT W5[i], ZERO,    FLAG_1[i] ; FLAG_1==true при FK[i]хFI[i]>0
+; CPY XI[i], XK[i+1], FLAG_1[i] ; XK[i+1] <- XI[i]
+; CPY FI[i], FK[i+1], FLAG_1[i] ; FK[i+1] <- FI[i]
+; CPY XN[i], XN[i+1], FLAG_1[i] ; XN[i+1] <- XN[i] - копируем без изменения
+; CPY FN[i], FN[i+1], FLAG_1[i] ; FN[i+1] <- FN[i] - -.-.-
+; MUL FN[i], FI[i],   W6[i] ; анализ знака FN[i]хFI[i]
+; PGT W6[i], ZERO,    FLAG_2[i] ; FLAG_2==true при FN[i]хFI[i]>0
+; CPY XI[i], XN[i+1], FLAG_2[i] ; XN[i+1] <- XI[i]
+; CPY FI[i], FN[i+1], FLAG_2[i] ; FN[i+1] <- XI[i]
+; CPY XK[i], XK[i+1], FLAG_2[i] ; XK[i+1] <- XK[i] - копируем без изменения
+; CPY FK[i], FK[i+1], FLAG_2[i] ; FK[i+1] <- FK[i] - -.-.-
+; ADD XN[i],   XK[i],  W7[i] ; сумма абсцисс начала и конца отрезка
+; DIV W7[i],   TWO,    XI[i+1] ; полусумма | для следующей итерации
+; POW XI[i+1], DEGREE, W8[i] ; XI^2 | вычисление FI в центре между XN и XK
+; SUB W8[i],   ONE,    FI[i+1] ; FI=XI^2-1 | для следующей итерации
+; } ; конец цикла по i
+;
+; начало расширение макроса на 1D псевдо-массивы
+MUL FK[1], FI[1], W5[1] ;  анализ знака FK[i]хFI[i]
+MUL FK[2], FI[2], W5[2] ;  анализ знака FK[i]хFI[i]
+MUL FK[3], FI[3], W5[3] ;  анализ знака FK[i]хFI[i]
+MUL FK[4], FI[4], W5[4] ;  анализ знака FK[i]хFI[i]
+MUL FK[5], FI[5], W5[5] ;  анализ знака FK[i]хFI[i]
+MUL FK[6], FI[6], W5[6] ;  анализ знака FK[i]хFI[i]
+MUL FK[7], FI[7], W5[7] ;  анализ знака FK[i]хFI[i]
+MUL FK[8], FI[8], W5[8] ;  анализ знака FK[i]хFI[i]
+MUL FK[9], FI[9], W5[9] ;  анализ знака FK[i]хFI[i]
+MUL FK[10], FI[10], W5[10] ;  анализ знака FK[i]хFI[i]
+MUL FK[11], FI[11], W5[11] ;  анализ знака FK[i]хFI[i]
+MUL FK[12], FI[12], W5[12] ;  анализ знака FK[i]хFI[i]
+MUL FK[13], FI[13], W5[13] ;  анализ знака FK[i]хFI[i]
+MUL FK[14], FI[14], W5[14] ;  анализ знака FK[i]хFI[i]
+MUL FK[15], FI[15], W5[15] ;  анализ знака FK[i]хFI[i]
+MUL FK[16], FI[16], W5[16] ;  анализ знака FK[i]хFI[i]
+MUL FK[17], FI[17], W5[17] ;  анализ знака FK[i]хFI[i]
+MUL FK[18], FI[18], W5[18] ;  анализ знака FK[i]хFI[i]
+MUL FK[19], FI[19], W5[19] ;  анализ знака FK[i]хFI[i]
+MUL FK[20], FI[20], W5[20] ;  анализ знака FK[i]хFI[i]
+PGT W5[1], ZERO, FLAG_1[1],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[2], ZERO, FLAG_1[2],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[3], ZERO, FLAG_1[3],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[4], ZERO, FLAG_1[4],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[5], ZERO, FLAG_1[5],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[6], ZERO, FLAG_1[6],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[7], ZERO, FLAG_1[7],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[8], ZERO, FLAG_1[8],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[9], ZERO, FLAG_1[9],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[10], ZERO, FLAG_1[10],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[11], ZERO, FLAG_1[11],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[12], ZERO, FLAG_1[12],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[13], ZERO, FLAG_1[13],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[14], ZERO, FLAG_1[14],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[15], ZERO, FLAG_1[15],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[16], ZERO, FLAG_1[16],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[17], ZERO, FLAG_1[17],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[18], ZERO, FLAG_1[18],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[19], ZERO, FLAG_1[19],  ;  FLAG_1==true при FK[i]хFI[i]>0
+PGT W5[20], ZERO, FLAG_1[20],  ;  FLAG_1==true при FK[i]хFI[i]>0
+CPY XI[1], XK[2], FLAG_1[1] ;  XK[i+1] <- XI[i]
+CPY XI[2], XK[3], FLAG_1[2] ;  XK[i+1] <- XI[i]
+CPY XI[3], XK[4], FLAG_1[3] ;  XK[i+1] <- XI[i]
+CPY XI[4], XK[5], FLAG_1[4] ;  XK[i+1] <- XI[i]
+CPY XI[5], XK[6], FLAG_1[5] ;  XK[i+1] <- XI[i]
+CPY XI[6], XK[7], FLAG_1[6] ;  XK[i+1] <- XI[i]
+CPY XI[7], XK[8], FLAG_1[7] ;  XK[i+1] <- XI[i]
+CPY XI[8], XK[9], FLAG_1[8] ;  XK[i+1] <- XI[i]
+CPY XI[9], XK[10], FLAG_1[9] ;  XK[i+1] <- XI[i]
+CPY XI[10], XK[11], FLAG_1[10] ;  XK[i+1] <- XI[i]
+CPY XI[11], XK[12], FLAG_1[11] ;  XK[i+1] <- XI[i]
+CPY XI[12], XK[13], FLAG_1[12] ;  XK[i+1] <- XI[i]
+CPY XI[13], XK[14], FLAG_1[13] ;  XK[i+1] <- XI[i]
+CPY XI[14], XK[15], FLAG_1[14] ;  XK[i+1] <- XI[i]
+CPY XI[15], XK[16], FLAG_1[15] ;  XK[i+1] <- XI[i]
+CPY XI[16], XK[17], FLAG_1[16] ;  XK[i+1] <- XI[i]
+CPY XI[17], XK[18], FLAG_1[17] ;  XK[i+1] <- XI[i]
+CPY XI[18], XK[19], FLAG_1[18] ;  XK[i+1] <- XI[i]
+CPY XI[19], XK[20], FLAG_1[19] ;  XK[i+1] <- XI[i]
+CPY XI[20], XK[21], FLAG_1[20] ;  XK[i+1] <- XI[i]
+CPY FI[1], FK[2], FLAG_1[1] ;  FK[i+1] <- FI[i]
+CPY FI[2], FK[3], FLAG_1[2] ;  FK[i+1] <- FI[i]
+CPY FI[3], FK[4], FLAG_1[3] ;  FK[i+1] <- FI[i]
+CPY FI[4], FK[5], FLAG_1[4] ;  FK[i+1] <- FI[i]
+CPY FI[5], FK[6], FLAG_1[5] ;  FK[i+1] <- FI[i]
+CPY FI[6], FK[7], FLAG_1[6] ;  FK[i+1] <- FI[i]
+CPY FI[7], FK[8], FLAG_1[7] ;  FK[i+1] <- FI[i]
+CPY FI[8], FK[9], FLAG_1[8] ;  FK[i+1] <- FI[i]
+CPY FI[9], FK[10], FLAG_1[9] ;  FK[i+1] <- FI[i]
+CPY FI[10], FK[11], FLAG_1[10] ;  FK[i+1] <- FI[i]
+CPY FI[11], FK[12], FLAG_1[11] ;  FK[i+1] <- FI[i]
+CPY FI[12], FK[13], FLAG_1[12] ;  FK[i+1] <- FI[i]
+CPY FI[13], FK[14], FLAG_1[13] ;  FK[i+1] <- FI[i]
+CPY FI[14], FK[15], FLAG_1[14] ;  FK[i+1] <- FI[i]
+CPY FI[15], FK[16], FLAG_1[15] ;  FK[i+1] <- FI[i]
+CPY FI[16], FK[17], FLAG_1[16] ;  FK[i+1] <- FI[i]
+CPY FI[17], FK[18], FLAG_1[17] ;  FK[i+1] <- FI[i]
+CPY FI[18], FK[19], FLAG_1[18] ;  FK[i+1] <- FI[i]
+CPY FI[19], FK[20], FLAG_1[19] ;  FK[i+1] <- FI[i]
+CPY FI[20], FK[21], FLAG_1[20] ;  FK[i+1] <- FI[i]
+CPY XN[1], XN[2], FLAG_1[1] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[2], XN[3], FLAG_1[2] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[3], XN[4], FLAG_1[3] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[4], XN[5], FLAG_1[4] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[5], XN[6], FLAG_1[5] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[6], XN[7], FLAG_1[6] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[7], XN[8], FLAG_1[7] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[8], XN[9], FLAG_1[8] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[9], XN[10], FLAG_1[9] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[10], XN[11], FLAG_1[10] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[11], XN[12], FLAG_1[11] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[12], XN[13], FLAG_1[12] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[13], XN[14], FLAG_1[13] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[14], XN[15], FLAG_1[14] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[15], XN[16], FLAG_1[15] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[16], XN[17], FLAG_1[16] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[17], XN[18], FLAG_1[17] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[18], XN[19], FLAG_1[18] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[19], XN[20], FLAG_1[19] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY XN[20], XN[21], FLAG_1[20] ;  XN[i+1] <- XN[i] - копируем без изменения
+CPY FN[1], FN[2], FLAG_1[1] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[2], FN[3], FLAG_1[2] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[3], FN[4], FLAG_1[3] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[4], FN[5], FLAG_1[4] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[5], FN[6], FLAG_1[5] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[6], FN[7], FLAG_1[6] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[7], FN[8], FLAG_1[7] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[8], FN[9], FLAG_1[8] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[9], FN[10], FLAG_1[9] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[10], FN[11], FLAG_1[10] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[11], FN[12], FLAG_1[11] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[12], FN[13], FLAG_1[12] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[13], FN[14], FLAG_1[13] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[14], FN[15], FLAG_1[14] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[15], FN[16], FLAG_1[15] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[16], FN[17], FLAG_1[16] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[17], FN[18], FLAG_1[17] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[18], FN[19], FLAG_1[18] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[19], FN[20], FLAG_1[19] ;  FN[i+1] <- FN[i] - -.-.-
+CPY FN[20], FN[21], FLAG_1[20] ;  FN[i+1] <- FN[i] - -.-.-
+MUL FN[1], FI[1], W6[1] ;  анализ знака FN[i]хFI[i]
+MUL FN[2], FI[2], W6[2] ;  анализ знака FN[i]хFI[i]
+MUL FN[3], FI[3], W6[3] ;  анализ знака FN[i]хFI[i]
+MUL FN[4], FI[4], W6[4] ;  анализ знака FN[i]хFI[i]
+MUL FN[5], FI[5], W6[5] ;  анализ знака FN[i]хFI[i]
+MUL FN[6], FI[6], W6[6] ;  анализ знака FN[i]хFI[i]
+MUL FN[7], FI[7], W6[7] ;  анализ знака FN[i]хFI[i]
+MUL FN[8], FI[8], W6[8] ;  анализ знака FN[i]хFI[i]
+MUL FN[9], FI[9], W6[9] ;  анализ знака FN[i]хFI[i]
+MUL FN[10], FI[10], W6[10] ;  анализ знака FN[i]хFI[i]
+MUL FN[11], FI[11], W6[11] ;  анализ знака FN[i]хFI[i]
+MUL FN[12], FI[12], W6[12] ;  анализ знака FN[i]хFI[i]
+MUL FN[13], FI[13], W6[13] ;  анализ знака FN[i]хFI[i]
+MUL FN[14], FI[14], W6[14] ;  анализ знака FN[i]хFI[i]
+MUL FN[15], FI[15], W6[15] ;  анализ знака FN[i]хFI[i]
+MUL FN[16], FI[16], W6[16] ;  анализ знака FN[i]хFI[i]
+MUL FN[17], FI[17], W6[17] ;  анализ знака FN[i]хFI[i]
+MUL FN[18], FI[18], W6[18] ;  анализ знака FN[i]хFI[i]
+MUL FN[19], FI[19], W6[19] ;  анализ знака FN[i]хFI[i]
+MUL FN[20], FI[20], W6[20] ;  анализ знака FN[i]хFI[i]
+PGT W6[1], ZERO, FLAG_2[1],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[2], ZERO, FLAG_2[2],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[3], ZERO, FLAG_2[3],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[4], ZERO, FLAG_2[4],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[5], ZERO, FLAG_2[5],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[6], ZERO, FLAG_2[6],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[7], ZERO, FLAG_2[7],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[8], ZERO, FLAG_2[8],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[9], ZERO, FLAG_2[9],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[10], ZERO, FLAG_2[10],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[11], ZERO, FLAG_2[11],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[12], ZERO, FLAG_2[12],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[13], ZERO, FLAG_2[13],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[14], ZERO, FLAG_2[14],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[15], ZERO, FLAG_2[15],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[16], ZERO, FLAG_2[16],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[17], ZERO, FLAG_2[17],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[18], ZERO, FLAG_2[18],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[19], ZERO, FLAG_2[19],  ;  FLAG_2==true при FN[i]хFI[i]>0
+PGT W6[20], ZERO, FLAG_2[20],  ;  FLAG_2==true при FN[i]хFI[i]>0
+CPY XI[1], XN[2], FLAG_2[1] ;  XN[i+1] <- XI[i]
+CPY XI[2], XN[3], FLAG_2[2] ;  XN[i+1] <- XI[i]
+CPY XI[3], XN[4], FLAG_2[3] ;  XN[i+1] <- XI[i]
+CPY XI[4], XN[5], FLAG_2[4] ;  XN[i+1] <- XI[i]
+CPY XI[5], XN[6], FLAG_2[5] ;  XN[i+1] <- XI[i]
+CPY XI[6], XN[7], FLAG_2[6] ;  XN[i+1] <- XI[i]
+CPY XI[7], XN[8], FLAG_2[7] ;  XN[i+1] <- XI[i]
+CPY XI[8], XN[9], FLAG_2[8] ;  XN[i+1] <- XI[i]
+CPY XI[9], XN[10], FLAG_2[9] ;  XN[i+1] <- XI[i]
+CPY XI[10], XN[11], FLAG_2[10] ;  XN[i+1] <- XI[i]
+CPY XI[11], XN[12], FLAG_2[11] ;  XN[i+1] <- XI[i]
+CPY XI[12], XN[13], FLAG_2[12] ;  XN[i+1] <- XI[i]
+CPY XI[13], XN[14], FLAG_2[13] ;  XN[i+1] <- XI[i]
+CPY XI[14], XN[15], FLAG_2[14] ;  XN[i+1] <- XI[i]
+CPY XI[15], XN[16], FLAG_2[15] ;  XN[i+1] <- XI[i]
+CPY XI[16], XN[17], FLAG_2[16] ;  XN[i+1] <- XI[i]
+CPY XI[17], XN[18], FLAG_2[17] ;  XN[i+1] <- XI[i]
+CPY XI[18], XN[19], FLAG_2[18] ;  XN[i+1] <- XI[i]
+CPY XI[19], XN[20], FLAG_2[19] ;  XN[i+1] <- XI[i]
+CPY XI[20], XN[21], FLAG_2[20] ;  XN[i+1] <- XI[i]
+CPY FI[1], FN[2], FLAG_2[1] ;  FN[i+1] <- XI[i]
+CPY FI[2], FN[3], FLAG_2[2] ;  FN[i+1] <- XI[i]
+CPY FI[3], FN[4], FLAG_2[3] ;  FN[i+1] <- XI[i]
+CPY FI[4], FN[5], FLAG_2[4] ;  FN[i+1] <- XI[i]
+CPY FI[5], FN[6], FLAG_2[5] ;  FN[i+1] <- XI[i]
+CPY FI[6], FN[7], FLAG_2[6] ;  FN[i+1] <- XI[i]
+CPY FI[7], FN[8], FLAG_2[7] ;  FN[i+1] <- XI[i]
+CPY FI[8], FN[9], FLAG_2[8] ;  FN[i+1] <- XI[i]
+CPY FI[9], FN[10], FLAG_2[9] ;  FN[i+1] <- XI[i]
+CPY FI[10], FN[11], FLAG_2[10] ;  FN[i+1] <- XI[i]
+CPY FI[11], FN[12], FLAG_2[11] ;  FN[i+1] <- XI[i]
+CPY FI[12], FN[13], FLAG_2[12] ;  FN[i+1] <- XI[i]
+CPY FI[13], FN[14], FLAG_2[13] ;  FN[i+1] <- XI[i]
+CPY FI[14], FN[15], FLAG_2[14] ;  FN[i+1] <- XI[i]
+CPY FI[15], FN[16], FLAG_2[15] ;  FN[i+1] <- XI[i]
+CPY FI[16], FN[17], FLAG_2[16] ;  FN[i+1] <- XI[i]
+CPY FI[17], FN[18], FLAG_2[17] ;  FN[i+1] <- XI[i]
+CPY FI[18], FN[19], FLAG_2[18] ;  FN[i+1] <- XI[i]
+CPY FI[19], FN[20], FLAG_2[19] ;  FN[i+1] <- XI[i]
+CPY FI[20], FN[21], FLAG_2[20] ;  FN[i+1] <- XI[i]
+CPY XK[1], XK[2], FLAG_2[1] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[2], XK[3], FLAG_2[2] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[3], XK[4], FLAG_2[3] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[4], XK[5], FLAG_2[4] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[5], XK[6], FLAG_2[5] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[6], XK[7], FLAG_2[6] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[7], XK[8], FLAG_2[7] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[8], XK[9], FLAG_2[8] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[9], XK[10], FLAG_2[9] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[10], XK[11], FLAG_2[10] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[11], XK[12], FLAG_2[11] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[12], XK[13], FLAG_2[12] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[13], XK[14], FLAG_2[13] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[14], XK[15], FLAG_2[14] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[15], XK[16], FLAG_2[15] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[16], XK[17], FLAG_2[16] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[17], XK[18], FLAG_2[17] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[18], XK[19], FLAG_2[18] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[19], XK[20], FLAG_2[19] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY XK[20], XK[21], FLAG_2[20] ;  XK[i+1] <- XK[i] - копируем без изменения
+CPY FK[1], FK[2], FLAG_2[1] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[2], FK[3], FLAG_2[2] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[3], FK[4], FLAG_2[3] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[4], FK[5], FLAG_2[4] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[5], FK[6], FLAG_2[5] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[6], FK[7], FLAG_2[6] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[7], FK[8], FLAG_2[7] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[8], FK[9], FLAG_2[8] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[9], FK[10], FLAG_2[9] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[10], FK[11], FLAG_2[10] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[11], FK[12], FLAG_2[11] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[12], FK[13], FLAG_2[12] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[13], FK[14], FLAG_2[13] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[14], FK[15], FLAG_2[14] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[15], FK[16], FLAG_2[15] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[16], FK[17], FLAG_2[16] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[17], FK[18], FLAG_2[17] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[18], FK[19], FLAG_2[18] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[19], FK[20], FLAG_2[19] ;  FK[i+1] <- FK[i] - -.-.-
+CPY FK[20], FK[21], FLAG_2[20] ;  FK[i+1] <- FK[i] - -.-.-
+ADD XN[1], XK[1], W7[1] ;  сумма абсцисс начала и конца отрезка
+ADD XN[2], XK[2], W7[2] ;  сумма абсцисс начала и конца отрезка
+ADD XN[3], XK[3], W7[3] ;  сумма абсцисс начала и конца отрезка
+ADD XN[4], XK[4], W7[4] ;  сумма абсцисс начала и конца отрезка
+ADD XN[5], XK[5], W7[5] ;  сумма абсцисс начала и конца отрезка
+ADD XN[6], XK[6], W7[6] ;  сумма абсцисс начала и конца отрезка
+ADD XN[7], XK[7], W7[7] ;  сумма абсцисс начала и конца отрезка
+ADD XN[8], XK[8], W7[8] ;  сумма абсцисс начала и конца отрезка
+ADD XN[9], XK[9], W7[9] ;  сумма абсцисс начала и конца отрезка
+ADD XN[10], XK[10], W7[10] ;  сумма абсцисс начала и конца отрезка
+ADD XN[11], XK[11], W7[11] ;  сумма абсцисс начала и конца отрезка
+ADD XN[12], XK[12], W7[12] ;  сумма абсцисс начала и конца отрезка
+ADD XN[13], XK[13], W7[13] ;  сумма абсцисс начала и конца отрезка
+ADD XN[14], XK[14], W7[14] ;  сумма абсцисс начала и конца отрезка
+ADD XN[15], XK[15], W7[15] ;  сумма абсцисс начала и конца отрезка
+ADD XN[16], XK[16], W7[16] ;  сумма абсцисс начала и конца отрезка
+ADD XN[17], XK[17], W7[17] ;  сумма абсцисс начала и конца отрезка
+ADD XN[18], XK[18], W7[18] ;  сумма абсцисс начала и конца отрезка
+ADD XN[19], XK[19], W7[19] ;  сумма абсцисс начала и конца отрезка
+ADD XN[20], XK[20], W7[20] ;  сумма абсцисс начала и конца отрезка
+DIV W7[1], TWO, XI[2] ;  полусумма | для следующей итерации
+DIV W7[2], TWO, XI[3] ;  полусумма | для следующей итерации
+DIV W7[3], TWO, XI[4] ;  полусумма | для следующей итерации
+DIV W7[4], TWO, XI[5] ;  полусумма | для следующей итерации
+DIV W7[5], TWO, XI[6] ;  полусумма | для следующей итерации
+DIV W7[6], TWO, XI[7] ;  полусумма | для следующей итерации
+DIV W7[7], TWO, XI[8] ;  полусумма | для следующей итерации
+DIV W7[8], TWO, XI[9] ;  полусумма | для следующей итерации
+DIV W7[9], TWO, XI[10] ;  полусумма | для следующей итерации
+DIV W7[10], TWO, XI[11] ;  полусумма | для следующей итерации
+DIV W7[11], TWO, XI[12] ;  полусумма | для следующей итерации
+DIV W7[12], TWO, XI[13] ;  полусумма | для следующей итерации
+DIV W7[13], TWO, XI[14] ;  полусумма | для следующей итерации
+DIV W7[14], TWO, XI[15] ;  полусумма | для следующей итерации
+DIV W7[15], TWO, XI[16] ;  полусумма | для следующей итерации
+DIV W7[16], TWO, XI[17] ;  полусумма | для следующей итерации
+DIV W7[17], TWO, XI[18] ;  полусумма | для следующей итерации
+DIV W7[18], TWO, XI[19] ;  полусумма | для следующей итерации
+DIV W7[19], TWO, XI[20] ;  полусумма | для следующей итерации
+DIV W7[20], TWO, XI[21] ;  полусумма | для следующей итерации
+POW XI[2], DEGREE, W8[1] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[3], DEGREE, W8[2] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[4], DEGREE, W8[3] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[5], DEGREE, W8[4] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[6], DEGREE, W8[5] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[7], DEGREE, W8[6] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[8], DEGREE, W8[7] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[9], DEGREE, W8[8] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[10], DEGREE, W8[9] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[11], DEGREE, W8[10] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[12], DEGREE, W8[11] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[13], DEGREE, W8[12] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[14], DEGREE, W8[13] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[15], DEGREE, W8[14] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[16], DEGREE, W8[15] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[17], DEGREE, W8[16] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[18], DEGREE, W8[17] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[19], DEGREE, W8[18] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[20], DEGREE, W8[19] ;  XI^2 | вычисление FI в центре между XN и XK
+POW XI[21], DEGREE, W8[20] ;  XI^2 | вычисление FI в центре между XN и XK
+SUB W8[1], ONE, FI[2] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[2], ONE, FI[3] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[3], ONE, FI[4] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[4], ONE, FI[5] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[5], ONE, FI[6] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[6], ONE, FI[7] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[7], ONE, FI[8] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[8], ONE, FI[9] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[9], ONE, FI[10] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[10], ONE, FI[11] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[11], ONE, FI[12] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[12], ONE, FI[13] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[13], ONE, FI[14] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[14], ONE, FI[15] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[15], ONE, FI[16] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[16], ONE, FI[17] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[17], ONE, FI[18] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[18], ONE, FI[19] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[19], ONE, FI[20] ;  FI=XI^2-1 | для следующей итерации
+SUB W8[20], ONE, FI[21] ;  FI=XI^2-1 | для следующей итерации
+; 
+; конец расширения макроса: заголовок 'for[i]=1,20,1 {'
+;
+;
+

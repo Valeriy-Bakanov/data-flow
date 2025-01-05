@@ -7,7 +7,7 @@
 SET 0,Sum[0]
 SET 1,Edin
 ;
-for[k]=1,100,1 {
+for[k]=1,10,1 {
 SET k, m[k]
 DIV Edin,  m[k], m1[k]
 DIV m1[k], m[k], m2[k]
